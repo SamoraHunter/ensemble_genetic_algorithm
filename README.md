@@ -97,6 +97,7 @@ modelFuncList = [
 nb_params = 100  # Maximum individual size
 pop_params = 50  # Population size
 g_params = 10    # Maximum generation number
+
 ```
 
 ## License
