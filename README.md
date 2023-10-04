@@ -59,13 +59,45 @@ Applies a grid search over featurespace and genetic algorithm hyperparameters to
 
 ## Usage
 
-Set paths for input data. See unit test synthetic data for example of feature column naming convention.
-Configure feature space exploration by setting *grid = {* parameters True/False.
-Configure learning algorithm inclusion by populating *modelFuncList*.
-Configure genetic algorithm hyperparameters by setting: 
-  Maximum individual size: *nb_params*
-  Population size: *pop params*
-  Maximum generation number: *g_params*
+To use this project, follow the steps below:
+
+1. **Set Paths for Input Data**: Ensure you have the necessary input data and set the paths accordingly. Refer to the unit test synthetic data for an example of the feature column naming convention.
+
+2. **Configure Feature Space Exploration**:
+   - Determine which parameters to include in the feature space exploration by setting the `grid` parameter to `True` or `False`.
+
+3. **Configure Learning Algorithm Inclusion**:
+   - Customize the list of learning algorithms you want to include by populating the `modelFuncList` variable.
+
+4. **Configure Genetic Algorithm Hyperparameters**:
+   - Adjust the genetic algorithm's hyperparameters as needed:
+     - Maximum Individual Size: Set the value for `nb_params`.
+     - Population Size: Set the value for `pop_params`.
+     - Maximum Generation Number: Set the value for `g_params`.
+
+Example Configuration:
+
+```python
+# Example Configuration
+grid = {
+    # Set feature space exploration parameters
+    "parameter1": True,
+    "parameter2": False,
+    # Add more parameters as needed
+}
+
+modelFuncList = [
+    # Add learning algorithms to include in the experiment
+    "Algorithm1",
+    "Algorithm2",
+    # Add more algorithms as needed
+]
+
+# Genetic algorithm hyperparameters
+nb_params = 100  # Maximum individual size
+pop_params = 50  # Population size
+g_params = 10    # Maximum generation number
+
 
 ## License
 
