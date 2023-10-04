@@ -202,12 +202,7 @@ xgboost==1.4.2
 
 ## References
 
-Agius, R., Brieghel, C., Andersen, M.A., Pearson, A.T.,
-Ledergerber, B., Cozzi-Lepri, A., Louzoun, Y., Andersen, C.L., Bergstedt, J., von Stemann, J.H., Jorgensen,
-M., Tang, M.E., Fontes, M., Bahlo, J., Herling, C.D.,
-Hallek, M., Lundgren, J., MacPherson, C.R., Larsen, J.
-and Niemann, C.U. (2020) 'Machine learning can identify newly diagnosed patients with CLL at high risk of
-infection', *Nature communications*, 11(1), pp. 363-8. doi:
-[10.1038/s41467-019-14225-8](https://doi.org/10.1038/s41467-019-14225-8).
+Agius, R., Brieghel, C., Andersen, M.A., Pearson, A.T., Ledergerber, B., Cozzi-Lepri, A., Louzoun, Y., Andersen, C.L., Bergstedt, J., von Stemann, J.H., Jorgensen, M., Tang, M.E., Fontes, M., Bahlo, J., Herling, C.D., Hallek, M., Lundgren, J., MacPherson, C.R., Larsen, J. and Niemann, C.U. (2020) 'Machine learning can identify newly diagnosed patients with CLL at high risk of infection', *Nature communications*, 11(1), pp. 363-8. doi: 10.1038/s41467-019-14225-8
+
 
 
