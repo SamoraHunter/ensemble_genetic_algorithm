@@ -16,3 +16,7 @@ torch==1.12.1+cu102
 torchmetrics==0.7.3
 tqdm==4.64.0
 xgboost==1.4.2
+imblearn
+tabulate
+ipywidgets
+eventlet

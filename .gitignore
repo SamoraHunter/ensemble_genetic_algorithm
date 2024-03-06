@@ -80,6 +80,7 @@ ipython_config.py
 ga_env/
 venv/
 HFE_ML_GA_experiments/
+HFE_GA_experiments
 
 
 # pyenv
