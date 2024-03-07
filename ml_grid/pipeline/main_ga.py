@@ -175,7 +175,10 @@ class run:
 
                 print("Registering toolbox elements")
                 self.toolbox.register(
-                    "ensembleGenerator", ensembleGenerator, nb_val=nb_val
+                    "ensembleGenerator",
+                    ensembleGenerator,
+                    nb_val=nb_val,
+                    ml_grid_object=self.ml_grid_object,
                 )
                 self.toolbox.register(
                     "individual",
@@ -183,6 +186,7 @@ class run:
                     self.creator.Individual,
                     self.toolbox.ensembleGenerator,
                     n=1,  # could potentially increase this to pass to multiprocessing?
+                    ml_grid_object=self.ml_grid_object,
                 )
                 self.toolbox.register(
                     "population", self.tools.initRepeat, list, self.toolbox.individual
@@ -202,8 +206,18 @@ class run:
 
                 start = time.time()
 
+                if self.ml_grid_object.verbose >= 1:
+                    print("self.toolbox.population pre evaluate", pop_val)
+                    print(self.toolbox.population)
+
                 print(f"Generate intial population n=={pop_val}")
                 pop = self.toolbox.population(n=pop_val)
+
+                if self.ml_grid_object.verbose >= 1:
+                    print("toolbox pre evaluate")
+                    print(self.toolbox)
+                    print(self.toolbox.evaluate)
+                    print(pop)
 
                 # Evaluate the entire population
                 fitnesses = list(self.toolbox.map(self.toolbox.evaluate, pop))
@@ -220,6 +234,10 @@ class run:
 
                 # Extracting all the fitnesses of
                 fits = [ind.fitness.values[0] for ind in pop]
+
+                if self.ml_grid_object.verbose >= 1:
+                    print("fits")
+                    print(fits)
 
                 # Variable keeping track of the number of generations
                 g = 0
