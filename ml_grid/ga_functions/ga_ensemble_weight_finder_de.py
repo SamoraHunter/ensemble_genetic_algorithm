@@ -3,9 +3,10 @@ from ml_grid.ga_functions.ga_de_weight_method import (
     get_weighted_ensemble_prediction_de_y_pred_valid,
 )
 from ml_grid.ga_functions.ga_unweighted import get_best_y_pred_unweighted
-from ml_grid.pipeline.evaluate_methods_ga import (
-    get_weighted_ensemble_prediction_de_cython,
-)
+
+# from ml_grid.pipeline.evaluate_methods_ga import (
+#     get_weighted_ensemble_prediction_de_cython,
+# )
 
 import numpy
 import numpy as np
@@ -32,6 +33,45 @@ from numpy.linalg import norm
 
 # redundant? weights only derived from xtrain, weight vec is size of ensemble not train set
 
+import numpy as np
+from numpy.linalg import norm
+from sklearn import metrics
+
+round_v = np.vectorize(round)
+
+
+def normalize(weights):
+    # calculate l1 vector norm
+    result = norm(weights, 1)
+    # check for a vector of all zeros
+    if result == 0.0:
+        return weights
+    # return normalized vector (unit norm)
+    return weights / result
+
+
+def get_weighted_ensemble_prediction_de_cython(weights, prediction_matrix_raw, y_test):
+    """Function used by DE algo to search for optimal weights with scoring"""
+
+    clean_prediction_matrix = prediction_matrix_raw.copy()
+    weights = normalize(weights)
+
+    weighted_prediction_matrix_array = (
+        np.array(clean_prediction_matrix) * weights[:, None]
+    )
+    collapsed_weighted_prediction_matrix_array = weighted_prediction_matrix_array.sum(
+        axis=0
+    )
+
+    y_pred_best = round_v(collapsed_weighted_prediction_matrix_array)
+
+    auc = metrics.roc_auc_score(y_test, y_pred_best)
+    score = auc
+
+    # mcc = metrics.matthews_corrcoef(y_test, y_pred_best)
+
+    return 1 - score
+
 
 # Only get weights from xtrain/ytrain, never get weights from xtest y test. Use weights on x_validation yhat to compare to ytrue_valid
 def super_ensemble_weight_finder_differential_evolution(
@@ -44,7 +84,13 @@ def super_ensemble_weight_finder_differential_evolution(
     y_train = ml_grid_object.y_train
     y_test = ml_grid_object.y_test
 
-    debug = ml_grid_object.debug  # set in data?
+    # debug = ml_grid_object.debug  # set in data? ????
+
+    debug = ml_grid_object.verbose > 0
+
+    if debug:
+        print("super_ensemble_weight_finder_differential_evolution, best:")
+        print(best)
 
     model_train_time_warning_threshold = 5
     # Get prediction matrix:

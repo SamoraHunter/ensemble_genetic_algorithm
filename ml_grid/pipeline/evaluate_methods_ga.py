@@ -3,6 +3,9 @@ from ml_grid.ga_functions.ga_ann_weight_methods import get_y_pred_ann_torch_weig
 from ml_grid.ga_functions.ga_de_weight_method import (
     get_weighted_ensemble_prediction_de_y_pred_valid,
 )
+from ml_grid.ga_functions.ga_ensemble_weight_finder_de import (
+    super_ensemble_weight_finder_differential_evolution,
+)
 
 # from ml_grid.ga_functions.ga_ensemble_weight_finder_de import (
 #     super_ensemble_weight_finder_differential_evolution,
@@ -29,17 +32,54 @@ from ml_grid.util.global_params import global_parameters
 from sklearn import metrics
 
 
+# def get_y_pred_resolver(ensemble, ml_grid_object, valid=False):
+#     local_param_dict = ml_grid_object.local_param_dict
+#     X_test_orig = ml_grid_object.X_test_orig
+#     y_test_orig = ml_grid_object.y_test_orig
+
+#     if (
+#         local_param_dict.get("weighted") == None
+#         or local_param_dict.get("weighted") == "unweighted"
+#     ):
+#         y_pred = get_best_y_pred_unweighted(ensemble, ml_grid_object, valid=valid)
+#     elif local_param_dict.get("weighted") == "de":
+#         y_pred = get_weighted_ensemble_prediction_de_y_pred_valid(
+#             ensemble,
+#             super_ensemble_weight_finder_differential_evolution(
+#                 ensemble, ml_grid_object, valid=valid
+#             ),
+#             valid=valid,
+#         )
+#         # print(y_pred.shape)
+#     elif local_param_dict.get("weighted") == "ann":
+#         y_pred = get_y_pred_ann_torch_weighting(ensemble, ml_grid_object, valid=valid)
+
+#     return y_pred
+
+
 def get_y_pred_resolver(ensemble, ml_grid_object, valid=False):
+    print("get_y_pred_resolver")
+    print(ensemble)
     local_param_dict = ml_grid_object.local_param_dict
     X_test_orig = ml_grid_object.X_test_orig
     y_test_orig = ml_grid_object.y_test_orig
+
+    if ml_grid_object.verbose >= 2:
+        print("Starting get_y_pred_resolver function...")
+        print("local_param_dict:", local_param_dict)
+        print("X_test_orig shape:", X_test_orig.shape)
+        print("y_test_orig shape:", y_test_orig.shape)
 
     if (
         local_param_dict.get("weighted") == None
         or local_param_dict.get("weighted") == "unweighted"
     ):
+        if ml_grid_object.verbose >= 1:
+            print("Using unweighted ensemble prediction...")
         y_pred = get_best_y_pred_unweighted(ensemble, ml_grid_object, valid=valid)
     elif local_param_dict.get("weighted") == "de":
+        if ml_grid_object.verbose >= 1:
+            print("Using DE weighted ensemble prediction...")
         y_pred = get_weighted_ensemble_prediction_de_y_pred_valid(
             ensemble,
             super_ensemble_weight_finder_differential_evolution(
@@ -47,25 +87,27 @@ def get_y_pred_resolver(ensemble, ml_grid_object, valid=False):
             ),
             valid=valid,
         )
-        # print(y_pred.shape)
+        if ml_grid_object.verbose >= 2:
+            print("DE weighted y_pred shape:", y_pred.shape)
     elif local_param_dict.get("weighted") == "ann":
+        if ml_grid_object.verbose >= 1:
+            print("Using ANN weighted ensemble prediction...")
         y_pred = get_y_pred_ann_torch_weighting(ensemble, ml_grid_object, valid=valid)
 
     return y_pred
 
 
 def evaluate_weighted_ensemble_auc(individual, ml_grid_object):
-    # global log_store_dataframe_path
-    # Evaluate ensemble
-    # X_test = X_test_orig.copy()
-    # y_test = y_test_orig.copy()
+
+    if ml_grid_object.verbose >= 1:
+        print("evaluate_weighted_ensemble_auc: individual")
+        print(individual)
+
     global_params = global_parameters()
 
     ml_grid_object = ml_grid_object
 
     verbose = ml_grid_object.global_params.verbose
-
-    # current_log_scores_filename = ml_grid_object.current_log_scores_filename
 
     y_test = ml_grid_object.y_test
 
@@ -232,27 +274,27 @@ def normalize(weights):
     return weights / result
 
 
-def get_weighted_ensemble_prediction_de_cython(weights, prediction_matrix_raw, y_test):
-    """Function used by DE algo to search for optimal weights with scoring"""
+# def get_weighted_ensemble_prediction_de_cython(weights, prediction_matrix_raw, y_test):
+#     """Function used by DE algo to search for optimal weights with scoring"""
 
-    clean_prediction_matrix = prediction_matrix_raw.copy()
-    weights = normalize(weights)
+#     clean_prediction_matrix = prediction_matrix_raw.copy()
+#     weights = normalize(weights)
 
-    weighted_prediction_matrix_array = (
-        np.array(clean_prediction_matrix) * weights[:, None]
-    )
-    collapsed_weighted_prediction_matrix_array = weighted_prediction_matrix_array.sum(
-        axis=0
-    )
+#     weighted_prediction_matrix_array = (
+#         np.array(clean_prediction_matrix) * weights[:, None]
+#     )
+#     collapsed_weighted_prediction_matrix_array = weighted_prediction_matrix_array.sum(
+#         axis=0
+#     )
 
-    y_pred_best = round_v(collapsed_weighted_prediction_matrix_array)
+#     y_pred_best = round_v(collapsed_weighted_prediction_matrix_array)
 
-    auc = metrics.roc_auc_score(y_test, y_pred_best)
-    score = auc
+#     auc = metrics.roc_auc_score(y_test, y_pred_best)
+#     score = auc
 
-    # mcc = metrics.matthews_corrcoef(y_test, y_pred_best)
+#     # mcc = metrics.matthews_corrcoef(y_test, y_pred_best)
 
-    return 1 - score
+#     return 1 - score
 
 
 def measure_binary_vector_diversity(ensemble, metric="jaccard"):

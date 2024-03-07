@@ -1,6 +1,7 @@
 import datetime
 import gc
 import itertools
+import os
 import pickle
 import random
 import time
@@ -87,7 +88,6 @@ class run:
 
         gen_eval_score_threshold_early_stopping = 5
 
-        # %%prun -s cumulative
         if __name__ == "__main__":
             grid = [self.nb_params, self.pop_params, self.g_params]
             param_grid = list(itertools.product(*grid))
@@ -122,6 +122,7 @@ class run:
             print(f"Passed main GA init")
 
     def execute(self):
+        print("Executing")
         self.model_error_list = []
 
         global_param_str = self.ml_grid_object.logging_paths_obj.global_param_str
@@ -152,9 +153,6 @@ class run:
 
         for i in enumerate(idx_list):
             i = i[0]
-            # for i in range(0, len(param_grid)):
-            #         best = evolve_best_ensemble(
-            #             param_grid[i][0], param_grid[i][1], param_grid[i][2])
 
             try:
                 nb_val = param_grid[i][0]
@@ -172,28 +170,9 @@ class run:
                 )
 
                 generation_progress_list = []
-                # print("Preparing log file")
-                # with open(self.global_param_str+self.additional_naming+"/progress_logs/"+log_folder_path, 'w') as file:
-                #     pass
-
-                # with open(self.global_param_str+self.additional_naming+"/progress_logs/"+log_folder_path, "a") as myfile:
-                #     myfile.write(' '.join(str(i) for i in[["Evolving ensemble: ", "nb_val:", nb_val,
-                #       "pop_val:", pop_val, "g_val:", g_val, "..."]]))
-                #     myfile.write('\n')
-                # #global master_result_list
-                #     myfile.close()
 
                 start = time.time()
 
-                # print(parameters)
-                #     nb_val = parameters[0]
-                #     pop_val = parameters[1]
-                #     g_val = parameters[2]
-                #         creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
-                #         creator.create("Individual", list, fitness=creator.FitnessMin)
-
-                # nb_val = 2
-                # toolbox = base.Toolbox()
                 print("Registering toolbox elements")
                 self.toolbox.register(
                     "ensembleGenerator", ensembleGenerator, nb_val=nb_val
@@ -221,15 +200,8 @@ class run:
                     tournsize=local_param_dict.get("t_size"),
                 )
 
-                # pool = multiprocessing.Pool()
-                # toolbox.register("map", pool.map)
-
-                # print(nb_val, pop_val, g_val)
-                # print("pop_val", pop_val)
                 start = time.time()
-                #     nb_val = param_grid[k][0]
-                #     pop_val = param_grid[k][1]
-                #     g_val = param_grid[k][2]
+
                 print(f"Generate intial population n=={pop_val}")
                 pop = self.toolbox.population(n=pop_val)
 
@@ -251,8 +223,6 @@ class run:
 
                 # Variable keeping track of the number of generations
                 g = 0
-
-                # testcrash
 
                 # Begin the evolution
                 chance_dummy_best_pred = [x for x in range(0, len(self.y_test))]
@@ -494,11 +464,23 @@ class run:
 
             except Exception as Argument:
                 date = datetime.datetime.now().strftime("%Y_%m_%d-%I:%M:%S_%p")
-                # creating/opening a file
+
+                try:
+                    str_to_write = os.path.join(
+                        f"{self.ml_grid_object.base_project_dir+self.global_param_str + additional_naming}/logs/",
+                        "logging.txt",
+                    )
+
+                    print(str_to_write)
+                except Exception as e:
+                    print(e)
+                    print("failed to get base dir str?")
+
                 f = open(
-                    f"{self.global_param_str+self.additional_naming}/GEC_log_{date}.txt",
+                    str_to_write,
                     "a",
                 )
+
                 # writing in the file
                 f.write(str(Argument))
                 f.write(str(traceback.format_exc()))
@@ -507,8 +489,8 @@ class run:
                 print(Argument)
 
                 print(traceback.format_exc())
-
-                continue
+                raise
+                # continue
 
         # for line in (master_result_list):
         #     print(line)
