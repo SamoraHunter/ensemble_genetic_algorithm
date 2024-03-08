@@ -326,7 +326,9 @@ class run:
                     # gen_eval_score = metrics.roc_auc_score(self.y_test_orig, best_pred)
 
                     # With best individual from population, evaluate their ensemble score on metric
-                    y_pred = get_y_pred_resolver(best, valid=False)
+                    y_pred = get_y_pred_resolver(
+                        best, ml_grid_object=self.ml_grid_object, valid=False
+                    )
 
                     gen_eval_score = metrics.roc_auc_score(self.y_test, y_pred)
                     print(f"gen_eval_score == {gen_eval_score} Generation {g}")
