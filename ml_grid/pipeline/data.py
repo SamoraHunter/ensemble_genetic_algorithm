@@ -50,6 +50,7 @@ class pipe:
         param_space_index,
         additional_naming=None,
         test_sample_n=0,
+        config_dict=None,
     ):  # kwargs**
 
         self.base_project_dir = base_project_dir
@@ -67,6 +68,14 @@ class pipe:
         self.project_score_save_object = project_score_save_class(
             base_project_dir=base_project_dir
         )
+
+        self.config_dict = config_dict
+        if self.config_dict == None:
+            self.config_dict = {
+                "use_stored_base_learners": False,
+            }
+            if self.verbose >= 1:
+                print(f"Using default config_dict... {self.config_dict}")
 
         if self.verbose >= 1:
             print(f"Starting... {self.local_param_dict}")

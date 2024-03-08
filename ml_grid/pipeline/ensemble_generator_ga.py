@@ -14,16 +14,20 @@ from functools import partial
 
 
 # v3
-def do_work(n, ml_grid_object):
+def do_work(n=0, ml_grid_object=None):
 
     if ml_grid_object.verbose >= 1:
         print("do_work")
 
-    global_params = global_parameters.global_parameters()
+    # global_params = global_parameters.global_parameters()
 
-    use_stored_base_learners = global_params.use_stored_base_learners
+    use_stored_base_learners = ml_grid_object.config_dict.get(
+        "use_stored_base_learners"
+    )
 
-    modelFuncList = ml_grid_object.modelFuncList
+    # use_stored_base_learners = global_params.use_stored_base_learners
+
+    modelFuncList = ml_grid_object.config_dict.get("modelFuncList")
 
     index = random.randint(0, len(modelFuncList) - 1)
 
@@ -37,7 +41,7 @@ def do_work(n, ml_grid_object):
         else:
             if ml_grid_object.verbose >= 1:
                 print("modelFuncList[index]()")
-            return modelFuncList[index]()
+            return modelFuncList[index](ml_grid_object, ml_grid_object.local_param_dict)
     except Exception as e:
         print(e)
         print(f"Failed to return model at index {index}, returning perceptron")
@@ -57,6 +61,8 @@ def multi_run_wrapper(args):
 
 def ensembleGenerator(nb_val=28, ml_grid_object=None):
     print("Generating ensemble...ensembleGenerator", nb_val)
+    print("ensembleGenerator>>ml_grid_object", ml_grid_object)
+
     # print("ensembleGenerator: ", nb_val)
 
     # nb_val = random.randint(2, nb_val) # dynamic individual size
@@ -92,7 +98,7 @@ def ensembleGenerator(nb_val=28, ml_grid_object=None):
 
         # pool = GreenPool()
         # Create a partial function with ml_grid_object filled
-        partial_do_work = partial(do_work, ml_grid_object)
+        partial_do_work = partial(do_work, ml_grid_object=ml_grid_object)
 
         # Now use the partial function with pool.imap
         pool = multiprocessing.Pool(processes=2)

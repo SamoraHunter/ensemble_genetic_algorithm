@@ -186,7 +186,7 @@ class run:
                     self.creator.Individual,
                     self.toolbox.ensembleGenerator,
                     n=1,  # could potentially increase this to pass to multiprocessing?
-                    ml_grid_object=self.ml_grid_object,
+                    # ml_grid_object=self.ml_grid_object,
                 )
                 self.toolbox.register(
                     "population", self.tools.initRepeat, list, self.toolbox.individual
