@@ -206,14 +206,14 @@ class run:
 
                 start = time.time()
 
-                if self.ml_grid_object.verbose >= 1:
+                if self.ml_grid_object.verbose >= 11:
                     print("self.toolbox.population pre evaluate", pop_val)
                     print(self.toolbox.population)
 
                 print(f"Generate intial population n=={pop_val}")
                 pop = self.toolbox.population(n=pop_val)
 
-                if self.ml_grid_object.verbose >= 1:
+                if self.ml_grid_object.verbose >= 11:
                     print("toolbox pre evaluate")
                     print(self.toolbox)
                     print(self.toolbox.evaluate)
@@ -235,7 +235,7 @@ class run:
                 # Extracting all the fitnesses of
                 fits = [ind.fitness.values[0] for ind in pop]
 
-                if self.ml_grid_object.verbose >= 1:
+                if self.ml_grid_object.verbose >= 11:
                     print("fits")
                     print(fits)
 

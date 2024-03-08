@@ -85,6 +85,7 @@ def get_y_pred_resolver(ensemble, ml_grid_object, valid=False):
             super_ensemble_weight_finder_differential_evolution(
                 ensemble, ml_grid_object, valid=valid
             ),
+            ml_grid_object,
             valid=valid,
         )
         if ml_grid_object.verbose >= 2:

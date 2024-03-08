@@ -16,7 +16,7 @@ from functools import partial
 # v3
 def do_work(n=0, ml_grid_object=None):
 
-    if ml_grid_object.verbose >= 1:
+    if ml_grid_object.verbose >= 11:
         print("do_work")
 
     # global_params = global_parameters.global_parameters()
@@ -33,19 +33,19 @@ def do_work(n=0, ml_grid_object=None):
 
     try:
         if use_stored_base_learners and random.random() > 0.5:
-            if ml_grid_object.verbose >= 1:
+            if ml_grid_object.verbose >= 2:
                 print("get_stored_model...")
 
             return get_stored_model()
 
         else:
-            if ml_grid_object.verbose >= 1:
+            if ml_grid_object.verbose >= 11:
                 print("modelFuncList[index]()")
             return modelFuncList[index](ml_grid_object, ml_grid_object.local_param_dict)
     except Exception as e:
         print(e)
         print(f"Failed to return model at index {index}, returning perceptron")
-        return modelFuncList[1]()
+        return modelFuncList[1](ml_grid_object, ml_grid_object.local_param_dict)
 
     # return random.choice(modelFuncList)
 
@@ -60,8 +60,9 @@ def multi_run_wrapper(args):
 
 
 def ensembleGenerator(nb_val=28, ml_grid_object=None):
-    print("Generating ensemble...ensembleGenerator", nb_val)
-    print("ensembleGenerator>>ml_grid_object", ml_grid_object)
+    if ml_grid_object.verbose >= 11:
+        print("Generating ensemble...ensembleGenerator", nb_val)
+        print("ensembleGenerator>>ml_grid_object", ml_grid_object)
 
     # print("ensembleGenerator: ", nb_val)
 
@@ -114,8 +115,9 @@ def ensembleGenerator(nb_val=28, ml_grid_object=None):
                 f"Error generating ensemble {len(ensemble)} {nb_val} {len(dummy_list)}"
             )
 
-        print("Returning ensemble of size ", len(ensemble))
-        print(ensemble)
+        if ml_grid_object.verbose >= 11:
+            print("Returning ensemble of size ", len(ensemble))
+            print(ensemble)
         return ensemble
     else:
         print(

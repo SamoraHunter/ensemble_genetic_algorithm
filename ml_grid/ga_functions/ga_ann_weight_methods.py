@@ -379,6 +379,8 @@ def get_y_pred_ann_torch_weighting(best, ml_grid_object, valid=False):
         X_prediction_matrix_raw_X_train = prediction_matrix_raw_X_train.T
         test_data = TestData(torch.FloatTensor(X_prediction_matrix_raw_X_train))
 
+        prediction_matrix_raw_X_test = X_prediction_matrix_raw_X_train  # missing line?
+
     train_data = TrainData(
         torch.FloatTensor(X_prediction_matrix_raw_X_train),
         torch.FloatTensor(np.array(y_train)),
@@ -432,7 +434,11 @@ def get_y_pred_ann_torch_weighting(best, ml_grid_object, valid=False):
 
 
 def train_ann_weight(input_shape, batch_size, train_data, test_data):
-    free_gpu = str(get_free_gpu())
+
+    try:
+        free_gpu = str(get_free_gpu())
+    except:
+        free_gpu = "-1"
 
     # Initialise global parameter space----------------------------------------------------------------
 
