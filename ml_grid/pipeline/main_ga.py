@@ -228,7 +228,7 @@ class run:
                 #       are crossed
                 #
                 # MUTPB is the probability for mutating an individual
-                CXPB, MUTPB = global_param_dict.get("cxpb"), global_param_dict.get(
+                CXPB, MUTPB = local_param_dict.get("cxpb"), local_param_dict.get(
                     "mutpb"
                 )
 
@@ -288,7 +288,9 @@ class run:
                             # print(mutant[0][0])
                             # mutant[0][0] = baseLearnerGenerator()#
                             # print(offspring[counter])
-                            mutatedEnsemble = mutateEnsemble(offspring[counter])
+                            mutatedEnsemble = mutateEnsemble(
+                                offspring[counter], ml_grid_object=self.ml_grid_object
+                            )
                             offspring[counter] = mutatedEnsemble
                             # print("mutated into:")
                             # print(mutatedEnsemble)
@@ -300,7 +302,7 @@ class run:
                     # Evaluate the individuals with an invalid fitness
                     invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
                     # fitnesses = map(toolbox.evaluate, invalid_ind)
-                    fitnesses = self.toolbox.map(toolbox.evaluate, invalid_ind)
+                    fitnesses = self.toolbox.map(self.toolbox.evaluate, invalid_ind)
                     for ind, fit in zip(invalid_ind, fitnesses):
                         ind.fitness.values = fit
                     pop[:] = offspring

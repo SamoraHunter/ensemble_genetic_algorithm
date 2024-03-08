@@ -1,16 +1,12 @@
-
 import numpy as np
 import sklearn
 
 
-class feature_methods():
-    
+class feature_methods:
+
     def __init__(self):
-        """_summary_
-        """
-        
-        
-        
+        """_summary_"""
+
     def getNfeaturesANOVAF(self, n, X_train, y_train):
         res = []
         for colName in X_train.columns:
@@ -23,13 +19,10 @@ class feature_methods():
                         )[0],
                     )
                 )
-        sortedList = sorted(res, key=lambda X:X[1])
+        sortedList = sorted(res, key=lambda X: X[1])
         sortedList.reverse()
         nFeatures = sortedList[:n]
         finalColNames = []
         for elem in nFeatures:
             finalColNames.append(elem[0])
         return finalColNames
-    
-    
-    
