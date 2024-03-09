@@ -96,8 +96,8 @@ class Grid:
         # g_params = [128]
 
         self.nb_params = [4]
-        self.pop_params = [8]
-        self.g_params = [4]
+        self.pop_params = [4]
+        self.g_params = [2]
 
         if self.test_grid:
             self.nb_params = [4, 8, 16]

@@ -19,7 +19,7 @@ def store_model(
     model_type="sklearn",
 ):  # **kwargs ):
 
-    if ml_grid_object.verbose >= 11:
+    if ml_grid_object.verbose >= 1:
         print("store_model")
 
     model_store_path = ml_grid_object.logging_paths_obj.model_store_path
@@ -33,6 +33,12 @@ def store_model(
     global_param_dict = ml_grid_object.global_params
 
     log_folder_path = ml_grid_object.logging_paths_obj.log_folder_path
+
+    if ml_grid_object.verbose >= 1:
+        print(
+            model_store_path,
+            log_folder_path,
+        )
 
     with open(model_store_path, "r") as f:
         model_store_data = json.load(f)
@@ -101,6 +107,8 @@ def get_stored_model(ml_grid_object):
 
     log_folder_path = ml_grid_object.logging_paths_obj.log_folder_path
 
+    modelFuncList = ml_grid_object.config_dict.modelFuncList
+
     with open(model_store_path, "r", encoding="utf-8") as f:
         model_store_data = json.load(f)
 
@@ -136,4 +144,4 @@ def get_stored_model(ml_grid_object):
         print("Failed inside getting stored model, returning random new model")
         index = random.randint(0, len(modelFuncList) - 1)
 
-        return modelFuncList[index]()
+        return modelFuncList[index](ml_grid_object, ml_grid_object.local_param_dict)

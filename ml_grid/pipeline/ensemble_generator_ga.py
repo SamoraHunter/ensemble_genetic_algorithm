@@ -92,7 +92,6 @@ def ensembleGenerator(nb_val=28, ml_grid_object=None):
     dummy_list = [x for x in range(0, nb_val)]
 
     if nb_val > 1:
-
         #
         # if __name__ == "__main__":
         from eventlet import GreenPool

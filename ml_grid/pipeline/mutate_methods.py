@@ -3,13 +3,13 @@ import random
 
 def baseLearnerGenerator(ml_grid_object):
 
-    modelFuncList = ml_grid_object.config_dict.modelFuncList
+    modelFuncList = ml_grid_object.config_dict.get("modelFuncList")
 
     index = random.randint(0, len(modelFuncList) - 1)
 
-    return modelFuncList[
-        index
-    ]()  # store as functions, pass as result of executed function
+    return modelFuncList[index](
+        ml_grid_object, ml_grid_object.local_param_dict
+    )  # store as functions, pass as result of executed function
 
 
 # Model will be fit in generation stage and pass fitted state with training data.

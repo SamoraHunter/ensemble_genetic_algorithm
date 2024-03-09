@@ -288,8 +288,9 @@ class TestData(Dataset):
 
 def get_y_pred_ann_torch_weighting(best, ml_grid_object, valid=False):
 
-    print("get_y_pred_ann_torch_weighting")
-    print(best)
+    if ml_grid_object.verbose >= 11:
+        print("get_y_pred_ann_torch_weighting")
+        print(best)
 
     y_test = ml_grid_object.y_test
     X_test_orig = ml_grid_object.X_test_orig

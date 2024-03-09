@@ -12,6 +12,8 @@ import numpy as np
 import pandas as pd
 import tqdm
 from deap import algorithms, base, creator, tools
+
+# from ml_grid.ga_functions.ga_plots.ga_progress import plot_generation_progress_fitness
 from ml_grid.model_classes_ga.logistic_regression_model import (
     logisticRegressionModelGenerator,
 )
@@ -384,7 +386,9 @@ class run:
                     print(
                         "Getting final final best pred for plot with validation set, get weights from xtrain ytrain"
                     )
-                    best_pred_orig = get_y_pred_resolver(best, valid=True)
+                    best_pred_orig = get_y_pred_resolver(
+                        ensemble=best, ml_grid_object=self.ml_grid_object, valid=True
+                    )
 
                     plot_auc(
                         best_pred_orig,
@@ -424,24 +428,31 @@ class run:
                 # with open(f'{self.global_param_str+self.additional_naming}/results_master_lists/master_result_list_{date}.pkl', 'wb') as f:
                 #     pickle.dump(master_result_list, f)
 
+                scores = metrics.roc_auc_score(self.y_test_orig, best_pred_orig)
+                current_algorithm = best
+                method_name = str(best)
+                pg = "nan"
+                n_iter_v = "nan"
+
                 try:
                     print("Writing grid perturbation to log")
                     # write line to best grid scores---------------------
                     self.project_score_save_object.update_score_log(
-                        self,
-                        ml_grid_object,
-                        scores,
-                        best_pred_orig,
-                        current_algorithm,
-                        method_name,
-                        pg,
-                        start,
-                        n_iter_v,
+                        # self=self.project_score_save_object,
+                        ml_grid_object=self.ml_grid_object,
+                        scores=scores,
+                        best_pred_orig=best_pred_orig,
+                        current_algorithm=current_algorithm,
+                        method_name=method_name,
+                        pg=pg,
+                        start=start,
+                        n_iter_v=n_iter_v,
                     )
 
                 except Exception as e:
                     print(e)
                     print("Failed to upgrade grid entry")
+                    raise
 
                 # Convert model definition to string for low file size
                 best_str = best.copy()
@@ -451,7 +462,18 @@ class run:
                     best_str[0][i][1] = str(best_str[0][i][1])
                     best_str[0][i] = tuple(best_str[0][i])
 
-                plot_generation_progress_fitness(generation_progress_list)
+                plot_path = os.path.join(
+                    f"{self.ml_grid_object.base_project_dir+self.global_param_str + additional_naming}/plots/",
+                    "generation_fitness.png",
+                )
+
+                # plot_generation_progress_fitness(
+                #     generation_progress_list,
+                #     pop_val,
+                #     g_val,
+                #     nb_val,
+                #     file_path=plot_path,
+                # )
 
                 with open(
                     self.global_param_str
@@ -473,15 +495,15 @@ class run:
                 # Try to reset DEAP for second run. Should be seperate:
                 from deap import algorithms, base, creator, tools
 
-                del toolbox
+                del self.toolbox
                 gc.collect()
                 creator.create("FitnessMax", base.Fitness, weights=(1.0,))
                 creator.create("Individual", list, fitness=creator.FitnessMax)
-                toolbox = base.Toolbox()
-                toolbox.register(
+                self.toolbox = base.Toolbox()
+                self.toolbox.register(
                     "evaluate",
                     evaluate_weighted_ensemble_auc,
-                    ml_grid_object=ml_grid_object,
+                    ml_grid_object=self.ml_grid_object,
                 )
 
             except Exception as Argument:

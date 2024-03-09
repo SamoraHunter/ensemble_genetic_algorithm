@@ -86,7 +86,7 @@ def super_ensemble_weight_finder_differential_evolution(
 
     # debug = ml_grid_object.debug  # set in data? ????
 
-    debug = ml_grid_object.verbose > 0
+    debug = ml_grid_object.verbose > 11
 
     if debug:
         print("super_ensemble_weight_finder_differential_evolution, best:")
