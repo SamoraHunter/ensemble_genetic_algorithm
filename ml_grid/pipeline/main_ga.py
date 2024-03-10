@@ -436,6 +436,7 @@ class run:
 
                 try:
                     print("Writing grid perturbation to log")
+                    # Is for valid or no? Pass valid and set orig or ytest...
                     # write line to best grid scores---------------------
                     self.project_score_save_object.update_score_log(
                         # self=self.project_score_save_object,
@@ -447,6 +448,7 @@ class run:
                         pg=pg,
                         start=start,
                         n_iter_v=n_iter_v,
+                        valid=True,
                     )
 
                 except Exception as e:

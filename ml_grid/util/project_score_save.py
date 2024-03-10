@@ -82,6 +82,7 @@ class project_score_save_class:
             "mutpb",
             "indpb",
             "t_size",
+            "valid",
         ]
 
         column_list = column_list + ["BL_" + str(x) for x in range(0, 64)]
@@ -114,12 +115,13 @@ class project_score_save_class:
         pg,
         start,
         n_iter_v,
+        valid=False,
     ):
 
         if ml_grid_object.verbose >= 1:
             print("update_score_log")
             # Debugging messages and variable prints
-
+            print("Valid:", valid)
             print("ML grid object:", ml_grid_object)
             print("Scores:", scores)
             print("Best prediction original:", best_pred_orig)
@@ -157,7 +159,7 @@ class project_score_save_class:
             print("X_test_orig shape:", self.X_test_orig.shape)
             print("y_test_orig shape:", self.y_test_orig.shape)
             print("Global parameters:", self.global_parameters)
-            print("best_pred_orig shape", best_pred_orig.shape)
+            print("best_pred_orig len", len(best_pred_orig))
         try:
             print("Writing grid permutation to log")
             # write line to best grid scores---------------------
@@ -212,6 +214,7 @@ class project_score_save_class:
                 "mutpb",
                 "indpb",
                 "t_size",
+                "valid",
             ]
 
             column_list = column_list + ["BL_" + str(x) for x in range(0, 64)]
@@ -229,12 +232,20 @@ class project_score_save_class:
 
             # best_pred_orig = grid.best_estimator_.predict(X_test_orig)
 
-            auc = metrics.roc_auc_score(self.y_test, best_pred_orig)
-            mcc = matthews_corrcoef(self.y_test, best_pred_orig)
-            f1 = f1_score(self.y_test, best_pred_orig, average="binary")
-            precision = precision_score(self.y_test, best_pred_orig, average="binary")
-            recall = recall_score(self.y_test, best_pred_orig, average="binary")
-            accuracy = accuracy_score(self.y_test, best_pred_orig)
+            if valid:
+                y_true = self.y_test_orig
+                debug_message = "Using self.y_test_orig for evaluation."
+            else:
+                y_true = self.y_test
+                debug_message = "Using self.y_test for evaluation."
+            if ml_grid_object.verbose > 1:
+                print(debug_message)
+            auc = metrics.roc_auc_score(y_true, best_pred_orig)
+            mcc = matthews_corrcoef(y_true, best_pred_orig)
+            f1 = f1_score(y_true, best_pred_orig, average="binary")
+            precision = precision_score(y_true, best_pred_orig, average="binary")
+            recall = recall_score(y_true, best_pred_orig, average="binary")
+            accuracy = accuracy_score(y_true, best_pred_orig)
 
             # get info from current settings iter...local_param_dict ml_grid_object
             for key in ml_grid_object.local_param_dict:
@@ -285,16 +296,18 @@ class project_score_save_class:
             line["t_fits"] = pg
             line["n_fits"] = n_iter_v
             line["i"] = self.param_space_index  # 0 # should be index of the iterator
-            line["fit_time_m"] = scores["fit_time"].mean()
-            line["fit_time_std"] = scores["fit_time"].std()
+            # scores from mlgrid are cross val obj. here they are single float.
+            # line["fit_time_m"] = scores["fit_time"].mean()
+            # line["fit_time_std"] = scores["fit_time"].std()
 
-            line["score_time_m"] = scores["score_time"].mean()
-            line["score_time_std"] = scores["score_time"].std()
+            # line["score_time_m"] = scores["score_time"].mean()
+            # line["score_time_std"] = scores["score_time"].std()
 
-            for metric in self.metric_list:
-                line[f"{metric}_m"] = scores[f"test_{metric}"].mean()
-                line[f"{metric}_std"] = scores[f"test_{metric}"].std()
+            # for metric in self.metric_list:
+            #     line[f"{metric}_m"] = scores[f"test_{metric}"].mean()
+            #     line[f"{metric}_std"] = scores[f"test_{metric}"].std()
 
+            line["valid"] = bool(valid)
             print(line)
 
             # line['outcome_var'] = y_test.name
@@ -315,5 +328,6 @@ class project_score_save_class:
             print(e)
             print(traceback.format_exc())
             print("Failed to upgrade grid entry")
+            raise
             if self.error_raise:
                 input()
