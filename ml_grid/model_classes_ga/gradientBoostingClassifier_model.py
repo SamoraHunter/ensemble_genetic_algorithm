@@ -9,7 +9,7 @@ from ml_grid.util.model_methods_ga import store_model
 from ml_grid.util.param_space import ParamSpace
 
 
-def GradientBoostingClassifier_ModelGen(ml_grid_object, local_param_dict):
+def GradientBoostingClassifier_ModelGenerator(ml_grid_object, local_param_dict):
     global_parameter_val = global_parameters()
 
     verbose = global_parameter_val.verbose
