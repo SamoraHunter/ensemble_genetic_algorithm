@@ -19,7 +19,7 @@ def store_model(
     model_type="sklearn",
 ):  # **kwargs ):
 
-    if ml_grid_object.verbose >= 1:
+    if ml_grid_object.verbose >= 11:
         print("store_model")
 
     model_store_path = ml_grid_object.logging_paths_obj.model_store_path

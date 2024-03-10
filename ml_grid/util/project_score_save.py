@@ -214,7 +214,7 @@ class project_score_save_class:
                 "mutpb",
                 "indpb",
                 "t_size",
-                "valid",
+                #               "valid",
             ]
 
             column_list = column_list + ["BL_" + str(x) for x in range(0, 64)]
@@ -307,8 +307,7 @@ class project_score_save_class:
             #     line[f"{metric}_m"] = scores[f"test_{metric}"].mean()
             #     line[f"{metric}_std"] = scores[f"test_{metric}"].std()
 
-            line["valid"] = bool(valid)
-            print(line)
+            #           line["valid"] = bool(valid)
 
             # line['outcome_var'] = y_test.name
 
@@ -316,6 +315,25 @@ class project_score_save_class:
             # line['pop_val'] = [pop_val]
             # line['g_val'] = [g_val]
             # line['g'] = [g]
+            print("current_algorithm")
+            print(current_algorithm)
+
+            for iii in range(0, len(current_algorithm[0])):
+                f_list = []
+                current_f = current_algorithm[0][iii][2]
+
+                current_f_vector = []
+                for elem in ml_grid_object.orignal_feature_names:
+                    if elem in current_f:
+                        current_f_vector.append(1)
+                    else:
+                        current_f_vector.append(0)
+                # f_list.append(np.array(current_f_vector))
+                f_list.append(current_f_vector)
+
+                line["BL_" + str(iii)] = [f_list]
+
+            print(line)
 
             line[column_list].to_csv(
                 ml_grid_object.base_project_dir + "final_grid_score_log.csv",
