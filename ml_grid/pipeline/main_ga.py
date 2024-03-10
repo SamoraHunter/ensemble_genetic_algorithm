@@ -478,7 +478,8 @@ class run:
                 # )
 
                 with open(
-                    self.global_param_str
+                    self.ml_grid_object.base_project_dir
+                    + self.global_param_str
                     + self.additional_naming
                     + "best_pop="
                     + str(pop_val)

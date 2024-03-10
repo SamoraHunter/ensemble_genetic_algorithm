@@ -36,7 +36,9 @@ def store_model(
 
     if ml_grid_object.verbose >= 1:
         print(
+            "model_store_path",
             model_store_path,
+            "log_folder_path",
             log_folder_path,
         )
 
