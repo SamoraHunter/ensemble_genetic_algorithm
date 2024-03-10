@@ -63,6 +63,17 @@ def perceptronModelGenerator(ml_grid_object, local_param_dict):
             y_pred,
         )
 
+    if ml_grid_object.verbose >= 1:
+        print("")
+        print(
+            mccscore, model, list(X_train.columns), model_train_time, auc_score, y_pred
+        )
+
     return (
-        (mccscore, model, list(X_train.columns), model_train_time, auc_score, y_pred),
+        mccscore,
+        model,
+        list(X_train.columns),
+        model_train_time,
+        auc_score,
+        y_pred,
     )

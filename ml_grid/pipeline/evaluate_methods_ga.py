@@ -58,7 +58,7 @@ from sklearn import metrics
 
 
 def get_y_pred_resolver(ensemble, ml_grid_object, valid=False):
-    if ml_grid_object.verbose >= 11:
+    if ml_grid_object.verbose >= 1:
         print("get_y_pred_resolver")
         print(ensemble)
     local_param_dict = ml_grid_object.local_param_dict

@@ -25,6 +25,7 @@ class Grid:
         # User can update grid dictionary on the object
         self.grid = {
             "weighted": ["ann", "de", "unweighted"],
+            # "weighted": ["unweighted"],
             "use_stored_base_learners": [False],
             "store_base_learners": [False],
             "resample": ["undersample"],
@@ -77,6 +78,7 @@ class Grid:
 
         random.shuffle(self.settings_list)
 
+        self.sample_n = min(sample_n, len(self.settings_list))
         self.settings_list = random.sample(self.settings_list, self.sample_n)
 
         self.settings_list_iterator = iter(self.settings_list)

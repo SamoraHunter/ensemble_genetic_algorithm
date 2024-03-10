@@ -169,6 +169,11 @@ def get_best_y_pred_unweighted(best, ml_grid_object, valid=False):
     if ml_grid_object.verbose >= 1:
         print("get_best_y_pred_unweighted: best:")
         print(best)
+        print("len(best)")
+        print(len(best))
+        print("len(best[0])")
+        print(len(best[0]))
+        print("Valid", valid)
 
     X_test_orig = ml_grid_object.X_test_orig
     y_test_orig = ml_grid_object.y_test_orig
@@ -214,6 +219,8 @@ def get_best_y_pred_unweighted(best, ml_grid_object, valid=False):
     else:
         if ml_grid_object.verbose >= 1:
             print("Predicting on non-validation set...")
+            print("Evaluating...", target_ensemble)
+            print(target_ensemble[0])
         for i in range(0, len(target_ensemble)):
             y_pred = target_ensemble[i][5]
             prediction_array.append(y_pred)
