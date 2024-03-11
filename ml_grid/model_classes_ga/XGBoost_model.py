@@ -70,7 +70,11 @@ def XGBoostModelGenerator(ml_grid_object, local_param_dict):
             700,
         ]
     )
-    gpu_id_n = get_free_gpu()
+    try:
+        gpu_id_n = get_free_gpu()
+    except:
+        gpu_id_n = '-1'
+        pass
     
     try:
         model = XGBClassifier(
