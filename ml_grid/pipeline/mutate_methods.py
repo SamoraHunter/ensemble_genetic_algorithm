@@ -45,6 +45,7 @@ def mutateEnsemble(individual, ml_grid_object):
         print(e)
         print("Failed to mutate Ensemble")
         print("Len individual", len(individual))
+        raise
         # print(individual[0])
         # print(individual)
         return individual
