@@ -27,7 +27,7 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
 
     verbose = global_parameter_val.verbose
     store_base_learners = ml_grid_object.global_params.store_base_learners
-    scale = ml_grid_object.local_param_dict.scale
+    scale = ml_grid_object.local_param_dict.get("scale")
 
     X_train = ml_grid_object.X_train
     X_test = ml_grid_object.X_test

@@ -7,6 +7,7 @@ from ml_grid.util.get_feature_selection_class_ga import feature_selection_method
 from ml_grid.util.global_params import global_parameters
 from ml_grid.util.model_methods_ga import store_model
 from ml_grid.util.param_space import ParamSpace
+from ml_grid.util.validate_param_methods import validate_max_leaf_nodes
 
 
 def GradientBoostingClassifier_ModelGenerator(ml_grid_object, local_param_dict):
@@ -66,6 +67,7 @@ def GradientBoostingClassifier_ModelGenerator(ml_grid_object, local_param_dict):
     for key in parameter_space.keys():
         sample_parameter_space[key] = random.choice(parameter_space.get(key))
 
+    parameter_space = validate_max_leaf_nodes(parameter_space)
     # fit model with random sample of global parameter space
     # display(sample_parameter_space)
     model = GradientBoostingClassifier(**sample_parameter_space)

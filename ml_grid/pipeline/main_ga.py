@@ -14,6 +14,7 @@ import tqdm
 from deap import algorithms, base, creator, tools
 
 # from ml_grid.ga_functions.ga_plots.ga_progress import plot_generation_progress_fitness
+from ml_grid.ga_functions.ga_plots.ga_progress import plot_generation_progress_fitness
 from ml_grid.model_classes_ga.logistic_regression_model import (
     logisticRegressionModelGenerator,
 )
@@ -464,18 +465,15 @@ class run:
                     best_str[0][i][1] = str(best_str[0][i][1])
                     best_str[0][i] = tuple(best_str[0][i])
 
-                plot_path = os.path.join(
-                    f"{self.ml_grid_object.base_project_dir+self.global_param_str + additional_naming}/plots/",
-                    "generation_fitness.png",
-                )
+                plot_path = f"{self.ml_grid_object.base_project_dir+self.global_param_str + additional_naming}/plots/"
 
-                # plot_generation_progress_fitness(
-                #     generation_progress_list,
-                #     pop_val,
-                #     g_val,
-                #     nb_val,
-                #     file_path=plot_path,
-                # )
+                plot_generation_progress_fitness(
+                    generation_progress_list,
+                    pop_val,
+                    g_val,
+                    nb_val,
+                    file_path=plot_path,
+                )
 
                 with open(
                     self.ml_grid_object.base_project_dir

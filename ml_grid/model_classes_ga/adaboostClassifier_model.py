@@ -42,7 +42,9 @@ def AdaBoostClassifierModelGenerator(ml_grid_object, local_param_dict):
 
     parameter_space = {
         "algorithm": ["SAMME.R", "SAMME"],
-        "base_estimator": [None],
+        "estimator": [
+            None
+        ],  # New in version 1.2: base_estimator_ was renamed to estimator_.
         "learning_rate": log_small,
         "n_estimators": log_large_long,
         "random_state": [None],
