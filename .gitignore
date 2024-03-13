@@ -27,11 +27,8 @@ share/python-wheels/
 .installed.cfg
 *.egg
 
-*tests/test_dev.ipynb
-tests\test_dev.ipynb
-tests/test_dev.ipynb
 
-ml_grid\tests\test_dev.ipynb
+*test_dev.ipynb
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
