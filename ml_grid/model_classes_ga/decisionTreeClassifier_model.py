@@ -37,6 +37,7 @@ def DecisionTreeClassifierModelGenerator(ml_grid_object, local_param_dict):
     log_med = param_dict["log_med"]
     log_zero_one = param_dict["log_zero_one"]
     lin_zero_one = param_dict["lin_zero_one"]
+
     # Initialise global parameter space----------------------------------------------------------------
 
     parameter_space = {
@@ -60,6 +61,8 @@ def DecisionTreeClassifierModelGenerator(ml_grid_object, local_param_dict):
     for key in parameter_space.keys():
         sample_parameter_space[key] = random.choice(parameter_space.get(key))
 
+    if sample_parameter_space.get("min_samples_split") == 0.0:
+        sample_parameter_space["min_samples_split"] = 0.001
     # fit model with random sample of global parameter space
     # display(sample_parameter_space)
     model = DecisionTreeClassifier(**sample_parameter_space)

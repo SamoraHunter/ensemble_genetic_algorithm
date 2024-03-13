@@ -26,7 +26,7 @@ def MLPClassifier_ModelGenerator(ml_grid_object, local_param_dict):
         ml_grid_object
     ).get_featured_selected_training_data(method="anova")
 
-    param_dict = ParamSpace(size=local_param_dict.get("param_space_size"))
+    param_dict = ParamSpace(size=local_param_dict.get("param_space_size")).param_dict
 
     log_small = param_dict["log_small"]
     bool_param = param_dict["bool_param"]
