@@ -1,3 +1,4 @@
+import itertools
 import random
 import time
 import numpy as np
@@ -56,7 +57,7 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
     parameter_space = {
         "column_length": [len(X_train.columns)],
         #'epochs': [50, 200],
-        "batch_size": [int(X.shape[0] / 100), int(X.shape[0] / 200)],
+        "batch_size": [int(X_train.shape[0] / 100), int(X_train.shape[0] / 200)],
         #'learning_rate': lr_space,
         #'learning_rate': [0.1, 0.001, 0.0005, 0.0001],
         "deep_layers_1": [2, 4, 8, 16, 32],

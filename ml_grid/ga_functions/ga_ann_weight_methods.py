@@ -224,9 +224,10 @@ from ml_grid.ga_functions.ga_ann_util import (
 
 def get_y_pred_ann_torch_weighting(best, ml_grid_object, valid=False):
 
-    if ml_grid_object.verbose >= 11:
+    if ml_grid_object.verbose >= 1:
         print("get_y_pred_ann_torch_weighting")
         print(best)
+        print("len best", len(best))
 
     y_test = ml_grid_object.y_test
     X_test_orig = ml_grid_object.X_test_orig
@@ -309,6 +310,7 @@ def get_y_pred_ann_torch_weighting(best, ml_grid_object, valid=False):
     elif not valid:
         if ml_grid_object.verbose >= 1:
             print("Training ANN weighted ensemble on full data")
+            print(target_ensemble)
         prediction_array = []
         for i in tqdm(range(0, len(target_ensemble))):
             prediction_array.append(target_ensemble[i][5])

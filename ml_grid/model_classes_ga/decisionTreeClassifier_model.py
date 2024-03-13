@@ -90,4 +90,4 @@ def DecisionTreeClassifierModelGenerator(ml_grid_object, local_param_dict):
             y_pred,
         )
 
-    return (mccscore, model, list(X_train.columns), model_train_time, auc_score)
+    return (mccscore, model, list(X_train.columns), model_train_time, auc_score, y_pred)
