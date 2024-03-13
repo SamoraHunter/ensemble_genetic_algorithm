@@ -11,7 +11,8 @@ def plot_generation_progress_fitness(
     ax.plot(x, generation_progress_list)
     plt.savefig(
         file_path
-        + "figures//"
+        + "/logs/"
+        + "figures/"
         + "best_pop="
         + str(pop_val)
         + "_g="

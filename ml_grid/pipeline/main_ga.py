@@ -465,7 +465,7 @@ class run:
                     best_str[0][i][1] = str(best_str[0][i][1])
                     best_str[0][i] = tuple(best_str[0][i])
 
-                plot_path = f"{self.ml_grid_object.base_project_dir+self.global_param_str + additional_naming}/plots/"
+                plot_path = f"{self.ml_grid_object.base_project_dir+self.global_param_str + additional_naming}/"
 
                 plot_generation_progress_fitness(
                     generation_progress_list,

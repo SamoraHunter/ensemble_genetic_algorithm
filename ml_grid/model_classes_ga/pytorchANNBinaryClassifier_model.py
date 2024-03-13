@@ -21,6 +21,8 @@ from ml_grid.util.global_params import global_parameters
 from ml_grid.util.model_methods_ga import store_model
 from sklearn.preprocessing import StandardScaler
 
+from ml_grid.util.validate_param_methods import validate_batch_size
+
 
 def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
     global_parameter_val = global_parameters()
@@ -54,10 +56,18 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
 
     # Initialise global parameter space----------------------------------------------------------------
 
+    print("ANN binary Xtrain")
+    print(X_train)
+    print(type(X_train))
+    print(int(X_train.shape[0]))
+
     parameter_space = {
         "column_length": [len(X_train.columns)],
         #'epochs': [50, 200],
-        "batch_size": [int(X_train.shape[0] / 100), int(X_train.shape[0] / 200)],
+        "batch_size": [
+            max(2, int(X_train.shape[0] / 100)),
+            max(2, int(X_train.shape[0] / 200)),
+        ],
         #'learning_rate': lr_space,
         #'learning_rate': [0.1, 0.001, 0.0005, 0.0001],
         "deep_layers_1": [2, 4, 8, 16, 32],
@@ -83,6 +93,8 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
     sample_parameter_space = {}
     for key in parameter_space.keys():
         sample_parameter_space[key] = random.choice(parameter_space.get(key))
+
+    parameter_space = validate_batch_size(parameter_space)
 
     additional_param_sample = random.choice(size_test)
 
@@ -186,6 +198,8 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
     if store_base_learners:
         try:
             store_model(
+                ml_grid_object,
+                local_param_dict,
                 mccscore,
                 model,
                 list(X_train.columns),
