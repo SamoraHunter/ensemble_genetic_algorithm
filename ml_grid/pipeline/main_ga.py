@@ -415,6 +415,9 @@ class run:
                 except Exception as e:
                     print("Failed to get best y pred and plot auc")
                     print(e)
+                    print("best_pred_orig:")
+                    print(best_pred_orig)
+                    raise
                     pass
 
                 end = time.time()

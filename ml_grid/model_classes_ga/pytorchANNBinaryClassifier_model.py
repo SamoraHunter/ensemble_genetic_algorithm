@@ -56,10 +56,10 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
 
     # Initialise global parameter space----------------------------------------------------------------
 
-    print("ANN binary Xtrain")
-    print(X_train)
-    print(type(X_train))
-    print(int(X_train.shape[0]))
+    # print("ANN binary Xtrain")
+    # print(X_train)
+    # print(type(X_train))
+    # print(int(X_train.shape[0]))
 
     parameter_space = {
         "column_length": [len(X_train.columns)],
