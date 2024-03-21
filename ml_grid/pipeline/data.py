@@ -52,9 +52,12 @@ class pipe:
         test_sample_n=0,
         config_dict=None,
         testing=False,
+        multiprocessing_ensemble=False,
     ):  # kwargs**
 
         self.testing = testing
+
+        self.multiprocessing_ensemble = multiprocessing_ensemble
 
         self.base_project_dir = base_project_dir
 

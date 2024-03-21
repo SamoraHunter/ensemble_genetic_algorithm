@@ -102,6 +102,7 @@ class Grid:
         self.g_params = [128]
 
         if self.test_grid:
+            print("Testing grid enabled")
             self.nb_params = [
                 4,
                 8,

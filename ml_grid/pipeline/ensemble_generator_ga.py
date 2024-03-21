@@ -91,22 +91,12 @@ def ensembleGenerator(nb_val=28, ml_grid_object=None):
 
     dummy_list = [x for x in range(0, nb_val)]
 
-    if nb_val > 1:
-        #
-        # if __name__ == "__main__":
-        from eventlet import GreenPool
-
-        # pool = GreenPool()
-        # Create a partial function with ml_grid_object filled
-        partial_do_work = partial(do_work, ml_grid_object=ml_grid_object)
-
-        # Now use the partial function with pool.imap
-        pool = multiprocessing.Pool(processes=2)
-        for _ in tqdm(pool.imap(partial_do_work, dummy_list), total=len(dummy_list)):
-            ensemble.append(_)
+    if ml_grid_object.multiprocessing_ensemble is False and nb_val > 1:
+        ensemble = []
+        for _ in tqdm(dummy_list, total=len(dummy_list)):
+            ensemble.append(do_work(ml_grid_object=ml_grid_object, n=_))
 
         if len(ensemble) != nb_val:
-
             print(
                 f"Error generating ensemble {len(ensemble)} {nb_val} {len(dummy_list)}"
             )
@@ -118,6 +108,30 @@ def ensembleGenerator(nb_val=28, ml_grid_object=None):
             print("Returning ensemble of size ", len(ensemble))
             print(ensemble)
         return ensemble
+
+    elif nb_val > 1:
+        # do multiprocessing
+        from eventlet import GreenPool
+
+        partial_do_work = partial(do_work, ml_grid_object=ml_grid_object)
+        pool = multiprocessing.Pool(processes=2)
+        ensemble = []
+        for _ in tqdm(pool.imap(partial_do_work, dummy_list), total=len(dummy_list)):
+            ensemble.append(_)
+
+        if len(ensemble) != nb_val:
+            print(
+                f"Error generating ensemble {len(ensemble)} {nb_val} {len(dummy_list)}"
+            )
+            raise Exception(
+                f"Error generating ensemble {len(ensemble)} {nb_val} {len(dummy_list)}"
+            )
+
+        if ml_grid_object.verbose >= 11:
+            print("Returning ensemble of size ", len(ensemble))
+            print(ensemble)
+        return ensemble
+
     else:
         print(
             "Nb_val passed <1 Returning individual of size from baseLearnerGenerator",
