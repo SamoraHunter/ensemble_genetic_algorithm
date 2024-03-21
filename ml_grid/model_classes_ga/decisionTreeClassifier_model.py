@@ -66,7 +66,7 @@ def DecisionTreeClassifierModelGenerator(ml_grid_object, local_param_dict):
         sample_parameter_space["min_samples_split"] = 0.001
     # fit model with random sample of global parameter space
     # display(sample_parameter_space)
-    parameter_space = validate_max_leaf_nodes(parameter_space)
+    sample_parameter_space = validate_max_leaf_nodes(sample_parameter_space)
 
     model = DecisionTreeClassifier(**sample_parameter_space)
 
