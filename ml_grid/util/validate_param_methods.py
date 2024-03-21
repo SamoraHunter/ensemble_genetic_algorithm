@@ -1,3 +1,6 @@
+import numpy as np
+
+
 def validate_max_leaf_nodes(param_space):
     if "max_leaf_nodes" in param_space:
         max_leaf_nodes = param_space["max_leaf_nodes"]
@@ -48,4 +51,14 @@ def validate_subsample(param_space):
     except Exception as e:
         print("Error occurred. Input param_space:", param_space)
         raise e
+    return param_space
+
+
+def validate_warm_start(param_space):
+    if "warm_start" in param_space:
+        warm_start = param_space["warm_start"]
+        if not isinstance(warm_start, bool) and not isinstance(warm_start, np.bool_):
+            # Set a default value if warm_start is invalid
+            param_space["warm_start"] = True  # Or any other valid value you prefer
+            print("Invalid value for warm_start. Setting it to default value.")
     return param_space
