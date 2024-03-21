@@ -9,6 +9,7 @@ from ml_grid.util.model_methods_ga import store_model
 from ml_grid.util.param_space import ParamSpace
 from ml_grid.util.validate_param_methods import (
     validate_max_leaf_nodes,
+    validate_min_samples_split,
     validate_subsample,
     validate_warm_start,
 )
@@ -74,6 +75,7 @@ def GradientBoostingClassifier_ModelGenerator(ml_grid_object, local_param_dict):
     sample_parameter_space = validate_max_leaf_nodes(sample_parameter_space)
     sample_parameter_space = validate_subsample(sample_parameter_space)
     sample_parameter_space = validate_warm_start(sample_parameter_space)
+    sample_parameter_space = validate_min_samples_split(sample_parameter_space)
 
     # fit model with random sample of global parameter space
     # display(sample_parameter_space)

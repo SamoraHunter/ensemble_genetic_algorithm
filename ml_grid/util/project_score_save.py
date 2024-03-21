@@ -1,3 +1,4 @@
+import os
 import time
 import traceback
 import warnings
@@ -98,12 +99,15 @@ class project_score_save_class:
 
         df = pd.DataFrame(data=None, columns=column_list)
 
-        df.to_csv(
-            base_project_dir + "final_grid_score_log.csv",
-            mode="w",
-            header=True,
-            index=False,
-        )
+        file_path = base_project_dir + "final_grid_score_log.csv"
+
+        if not os.path.exists(file_path):
+            df.to_csv(
+                file_path,
+                mode="w",
+                header=True,
+                index=False,
+            )
 
     def update_score_log(
         self,

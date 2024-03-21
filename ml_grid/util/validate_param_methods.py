@@ -35,19 +35,24 @@ def validate_subsample(param_space):
                     ):
                         # Set a default value within the valid range if subsample is invalid
                         param_space["subsample"][i] = max(
-                            0.0, min(float(subsample[i]), 1.0)
-                        )
+                            0.01, min(float(subsample[i]), 1.0)
+                        )  # Change default value to 0.01
                         print(
                             f"Invalid value for subsample[{i}]. Setting it to a value within the valid range."
                         )
-            elif (
-                not isinstance(subsample, float) or subsample <= 0.0 or subsample > 1.0
-            ):
-                # If subsample is not a list but a single value, validate it directly
-                param_space["subsample"] = max(0.0, min(float(subsample), 1.0))
-                print(
-                    "Invalid value for subsample. Setting it to a value within the valid range."
-                )
+            else:
+                if (
+                    not isinstance(subsample, float)
+                    or subsample <= 0.0
+                    or subsample > 1.0
+                ):
+                    # If subsample is not a list but a single value, validate it directly
+                    param_space["subsample"] = max(
+                        0.01, min(float(subsample), 1.0)
+                    )  # Change default value to 0.01
+                    print(
+                        "Invalid value for subsample. Setting it to a value within the valid range."
+                    )
     except Exception as e:
         print("Error occurred. Input param_space:", param_space)
         raise e
@@ -61,4 +66,16 @@ def validate_warm_start(param_space):
             # Set a default value if warm_start is invalid
             param_space["warm_start"] = True  # Or any other valid value you prefer
             print("Invalid value for warm_start. Setting it to default value.")
+    return param_space
+
+
+def validate_min_samples_split(param_space):
+    if "min_samples_split" in param_space:
+        min_samples_split = param_space["min_samples_split"]
+        if not (isinstance(min_samples_split, int) and min_samples_split >= 2) and not (
+            isinstance(min_samples_split, float) and 0.0 < min_samples_split < 1.0
+        ):
+            # Set a default value if min_samples_split is invalid
+            param_space["min_samples_split"] = 2  # Or any other valid value you prefer
+            print("Invalid value for min_samples_split. Setting it to default value.")
     return param_space
