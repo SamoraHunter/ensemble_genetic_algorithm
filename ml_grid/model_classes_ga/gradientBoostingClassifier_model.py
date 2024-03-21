@@ -70,8 +70,8 @@ def GradientBoostingClassifier_ModelGenerator(ml_grid_object, local_param_dict):
     for key in parameter_space.keys():
         sample_parameter_space[key] = random.choice(parameter_space.get(key))
 
-    parameter_space = validate_max_leaf_nodes(parameter_space)
-    parameter_space = validate_subsample(parameter_space)
+    sample_parameter_space = validate_max_leaf_nodes(sample_parameter_space)
+    sample_parameter_space = validate_subsample(sample_parameter_space)
 
     # fit model with random sample of global parameter space
     # display(sample_parameter_space)

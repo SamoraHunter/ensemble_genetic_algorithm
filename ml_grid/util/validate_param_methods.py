@@ -19,27 +19,33 @@ def validate_batch_size(param_space):
 
 
 def validate_subsample(param_space):
-    if "subsample" in param_space:
-        subsample = param_space["subsample"]
-        if isinstance(subsample, list):
-            # If subsample is a list, iterate over its elements and validate each one
-            for i in range(len(subsample)):
-                if (
-                    not isinstance(subsample[i], float)
-                    or subsample[i] <= 0.0
-                    or subsample[i] > 1.0
-                ):
-                    # Set a default value within the valid range if subsample is invalid
-                    param_space["subsample"][i] = max(
-                        0.0, min(float(subsample[i]), 1.0)
-                    )
-                    print(
-                        f"Invalid value for subsample[{i}]. Setting it to a value within the valid range."
-                    )
-        elif not isinstance(subsample, float) or subsample <= 0.0 or subsample > 1.0:
-            # If subsample is not a list but a single value, validate it directly
-            param_space["subsample"] = max(0.0, min(float(subsample), 1.0))
-            print(
-                "Invalid value for subsample. Setting it to a value within the valid range."
-            )
+    try:
+        if "subsample" in param_space:
+            subsample = param_space["subsample"]
+            if isinstance(subsample, list):
+                # If subsample is a list, iterate over its elements and validate each one
+                for i in range(len(subsample)):
+                    if (
+                        not isinstance(subsample[i], float)
+                        or subsample[i] <= 0.0
+                        or subsample[i] > 1.0
+                    ):
+                        # Set a default value within the valid range if subsample is invalid
+                        param_space["subsample"][i] = max(
+                            0.0, min(float(subsample[i]), 1.0)
+                        )
+                        print(
+                            f"Invalid value for subsample[{i}]. Setting it to a value within the valid range."
+                        )
+            elif (
+                not isinstance(subsample, float) or subsample <= 0.0 or subsample > 1.0
+            ):
+                # If subsample is not a list but a single value, validate it directly
+                param_space["subsample"] = max(0.0, min(float(subsample), 1.0))
+                print(
+                    "Invalid value for subsample. Setting it to a value within the valid range."
+                )
+    except Exception as e:
+        print("Error occurred. Input param_space:", param_space)
+        raise e
     return param_space
