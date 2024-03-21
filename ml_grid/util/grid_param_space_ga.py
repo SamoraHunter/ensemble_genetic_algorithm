@@ -28,14 +28,14 @@ class Grid:
             # "weighted": ["unweighted"],
             "use_stored_base_learners": [False],
             "store_base_learners": [False],
-            "resample": ["undersample"],
+            "resample": ["undersample", "oversample", None],
             "scale": [True],
             "n_features": ["all"],
             "param_space_size": ["medium"],
             "n_unique_out": [10],
             "outcome_var_n": ["1"],
             "div_p": [0],
-            "percent_missing": [99.9, 95, 90],  # n/100 ex 95 for 95%
+            "percent_missing": [99.9, 99.8, 99.7],  # n/100 ex 95 for 95%
             "corr": [0.9, 0.99],
             "cxpb": [0.5, 0.75, 0.25],
             "mutpb": [0.2, 0.4, 0.8],
@@ -60,7 +60,7 @@ class Grid:
                     "hosp_site": [True],
                     "core_resus": [True],
                     "news": [True],
-                    "date_time_stamp": [True],
+                    "date_time_stamp": [False],
                 }
             ],
         }
@@ -97,11 +97,14 @@ class Grid:
         # pop_params = [32, 64, 128]
         # g_params = [128]
 
-        self.nb_params = [4]
-        self.pop_params = [4]
-        self.g_params = [2]
+        self.nb_params = [4, 8, 16, 32]
+        self.pop_params = [32, 64]
+        self.g_params = [128]
 
         if self.test_grid:
-            self.nb_params = [4, 8, 16]
-            self.pop_params = [10, 20]
-            self.g_params = [10, 30]
+            self.nb_params = [
+                4,
+                8,
+            ]
+            self.pop_params = [4, 8]
+            self.g_params = [2, 4]

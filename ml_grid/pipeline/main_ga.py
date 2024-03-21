@@ -46,7 +46,7 @@ class run:
 
         self.error_raise = self.global_params.error_raise
 
-        ga_grid = Grid()
+        ga_grid = Grid(test_grid=ml_grid_object.testing)
 
         # pass in and get outside
         self.nb_params, self.pop_params, self.g_params = (

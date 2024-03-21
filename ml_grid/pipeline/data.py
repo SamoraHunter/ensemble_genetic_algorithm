@@ -51,7 +51,10 @@ class pipe:
         additional_naming=None,
         test_sample_n=0,
         config_dict=None,
+        testing=False,
     ):  # kwargs**
+
+        self.testing = testing
 
         self.base_project_dir = base_project_dir
 
