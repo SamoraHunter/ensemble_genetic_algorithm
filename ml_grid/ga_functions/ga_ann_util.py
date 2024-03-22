@@ -74,18 +74,24 @@ class TestData(Dataset):
 
 
 def get_free_gpu():
-    gpu_stats = subprocess.check_output(
-        ["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"]
-    )
-    gpu_df = pd.read_csv(
-        StringIO(gpu_stats.decode("utf-8")),
-        names=["memory.used", "memory.free"],
-        skiprows=1,
-    )
-    # print('GPU usage:\n{}'.format(gpu_df))
-    gpu_df["memory.free"] = gpu_df["memory.free"].map(lambda x: x.rstrip(" [MiB]"))
-    idx = gpu_df["memory.free"].astype(int).idxmax()
-    print(
-        "Returning GPU{} with {} free MiB".format(idx, gpu_df.iloc[idx]["memory.free"])
-    )
-    return int(idx)
+    try:
+        gpu_stats = subprocess.check_output(
+            ["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"]
+        )
+        gpu_df = pd.read_csv(
+            StringIO(gpu_stats.decode("utf-8")),
+            names=["memory.used", "memory.free"],
+            skiprows=1,
+        )
+        # print('GPU usage:\n{}'.format(gpu_df))
+        gpu_df["memory.free"] = gpu_df["memory.free"].map(lambda x: x.rstrip(" [MiB]"))
+        idx = gpu_df["memory.free"].astype(int).idxmax()
+        print(
+            "Returning GPU{} with {} free MiB".format(
+                idx, gpu_df.iloc[idx]["memory.free"]
+            )
+        )
+        return int(idx)
+    except Exception as e:
+        # print("Error:", e)
+        return -1

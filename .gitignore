@@ -27,7 +27,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 
-
+test_dev.ipynb
 *test_dev.ipynb
 
 # PyInstaller
