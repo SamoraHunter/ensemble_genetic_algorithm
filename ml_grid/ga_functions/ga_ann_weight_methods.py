@@ -424,14 +424,15 @@ def train_ann_weight(input_shape, batch_size, train_data, test_data):
     for key in additional_grid.keys():
         additional_param_sample[key] = random.choice(additional_grid.get(key))
 
-    print(sample_parameter_space)
+    # print(sample_parameter_space)
 
-    print(additional_param_sample)
+    # print(additional_param_sample)
 
     # os.environ["CUDA_VISIBLE_DEVICES"]=free_gpu
 
     device = torch.device(f"cuda:{free_gpu}" if torch.cuda.is_available() else "cpu")
-    print(device)
+
+    # print(device)
 
     train_loader = DataLoader(
         dataset=train_data,

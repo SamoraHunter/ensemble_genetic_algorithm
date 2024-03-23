@@ -102,16 +102,18 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
     for key in additional_grid.keys():
         additional_param_sample[key] = random.choice(additional_grid.get(key))
 
-    print(sample_parameter_space)
+    if ml_grid_object.verbose > 0:
+        print(sample_parameter_space)
 
-    print(additional_param_sample)
+        print(additional_param_sample)
 
     free_gpu = str(get_free_gpu())
 
     # os.environ["CUDA_VISIBLE_DEVICES"]=free_gpu
 
     device = torch.device(f"cuda:{free_gpu}" if torch.cuda.is_available() else "cpu")
-    print(device)
+    if ml_grid_object.verbose > 0:
+        print(device)
 
     train_loader = DataLoader(
         dataset=train_data,
@@ -148,10 +150,10 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
 
             epoch_loss += loss.item()
             epoch_acc += acc.item()
-
-    print(
-        f"Epoch {e+0:03}: | Loss: {epoch_loss/len(train_loader):.5f} | Acc: {epoch_acc/len(train_loader):.3f}"
-    )
+    if ml_grid_object.verbose > 2:
+        print(
+            f"Epoch {e+0:03}: | Loss: {epoch_loss/len(train_loader):.5f} | Acc: {epoch_acc/len(train_loader):.3f}"
+        )
 
     para_str = (
         str(settings)
@@ -168,7 +170,8 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
     y_pred = torch.round(torch.sigmoid(y_pred)).cpu().detach().numpy().flatten()
 
     if any(np.isnan(y_pred)):
-        print("Torch model nan, returning random y pred vector")
+        if ml_grid_object.verbose > 1:
+            print("Torch model nan, returning random y pred vector")
         # zero_vector = [x for x in range(0, len(y_pred))]
         # y_pred = zero_vector
         random_y_pred_vector = (
