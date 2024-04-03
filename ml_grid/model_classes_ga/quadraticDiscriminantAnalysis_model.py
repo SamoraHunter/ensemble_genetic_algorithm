@@ -8,7 +8,6 @@ from ml_grid.util.get_feature_selection_class_ga import feature_selection_method
 from ml_grid.util.global_params import global_parameters
 from ml_grid.util.model_methods_ga import store_model
 from ml_grid.util.param_space import ParamSpace
-from sklearn.exceptions import LinAlgError
 
 
 def QuadraticDiscriminantAnalysis_ModelGenerator(ml_grid_object, local_param_dict):
@@ -63,7 +62,7 @@ def QuadraticDiscriminantAnalysis_ModelGenerator(ml_grid_object, local_param_dic
 
         # predict
         y_pred = model.predict(X_test)
-    except LinAlgError as e:
+    except np.linalg.LinAlgError as e:
         if verbose >= 1:
             print("Encountered LinAlgError:", e)
 
