@@ -64,7 +64,8 @@ def QuadraticDiscriminantAnalysis_ModelGenerator(ml_grid_object, local_param_dic
         # predict
         y_pred = model.predict(X_test)
     except LinAlgError as e:
-        print("Encountered LinAlgError:", e)
+        if verbose >= 1:
+            print("Encountered LinAlgError:", e)
 
         X_test_length = len(X_test)
 
