@@ -165,9 +165,18 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
         .replace(" ", "_")
     ).replace("__", "_")
 
-    y_pred = model(test_data.X_data.to(device))
+    try:
+        y_pred = model(test_data.X_data.to(device))
 
-    y_pred = torch.round(torch.sigmoid(y_pred)).cpu().detach().numpy().flatten()
+        y_pred = torch.round(torch.sigmoid(y_pred)).cpu().detach().numpy().flatten()
+
+    except ValueError as e:
+        if verbose >= 1:
+            print(e)
+            print("Returning random label vector")
+            X_test_length = len(X_test)
+
+            y_pred = np.random.randint(2, size=X_test_length)
 
     if any(np.isnan(y_pred)):
         if ml_grid_object.verbose > 1:
