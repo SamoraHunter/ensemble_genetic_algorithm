@@ -1,5 +1,6 @@
 import random
 import time
+import numpy as np
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.metrics import matthews_corrcoef, roc_auc_score
 from ml_grid.util.debug_methods_ga import debug_base_learner
@@ -7,6 +8,7 @@ from ml_grid.util.get_feature_selection_class_ga import feature_selection_method
 from ml_grid.util.global_params import global_parameters
 from ml_grid.util.model_methods_ga import store_model
 from ml_grid.util.param_space import ParamSpace
+from sklearn.exceptions import LinAlgError
 
 
 def QuadraticDiscriminantAnalysis_ModelGenerator(ml_grid_object, local_param_dict):
@@ -55,10 +57,19 @@ def QuadraticDiscriminantAnalysis_ModelGenerator(ml_grid_object, local_param_dic
     model = QuadraticDiscriminantAnalysis(**sample_parameter_space)
 
     # Train the model--------------------------------------------------------------------
-    model.fit(X_train, y_train)
+    try:
 
-    # predict
-    y_pred = model.predict(X_test)
+        model.fit(X_train, y_train)
+
+        # predict
+        y_pred = model.predict(X_test)
+    except LinAlgError as e:
+        print("Encountered LinAlgError:", e)
+
+        X_test_length = len(X_test)
+
+        y_pred = np.random.randint(2, size=X_test_length)
+
     mccscore = matthews_corrcoef(y_test, y_pred)
 
     auc_score = round(roc_auc_score(y_test, y_pred), 4)
