@@ -26,6 +26,7 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+installation_log.txt
 
 test_dev.ipynb
 *test_dev.ipynb
