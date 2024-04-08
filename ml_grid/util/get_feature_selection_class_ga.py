@@ -98,6 +98,7 @@ class feature_selection_methods_class():
         except Exception as e:
             print(e)
             print("Failed to get xgboost feature columns")
+            raise e
 
         return finalColNames
 
