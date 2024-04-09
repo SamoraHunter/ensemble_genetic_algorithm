@@ -472,7 +472,7 @@ def train_ann_weight(input_shape, batch_size, train_data, test_data):
         # print(f'Epoch {e+0:03}: | Loss: {epoch_loss/len(train_loader):.5f} | Acc: {epoch_acc/len(train_loader):.3f} | AUC: {torchmetrics.functional.auc(y_batch, y_pred, reorder=True)}')
 
     print(
-        f"Epoch {e+0:03}: | Loss: {epoch_loss/len(train_loader):.5f} | Acc: {epoch_acc/len(train_loader):.3f} | AUC: {torchmetrics.functional.auc(y_batch, y_pred, reorder=True)}"
+        f"Epoch {e+0:03}: | Loss: {epoch_loss/len(train_loader):.5f} | Acc: {epoch_acc/len(train_loader):.3f} "#| AUC: {torchmetrics.functional.auc(y_batch, y_pred, reorder=True)
     )
 
     para_str = (

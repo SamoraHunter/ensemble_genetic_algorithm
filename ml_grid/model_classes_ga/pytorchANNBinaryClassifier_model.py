@@ -116,7 +116,7 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
 
         print(additional_param_sample)
 
-    free_gpu = str(get_free_gpu())
+    free_gpu = str(get_free_gpu(ml_grid_object))
 
     # os.environ["CUDA_VISIBLE_DEVICES"]=free_gpu
 
@@ -150,7 +150,18 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
             optimizer.zero_grad()
 
             #y_pred = model(X_batch)
-            y_pred = predict_with_fallback(model = model, X_batch = X_batch)
+            #print(X_batch.shape)
+            #print(type(X_batch)) #torch torch.Tensor
+            try:
+                y_pred = predict_with_fallback(model = model, X_batch = X_batch)
+
+            except Exception as e:
+                print(e)
+                print("Failed ypred fallback")
+                print("X_batch shape,", X_batch.shape)
+                print("Y_batch.shape", y_batch.shape)
+                print("Y_pred.shape", y_pred.shape, type(y_pred), )
+                raise e
 
             loss = criterion(y_pred, y_batch.unsqueeze(1))
             acc = binary_acc(y_pred, y_batch.unsqueeze(1))

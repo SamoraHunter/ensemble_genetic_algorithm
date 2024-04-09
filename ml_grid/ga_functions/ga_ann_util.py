@@ -73,7 +73,11 @@ class TestData(Dataset):
         return len(self.X_data)
 
 
-def get_free_gpu():
+def get_free_gpu(ml_grid_object=None):
+    verbosity = 0
+    if ml_grid_object is not None:
+        verbosity = ml_grid_object.verbose
+    
     try:
         gpu_stats = subprocess.check_output(
             ["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"]
@@ -86,11 +90,13 @@ def get_free_gpu():
         # print('GPU usage:\n{}'.format(gpu_df))
         gpu_df["memory.free"] = gpu_df["memory.free"].map(lambda x: x.rstrip(" [MiB]"))
         idx = gpu_df["memory.free"].astype(int).idxmax()
-        print(
-            "Returning GPU{} with {} free MiB".format(
-                idx, gpu_df.iloc[idx]["memory.free"]
+        
+        if(verbosity>=6):
+            print(
+                "Returning GPU{} with {} free MiB".format(
+                    idx, gpu_df.iloc[idx]["memory.free"]
+                )
             )
-        )
         return int(idx)
     except Exception as e:
         # print("Error:", e)

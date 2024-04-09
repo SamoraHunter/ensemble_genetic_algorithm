@@ -74,7 +74,7 @@ def XGBoostModelGenerator(ml_grid_object, local_param_dict):
         ]
     )
     try:
-        gpu_id_n = get_free_gpu()
+        gpu_id_n = get_free_gpu(ml_grid_object)
     except:
         gpu_id_n = "-1"
         pass

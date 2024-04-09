@@ -123,29 +123,34 @@ def super_ensemble_weight_finder_differential_evolution(
     bounds = [(0, 1) for x in range(0, len(best[0]))]
 
     start = time.time()
-    de = scipy.optimize.differential_evolution(
-        get_weighted_ensemble_prediction_de_cython,
-        bounds,
-        args=((prediction_matrix_raw, y_test)),
-        strategy="best1bin",
-        maxiter=20,
-        popsize=15,
-        tol=0.01,
-        mutation=(0.5, 1),
-        recombination=0.7,
-        seed=None,
-        callback=None,
-        disp=False,
-        polish=True,
-        init="latinhypercube",
-        atol=0,
-        updating="immediate",
-        workers=4,
-        constraints=(),
-        x0=None,
-        # integrality=None,
-        # vectorized=False
-    )
+    try:
+        de = scipy.optimize.differential_evolution(
+            get_weighted_ensemble_prediction_de_cython,
+            bounds,
+            args=((prediction_matrix_raw, y_test)),
+            strategy="best1bin",
+            maxiter=20,
+            popsize=15,
+            tol=0.01,
+            mutation=(0.5, 1),
+            recombination=0.7,
+            seed=None,
+            callback=None,
+            disp=False,
+            polish=True,
+            init="latinhypercube",
+            atol=0,
+            updating="immediate",
+            workers=4,
+            constraints=(),
+            x0=None,
+            # integrality=None,
+            # vectorized=False
+        )
+    except Exception as e:
+        print("Failed on s e wf DE", e)
+        print(prediction_matrix_raw, y_test)
+        raise e
 
     score = 1 - de.fun
     optimal_weights = de.x

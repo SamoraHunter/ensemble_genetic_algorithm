@@ -45,6 +45,7 @@ def do_work(n=0, ml_grid_object=None):
     except Exception as e:
         print(e)
         print(f"Failed to return model at index {index}, returning perceptron")
+        raise e
         return modelFuncList[1](ml_grid_object, ml_grid_object.local_param_dict)
 
     # return random.choice(modelFuncList)
