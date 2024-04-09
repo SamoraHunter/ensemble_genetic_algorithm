@@ -18,6 +18,8 @@ from scipy import stats
 
 from sklearn import datasets, feature_selection, linear_model, metrics, svm, tree
 
+from ml_grid.ga_functions.ga_ann_util import BinaryClassification
+
 from sklearn.metrics import (
     accuracy_score,
     classification_report,
@@ -42,38 +44,6 @@ def normalize(weights):
         return weights
     # return normalized vector (unit norm)
     return weights / result
-
-
-# should call from import:
-class BinaryClassification(nn.Module):
-    def __init__(self, column_length, deep_layers_1, batch_size, dropout_val):
-        super(BinaryClassification, self).__init__()
-        # Number of input features is 12.
-        self.layer_1 = nn.Linear(column_length, batch_size)
-        self.layer_2 = nn.Linear(batch_size, batch_size)
-        layers = []
-        for i in range(0, deep_layers_1):
-            layers.append(nn.Linear(batch_size, batch_size))
-
-        self.deep_layers = nn.Sequential(*layers)
-
-        self.layer_out = nn.Linear(batch_size, 1)
-
-        self.relu = nn.ReLU()
-        self.dropout = nn.Dropout(p=dropout_val)
-        self.batchnorm1 = nn.BatchNorm1d(batch_size)
-        self.batchnorm2 = nn.BatchNorm1d(batch_size)
-
-    def forward(self, inputs):
-        x = self.relu(self.layer_1(inputs))
-        x = self.batchnorm1(x)
-        x = self.relu(self.layer_2(x))
-        x = self.relu(self.deep_layers(x))
-        x = self.batchnorm2(x)
-        x = self.dropout(x)
-        x = self.layer_out(x)
-
-        return x
 
 
 ## train data
