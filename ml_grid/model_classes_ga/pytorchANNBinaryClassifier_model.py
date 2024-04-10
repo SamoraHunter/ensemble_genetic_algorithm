@@ -24,14 +24,38 @@ from sklearn.preprocessing import StandardScaler
 from ml_grid.util.validate_param_methods import validate_batch_size
 
 
-def predict_with_fallback(model, X_batch):
+# def predict_with_fallback(model, X_batch):
+#     try:
+#         y_pred = model(X_batch)
+#         return y_pred
+#     except:
+#         # If an exception occurs (e.g., model prediction fails), generate a random binary vector
+#         random_binary_vector = np.random.randint(2, size=X_batch.shape[0])
+#         return random_binary_vector
+
+
+def predict_with_fallback(model, X_batch, y_batch):
+    """
+    Predict using the model with fallback mechanism.
+
+    Parameters:
+    model (object): The model used for prediction.
+    X_batch (object): The input data batch.
+    y_batch (object): The target data batch.
+
+    Returns:
+    object: The predicted output or a random binary vector in case of an exception.
+    """
+
+    # Use model prediction if possible
     try:
         y_pred = model(X_batch)
-        return y_pred
+
+    # If prediction fails, generate a random binary vector
     except:
-        # If an exception occurs (e.g., model prediction fails), generate a random binary vector
-        random_binary_vector = np.random.randint(2, size=X_batch.shape[0])
-        return random_binary_vector
+        y_pred = torch.randint(2, size=y_batch.shape, device=X_batch.device)
+
+    return y_pred
 
 def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
     global_parameter_val = global_parameters()
@@ -162,11 +186,6 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
                 print("Y_batch.shape", y_batch.shape)
                 print("Y_pred.shape", y_pred.shape, type(y_pred), )
                 raise e
-            
-            print("pre: loss = criterion")
-            print("X_batch shape,", X_batch.shape)
-            print("Y_batch.shape", y_batch.shape)
-            print("Y_pred.shape", y_pred.shape, type(y_pred), )
 
             loss = criterion(y_pred, y_batch.unsqueeze(1))
             acc = binary_acc(y_pred, y_batch.unsqueeze(1))
