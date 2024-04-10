@@ -99,11 +99,11 @@ class pipe:
         else:
             self.df = read_in.read(file_name,).raw_input_data
 
-        if test_sample_n > 0:
+        if test_sample_n > 0 and read_in_sample == False:
             print("sampling 200 for debug/trial purposes...")
             self.df = self.df.sample(test_sample_n)
 
-        if column_sample_n > 0:
+        if column_sample_n > 0 and read_in_sample == False:
             # Check if 'age' and 'male' columns are in the original DataFrame
             if 'age' in self.df.columns and 'male' in self.df.columns and 'outcome_var_1' in self.df.columns:
                 original_columns = ['age', 'male', 'outcome_var_1']
