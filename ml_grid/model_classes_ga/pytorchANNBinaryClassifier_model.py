@@ -25,13 +25,22 @@ from ml_grid.util.validate_param_methods import validate_batch_size
 
 
 def predict_with_fallback(model, X_batch):
+    
+    print("predict_with_fallback", X_batch.shape)
+    
     try:
         y_pred = model(X_batch)
         return y_pred
     except:
         # If an exception occurs (e.g., model prediction fails), generate a random binary vector
-        random_binary_vector = np.random.randint(2, size=X_batch.shape[0])
-        return random_binary_vector
+        #random_binary_vector = np.random.randint(2, size=X_batch.shape[0])
+        X_batch_shape_0 = X_batch.size(0)
+        random_binary_vector = torch.randint(2, size=(X_batch_shape_0,))
+        
+        X_batch_shape = X_batch.shape
+        random_binary_tensor = torch.randint(2, size=X_batch_shape)
+        print("Returning random_binary_tensor", random_binary_tensor)
+        return random_binary_tensor
 
 def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
     global_parameter_val = global_parameters()
@@ -162,6 +171,11 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
                 print("Y_batch.shape", y_batch.shape)
                 print("Y_pred.shape", y_pred.shape, type(y_pred), )
                 raise e
+            
+            print("pre: loss = criterion")
+            print("X_batch shape,", X_batch.shape)
+            print("Y_batch.shape", y_batch.shape)
+            print("Y_pred.shape", y_pred.shape, type(y_pred), )
 
             loss = criterion(y_pred, y_batch.unsqueeze(1))
             acc = binary_acc(y_pred, y_batch.unsqueeze(1))
