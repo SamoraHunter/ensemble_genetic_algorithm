@@ -52,7 +52,15 @@ def predict_with_fallback(model, X_batch, y_batch):
         y_pred = model(X_batch)
 
     # If prediction fails, generate a random binary vector
-    except:
+    except Exception as e:
+        print(e)
+        print("Failed ypred fallback")
+        print("X_batch shape,", X_batch.shape)
+        print("Y_batch.shape", y_batch.shape)
+        #print("Y_pred.shape", y_pred.shape, type(y_pred), )
+        raise e
+
+
         y_pred = torch.randint(2, size=X_batch.shape, device=X_batch.device)
 
     return y_pred
@@ -106,6 +114,7 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
         "deep_layers_1": [2, 4, 8, 16, 32],
         "dropout_val": [0.1, 0.01, 0.001],
     }
+    #print("parameter_space", parameter_space)
 
     additional_grid = {
         "epochs": [10, 50, 100],
@@ -152,8 +161,9 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
         dataset=train_data,
         batch_size=sample_parameter_space["batch_size"],
         shuffle=True,
+        drop_last=True
     )
-    test_loader = DataLoader(dataset=test_data, batch_size=1)
+    #test_loader = DataLoader(dataset=test_data, batch_size=1)
 
     # fit model with random sample of global parameter space
     model = BinaryClassification(**sample_parameter_space)
