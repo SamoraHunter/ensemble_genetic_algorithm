@@ -96,8 +96,8 @@ class pipe:
 
         if read_in_sample and test_sample_n > 0 or column_sample_n > 0:
             self.df = read_in.read_sample(file_name, test_sample_n, column_sample_n).raw_input_data
-
-        self.df = read_in.read(file_name,).raw_input_data
+        else:
+            self.df = read_in.read(file_name,).raw_input_data
 
         if test_sample_n > 0:
             print("sampling 200 for debug/trial purposes...")
