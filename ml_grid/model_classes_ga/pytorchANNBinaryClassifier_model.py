@@ -25,22 +25,13 @@ from ml_grid.util.validate_param_methods import validate_batch_size
 
 
 def predict_with_fallback(model, X_batch):
-    
-    print("predict_with_fallback", X_batch.shape)
-    
     try:
         y_pred = model(X_batch)
         return y_pred
     except:
         # If an exception occurs (e.g., model prediction fails), generate a random binary vector
-        #random_binary_vector = np.random.randint(2, size=X_batch.shape[0])
-        X_batch_shape_0 = X_batch.size(0)
-        random_binary_vector = torch.randint(2, size=(X_batch_shape_0,))
-        
-        X_batch_shape = X_batch.shape
-        random_binary_tensor = torch.randint(2, size=X_batch_shape)
-        print("Returning random_binary_tensor", random_binary_tensor)
-        return random_binary_tensor
+        random_binary_vector = np.random.randint(2, size=X_batch.shape[0])
+        return random_binary_vector
 
 def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
     global_parameter_val = global_parameters()
@@ -162,7 +153,7 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
             #print(X_batch.shape)
             #print(type(X_batch)) #torch torch.Tensor
             try:
-                y_pred = predict_with_fallback(model = model, X_batch = X_batch)
+                y_pred = predict_with_fallback(model = model, X_batch = X_batch, y_batch=y_batch)
 
             except Exception as e:
                 print(e)

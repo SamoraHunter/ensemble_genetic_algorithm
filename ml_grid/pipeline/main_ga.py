@@ -272,7 +272,7 @@ class run:
 
                 while g < g_val and gen_eval_score < 0.999 and stop_early == False:
                     
-                    if(self.ml_grid_object.verbose<9):
+                    if(self.ml_grid_object.verbose<9 and g % 2==0):
                         clear_output(wait=False)
                     # while g < 50: alt ::  while g < g_val and  ?? eval some how measure AUC or mcc of ensemble?
                     # for i in tqdm(range(0, g_val)):
