@@ -53,7 +53,7 @@ def predict_with_fallback(model, X_batch, y_batch):
 
     # If prediction fails, generate a random binary vector
     except:
-        y_pred = torch.randint(2, size=y_batch.shape, device=X_batch.device)
+        y_pred = torch.randint(2, size=X_batch.shape, device=X_batch.device)
 
     return y_pred
 
