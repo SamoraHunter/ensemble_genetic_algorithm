@@ -50,6 +50,7 @@ class pipe:
         param_space_index,
         additional_naming=None,
         test_sample_n=0,
+        column_sample_n=0,
         config_dict=None,
         testing=False,
         multiprocessing_ensemble=False,
@@ -97,6 +98,28 @@ class pipe:
         if test_sample_n > 0:
             print("sampling 200 for debug/trial purposes...")
             self.df = self.df.sample(test_sample_n)
+
+        if column_sample_n > 0:
+            # Check if 'age' and 'male' columns are in the original DataFrame
+            if 'age' in self.df.columns and 'male' in self.df.columns and 'outcome_var_1' in self.df.columns:
+                original_columns = ['age', 'male', 'outcome_var_1']
+            else:
+                original_columns = []
+            
+            print("Sampling", column_sample_n, "columns for additional debug/trial purposes...")
+            
+            # Sample the columns
+            sampled_columns = self.df.sample(n=column_sample_n, axis=1).columns
+            
+            # Ensure original columns are retained
+            new_columns = list(set(sampled_columns) | set(original_columns))
+            
+            # Reassign DataFrame with sampled columns
+            self.df = self.df[new_columns].copy()
+            
+            print("Result df shape", self.df.shape)
+
+
 
         self.all_df_columns = list(self.df.columns)
 
