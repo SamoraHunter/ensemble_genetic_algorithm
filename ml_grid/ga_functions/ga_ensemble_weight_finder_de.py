@@ -53,32 +53,31 @@ def normalize(weights):
 def get_weighted_ensemble_prediction_de_cython(weights, prediction_matrix_raw, y_test):
     """Function used by DE algo to search for optimal weights with scoring"""
 
+    
+
+    clean_prediction_matrix = prediction_matrix_raw.copy()
+    weights = normalize(weights)
+
+    weighted_prediction_matrix_array = (
+        np.array(clean_prediction_matrix) * weights[:, None]
+    )
+    collapsed_weighted_prediction_matrix_array = (
+        weighted_prediction_matrix_array.sum(axis=0)
+    )
+
+    y_pred_best = round_v(collapsed_weighted_prediction_matrix_array)
     try:
-
-        clean_prediction_matrix = prediction_matrix_raw.copy()
-        weights = normalize(weights)
-
-        weighted_prediction_matrix_array = (
-            np.array(clean_prediction_matrix) * weights[:, None]
-        )
-        collapsed_weighted_prediction_matrix_array = (
-            weighted_prediction_matrix_array.sum(axis=0)
-        )
-
-        y_pred_best = round_v(collapsed_weighted_prediction_matrix_array)
-        try:
-            auc = metrics.roc_auc_score(y_test, y_pred_best)
-            score = auc
-            return 1 - score
-        except Exception as e:
-            print(y_test)
-            print(y_pred_best)
-            print(type(y_test))
-            print(type(y_pred_best))
-            raise e
-
+        auc = metrics.roc_auc_score(y_test, y_pred_best)
+        score = auc
+        return 1 - score
     except Exception as e:
-        print("Error: get_weighted_ensemble_prediction_de_cython", e)
+        print(y_test)
+        print(y_pred_best)
+        print(type(y_test))
+        print(type(y_pred_best))
+        raise e
+
+
 
 
 # Only get weights from xtrain/ytrain, never get weights from xtest y test. Use weights on x_validation yhat to compare to ytrue_valid
@@ -93,6 +92,9 @@ def super_ensemble_weight_finder_differential_evolution(
     y_test = ml_grid_object.y_test
     
     y_test = y_test.copy()  # WRITEABLE error fix?
+    if isinstance(y_test, pd.Series):
+        y_test = y_test.values
+    
 
     # debug = ml_grid_object.debug  # set in data? ????
 
