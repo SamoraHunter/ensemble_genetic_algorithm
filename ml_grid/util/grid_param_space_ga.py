@@ -25,7 +25,7 @@ class Grid:
         # User can update grid dictionary on the object
         self.grid = {
             "weighted": ["ann", "de", "unweighted"],
-            # "weighted": ["unweighted"],
+            #"weighted": ["unweighted"],
             "use_stored_base_learners": [False],
             "store_base_learners": [False],
             "resample": ["undersample", "oversample", None],
