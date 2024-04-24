@@ -309,6 +309,9 @@ def measure_binary_vector_diversity(ensemble, metric="jaccard"):
     # then (0.5 * 0.1)*2  = 0.1
     # and  (0.5 * 0.5)*2) = 0.5
     # needs diversity_parameter to modify strength?
+    # print("Diversity ensemble..")
+    # print(ensemble)
+    # raise
 
     n_y_pred = len(ensemble[0])  # check level
 
