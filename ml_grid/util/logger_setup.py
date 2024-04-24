@@ -5,7 +5,7 @@ import sys
 from IPython.core.getipython import get_ipython
 
 
-def setup_logger():
+def setup_logger(log_folder_path="."):
     # Get the directory path of the current module
     module_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -15,7 +15,10 @@ def setup_logger():
     )
 
     # Navigate up from the notebook directory to get the logs directory
-    logs_dir = os.path.abspath(os.path.join(module_dir, "..", "..", "logs"))
+    folder_name = log_folder_path
+    current_dir = os.getcwd()
+    # Combine the current directory and folder name to get the target directory
+    logs_dir = os.path.abspath(os.path.join(current_dir, folder_name))
     print("logs_dir", logs_dir)
     os.makedirs(logs_dir, exist_ok=True)
 
