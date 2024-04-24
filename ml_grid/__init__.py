@@ -1,4 +1,4 @@
-print("ml_grid imported")
+print("---Ensemble GA---")
 
 
 from ml_grid.model_classes import logistic_regression_class
