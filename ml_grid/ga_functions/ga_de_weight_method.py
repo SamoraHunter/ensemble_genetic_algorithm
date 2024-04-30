@@ -148,6 +148,8 @@ def get_weighted_ensemble_prediction_de_y_pred_valid(
 
         for i in range(0, len(target_ensemble)):
             feature_columns = target_ensemble[i][2]
+
+            
             model = target_ensemble[i][1]
 
             if type(target_ensemble[i][1]) is not BinaryClassification:
