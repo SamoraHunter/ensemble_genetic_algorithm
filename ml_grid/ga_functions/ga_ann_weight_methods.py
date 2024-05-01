@@ -252,16 +252,22 @@ def get_y_pred_ann_torch_weighting(best, ml_grid_object, valid=False):
         for i in tqdm(range(0, len(target_ensemble))):
             feature_columns = list(target_ensemble[i][2])
 
-            existing_columns = [col for col in feature_columns if col in X_train.columns]
+            existing_columns = [
+                col
+                for col in feature_columns
+                if col in X_train.columns and col in x_test.columns
+            ]
 
-            missing_columns = [col for col in existing_columns if col not in feature_columns]
+            missing_columns = [
+                col for col in existing_columns if col not in feature_columns
+            ]
 
-            if ml_grid_object.verbose >= 1 and len(missing_columns)>=1:
+            if ml_grid_object.verbose >= 1 and len(missing_columns) >= 1:
                 print("Warning: The following columns do not exist in feature_columns:")
-                print('\n'.join(missing_columns))
+                print("\n".join(missing_columns))
             else:
                 pass
-                #print("All existing columns are present in feature_columns.")
+                # print("All existing columns are present in feature_columns.")
             feature_columns = existing_columns.copy()
 
             if type(target_ensemble[i][1]) is not BinaryClassification:
@@ -484,7 +490,7 @@ def train_ann_weight(input_shape, batch_size, train_data, test_data):
         # print(f'Epoch {e+0:03}: | Loss: {epoch_loss/len(train_loader):.5f} | Acc: {epoch_acc/len(train_loader):.3f} | AUC: {torchmetrics.functional.auc(y_batch, y_pred, reorder=True)}')
 
     print(
-        f"Epoch {e+0:03}: | Loss: {epoch_loss/len(train_loader):.5f} | Acc: {epoch_acc/len(train_loader):.3f} "#| AUC: {torchmetrics.functional.auc(y_batch, y_pred, reorder=True)
+        f"Epoch {e+0:03}: | Loss: {epoch_loss/len(train_loader):.5f} | Acc: {epoch_acc/len(train_loader):.3f} "  # | AUC: {torchmetrics.functional.auc(y_batch, y_pred, reorder=True)
     )
 
     para_str = (

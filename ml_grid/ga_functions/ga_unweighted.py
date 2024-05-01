@@ -164,16 +164,22 @@ def get_best_y_pred_unweighted(best, ml_grid_object, valid=False):
 
             feature_columns = list(target_ensemble[i][2])
 
-            existing_columns = [col for col in feature_columns if col in X_train.columns]
+            existing_columns = [
+                col
+                for col in feature_columns
+                if col in X_train.columns and col in X_test.columns
+            ]
 
-            missing_columns = [col for col in existing_columns if col not in feature_columns]
+            missing_columns = [
+                col for col in existing_columns if col not in feature_columns
+            ]
 
-            if ml_grid_object.verbose >= 1 and len(missing_columns)>=1:
+            if ml_grid_object.verbose >= 1 and len(missing_columns) >= 1:
                 print("Warning: The following columns do not exist in feature_columns:")
-                print('\n'.join(missing_columns))
+                print("\n".join(missing_columns))
             else:
                 pass
-                #print("All existing columns are present in feature_columns.")
+                # print("All existing columns are present in feature_columns.")
             feature_columns = existing_columns.copy()
 
             if type(target_ensemble[i][1]) is not BinaryClassification:

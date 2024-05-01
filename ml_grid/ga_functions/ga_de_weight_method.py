@@ -20,8 +20,6 @@ def normalize(weights):
     return weights / result
 
 
-
-
 # def get_weighted_ensemble_prediction_de_y_pred_valid(
 #     best, weights, ml_grid_object, valid=False
 # ):
@@ -149,7 +147,24 @@ def get_weighted_ensemble_prediction_de_y_pred_valid(
         for i in range(0, len(target_ensemble)):
             feature_columns = target_ensemble[i][2]
 
-            
+            existing_columns = [
+                col
+                for col in feature_columns
+                if col in X_train.columns and col in X_test.columns
+            ]
+
+            missing_columns = [
+                col for col in existing_columns if col not in feature_columns
+            ]
+
+            if ml_grid_object.verbose >= 1 and len(missing_columns) >= 1:
+                print("Warning: The following columns do not exist in feature_columns:")
+                print("\n".join(missing_columns))
+            else:
+                pass
+                # print("All existing columns are present in feature_columns.")
+            feature_columns = existing_columns.copy()
+
             model = target_ensemble[i][1]
 
             if type(target_ensemble[i][1]) is not BinaryClassification:
