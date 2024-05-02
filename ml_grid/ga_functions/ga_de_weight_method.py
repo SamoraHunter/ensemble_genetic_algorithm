@@ -170,7 +170,27 @@ def get_weighted_ensemble_prediction_de_y_pred_valid(
             if type(target_ensemble[i][1]) is not BinaryClassification:
                 if ml_grid_object.verbose >= 2:
                     print(f"Fitting model {i+1}")
-                model.fit(X_train[feature_columns], y_train)
+
+                try:
+                    model.fit(X_train[feature_columns], y_train)
+                except ValueError as e:
+                    print(e)
+                    print("ValueError on fit")
+                    print("feature_columns")
+                    print(len(feature_columns))
+                    print(
+                        X_train.shape,
+                        X_test.shape,
+                        type(X_train),
+                        type(y_train),
+                        type(feature_columns),
+                    )
+                    print(
+                        "Warning: The following columns do not exist in feature_columns:"
+                    )
+                    print("\n".join(missing_columns))
+                    print(print(len(missing_columns), len(feature_columns)))
+
                 prediction_array.append(model.predict(x_test[feature_columns]))
             else:
                 if ml_grid_object.verbose >= 2:
