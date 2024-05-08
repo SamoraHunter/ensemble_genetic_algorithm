@@ -77,3 +77,4 @@ wcwidth==0.2.13
 widgetsnbextension==4.0.10
 xgboost==2.0.3
 polars==0.20.25
+pyarrow==16.0.0
