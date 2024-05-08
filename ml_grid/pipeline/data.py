@@ -55,36 +55,36 @@ class pipe:
         testing=False,
         multiprocessing_ensemble=False,
     ):  # kwargs**
-        +"""
-+        This class is the main entry point for the ml_grid pipeline. It takes in a number of parameters which specify the
-+        data, the desired outcome, and the global parameters for the project. It then does the following:
-+
-+            1. Read in the input data
-+            2. Remove any columns specified in the drop_term_list
-+            3. Remove any columns which have a percentage of missing values greater than the threshold specified in
-+               local_param_dict['missing_data_threshold']
-+            4. Remove any duplicate columns
-+            5. Handle any correlation between columns by removing any columns which have a correlation greater than the
-+               threshold specified in local_param_dict['correlation_threshold']
-+            6. Split the data into training and testing sets
-+            7. Optionally performs data scaling (e.g. standardization)
-+            8. Optionally performs feature selection to target a specific number of features
-+            9. Saves the results of each of the above steps
-+
-+        The resulting object is then used to pass to the classifier methods.
-+
-+        :param file_name: The path to the input data
-+        :param drop_term_list: A list of terms to be removed from the data
-+        :param local_param_dict: A dictionary containing the local parameters for the project
-+        :param base_project_dir: The base directory of the project
-+        :param param_space_index: The index of the parameter space iteration
-+        :param additional_naming: Any additional strings to be added to the naming of the output files
-+        :param test_sample_n: The number of rows to sample from the data for testing purposes
-+        :param column_sample_n: The number of columns to sample from the data for testing purposes
-+        :param config_dict: A dictionary of configuration options
-+        :param testing: Whether to run in testing mode or not
-+        :param multiprocessing_ensemble: Whether to use multiprocessing for ensemble methods
-+        """
+        """
+        This class is the main entry point for the ml_grid pipeline. It takes in a number of parameters which specify the
+        data, the desired outcome, and the global parameters for the project. It then does the following:
+
+            1. Read in the input data
+            2. Remove any columns specified in the drop_term_list
+            3. Remove any columns which have a percentage of missing values greater than the threshold specified in
+               local_param_dict['missing_data_threshold']
+            4. Remove any duplicate columns
+            5. Handle any correlation between columns by removing any columns which have a correlation greater than the
+               threshold specified in local_param_dict['correlation_threshold']
+            6. Split the data into training and testing sets
+            7. Optionally performs data scaling (e.g. standardization)
+            8. Optionally performs feature selection to target a specific number of features
+            9. Saves the results of each of the above steps
+
+        The resulting object is then used to pass to the classifier methods.
+
+        :param file_name: The path to the input data
+        :param drop_term_list: A list of terms to be removed from the data
+        :param local_param_dict: A dictionary containing the local parameters for the project
+        :param base_project_dir: The base directory of the project
+        :param param_space_index: The index of the parameter space iteration
+        :param additional_naming: Any additional strings to be added to the naming of the output files
+        :param test_sample_n: The number of rows to sample from the data for testing purposes
+        :param column_sample_n: The number of columns to sample from the data for testing purposes
+        :param config_dict: A dictionary of configuration options
+        :param testing: Whether to run in testing mode or not
+        :param multiprocessing_ensemble: Whether to use multiprocessing for ensemble methods
+        """
 
         self.testing = testing
 
