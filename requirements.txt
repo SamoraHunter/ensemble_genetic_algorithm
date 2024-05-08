@@ -76,4 +76,4 @@ tzdata==2024.1
 wcwidth==0.2.13
 widgetsnbextension==4.0.10
 xgboost==2.0.3
-polars==0.20.23
+polars==0.20.25
