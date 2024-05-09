@@ -72,6 +72,8 @@ class Grid:
                 99.7,
             ],  # Percentage of missing data column wise as a threshold to remove
             "corr": [0.9, 0.99],  # Correlation thresholds for removing columns
+            # "feature_selection_method": ["markov_blanket"],
+            "feature_selection_method": ["anova"],
             "cxpb": [0.5, 0.75, 0.25],  # Crossover probability
             "mutpb": [0.2, 0.4, 0.8],  # Mutation probability
             "indpb": [0.025, 0.05, 0.075],  # Probability of individual mutation
