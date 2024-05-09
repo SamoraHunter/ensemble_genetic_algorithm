@@ -107,5 +107,5 @@ class Grid:
                 4,
                 8,
             ]
-            self.pop_params = [4, 8]
-            self.g_params = [2, 4]
+            self.pop_params = [8]
+            self.g_params = [4]
