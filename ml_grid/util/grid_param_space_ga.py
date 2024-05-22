@@ -110,6 +110,7 @@ class Grid:
                     "core_resus": [False],  # Whether to include core_resus
                     "news": [True],  # Whether to include news
                     "date_time_stamp": [False],  # Whether to include date_time_stamp
+                    "appointments": [False],  # Whether to include appointments
                 }
             ],
         }
