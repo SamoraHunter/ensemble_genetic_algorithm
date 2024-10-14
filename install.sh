@@ -36,14 +36,7 @@ pip install ipykernel
 python -m ipykernel install --user --name=ga_env
 
 # Install requirements from requirements.txt
-while read -r requirement; do
-    pip install "$requirement"
-    if [ $? -ne 0 ]; then
-        echo "Failed to install $requirement" >> installation_log.txt
-    else
-        echo "Successfully installed $requirement"
-    fi
-done < requirements.txt
+pip install -r requirements.txt
 
 # Deactivate virtual environment
 deactivate
