@@ -7,24 +7,41 @@ print_error_and_exit() {
     exit 1
 }
 
-# Check if Python 3 is found
-if ! command -v python3 &> /dev/null; then
+# Determine which Python command to use
+if command -v python3 &> /dev/null; then
+    PYTHON_CMD="python3"
+elif command -v python &> /dev/null; then
+    # Check if python is actually Python 3
+    PY_VERSION=$(python --version 2>&1)
+    if [[ $PY_VERSION == *"Python 3"* ]]; then
+        PYTHON_CMD="python"
+    else
+        print_error_and_exit "Python 3 is required but only Python 2 was found. Please install Python 3."
+    fi
+else
     print_error_and_exit "Python 3 is not found. Please make sure Python 3 is installed."
 fi
 
-# Check if python3-venv package is installed
-if ! dpkg -s python3-venv &> /dev/null; then
-    print_error_and_exit "The 'python3-venv' package is not installed. Please install it using your package manager (e.g., sudo apt-get install python3-venv)."
+echo "Using Python command: $PYTHON_CMD"
+
+# Check if python3-venv package is installed (if using apt-based distro)
+if command -v dpkg &> /dev/null; then
+    if ! dpkg -s python3-venv &> /dev/null; then
+        echo "Warning: The 'python3-venv' package might not be installed."
+        echo "If you encounter errors, please install it using: sudo apt-get install python3-venv"
+    fi
 fi
 
 # Check if virtual environment exists
 if [ ! -d "ga_env" ]; then
     # Create virtual environment
-    python3 -m venv ga_env || print_error_and_exit "Failed to create virtual environment"
+    $PYTHON_CMD -m venv ga_env || print_error_and_exit "Failed to create virtual environment"
+    echo "Virtual environment created successfully."
 fi
 
 # Activate virtual environment
 source ga_env/bin/activate || print_error_and_exit "Failed to activate virtual environment"
+echo "Virtual environment activated."
 
 # Upgrade pip
 python -m pip install --upgrade pip
@@ -35,8 +52,14 @@ pip install ipykernel
 # Add kernel spec
 python -m ipykernel install --user --name=ga_env
 
-# Install requirements from requirements.txt
-pip install -r requirements.txt
+# Install requirements from requirements.txt if it exists
+if [ -f "requirements.txt" ]; then
+    pip install -r requirements.txt
+else
+    echo "Note: requirements.txt not found. Skipping package installation."
+fi
+
+echo "Setup completed successfully!"
 
 # Deactivate virtual environment
 deactivate
