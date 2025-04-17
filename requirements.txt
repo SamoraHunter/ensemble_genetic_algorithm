@@ -152,6 +152,7 @@ nest-asyncio==1.6.0
     #   -r requirements.in
     #   ipykernel
 nbformat
+nbconvert
 networkx==3.3
     # via
     #   -r requirements.in
