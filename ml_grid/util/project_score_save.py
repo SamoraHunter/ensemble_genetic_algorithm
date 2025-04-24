@@ -218,7 +218,7 @@ class project_score_save_class:
                 "mutpb",
                 "indpb",
                 "t_size",
-                #               "valid",
+                "valid",
             ]
 
             column_list = column_list + ["BL_" + str(x) for x in range(0, 64)]
