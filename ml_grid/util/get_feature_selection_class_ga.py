@@ -10,6 +10,7 @@ import numpy as np
 import sklearn
 from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
 from xgboost import XGBClassifier
+from sklearn.feature_selection import f_classif
 
 
 class feature_selection_methods_class():
@@ -33,25 +34,32 @@ class feature_selection_methods_class():
       
       
       
+    
+
     def getNfeaturesANOVAF(self, n):
         res = []
         for colName in self.X_train.columns:
             if colName != "intercept":
-                res.append(
-                    (
-                        colName,
-                        sklearn.feature_selection.f_classif(
-                            np.array(self.X_train[colName]).reshape(-1, 1), self.y_train
-                        )[0],
-                    )
-                )
-        sortedList = sorted(res, key=lambda x: x[1])
-        sortedList.reverse()
+                # Compute F-score
+                f_score = f_classif(
+                    np.array(self.X_train[colName]).reshape(-1, 1), self.y_train
+                )[0][0]
+
+                # Skip if F-score is NaN
+                if not np.isnan(f_score):
+                    res.append((colName, f_score))
+
+        # Sort by F-score descending
+        sortedList = sorted(res, key=lambda x: x[1], reverse=True)
+
+        # Take top n
         nFeatures = sortedList[:n]
-        finalColNames = []
-        for elem in nFeatures:
-            finalColNames.append(elem[0])
+
+        # Extract column names
+        finalColNames = [elem[0] for elem in nFeatures]
+
         return finalColNames
+
 
 
     def getRandomForestFeatureColumns(self, X, y, n):
