@@ -313,6 +313,7 @@ pyzmq==26.2.0
     #   ipykernel
     #   jupyter-client
     #   scoop
+pre-commit
 pyarrow==19.0.1
     # manually added
 scikit-learn==1.5.2
