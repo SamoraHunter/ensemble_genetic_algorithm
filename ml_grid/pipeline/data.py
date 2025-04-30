@@ -231,6 +231,21 @@ class pipe:
                 f"len final droplist: {len(self.drop_list)} \ {len(list(self.df.columns))}"
             )
             # print('\n'.join(map(str, self.drop_list[0:5])))
+            
+        # screen for nan and string variables, raise error if found in self.X
+        
+        # Check for NaNs
+        if self.X.isnull().values.any():
+            raise ValueError("DataFrame contains NaN values.")
+
+        # Check for string (object or string) columns or values
+        if self.X.select_dtypes(include=['object', 'string']).shape[1] > 0:
+            raise ValueError("DataFrame contains string (non-numeric) columns.")
+
+        # Optionally: check for any string values hidden in numeric-looking columns
+        if self.X.applymap(lambda x: isinstance(x, str)).any().any():
+            raise ValueError("DataFrame contains string values within numeric columns.")
+        
 
         print("------------------------")
 
