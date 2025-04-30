@@ -77,7 +77,13 @@ def get_y_pred_resolver(ensemble, ml_grid_object, valid=False):
     ):
         if ml_grid_object.verbose >= 1:
             print("Using unweighted ensemble prediction...")
-        y_pred = get_best_y_pred_unweighted(ensemble, ml_grid_object, valid=valid)
+        try:
+            y_pred = get_best_y_pred_unweighted(ensemble, ml_grid_object, valid=valid)
+        except Exception as e:
+            print("exception on y_pred = get_best_y_pred_unweighted(ensemble, ml_grid_object, valid=valid)")
+            print(ensemble)
+            print("valid", valid)
+            raise e
     elif local_param_dict.get("weighted") == "de":
         if ml_grid_object.verbose >= 1:
             print("Using DE weighted ensemble prediction...")
