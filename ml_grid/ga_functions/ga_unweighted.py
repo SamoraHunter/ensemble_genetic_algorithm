@@ -221,8 +221,8 @@ def get_best_y_pred_unweighted(best, ml_grid_object, valid=False):
     for i in range(0, len(prediction_array[0])):
         try:
             y_pred_best.append(
-                stats.mode(np.matrix(prediction_array)[:, i], keepdims=True)[0][0][0]
+                stats.mode(np.matrix(prediction_array)[:, i].astype(int), keepdims=True)[0][0][0]
             )
         except:
-            y_pred_best.append(stats.mode(np.matrix(prediction_array)[:, i])[0][0][0])
+            y_pred_best.append(stats.mode(np.matrix(prediction_array)[:, i].astype(int))[0][0][0])
     return y_pred_best
