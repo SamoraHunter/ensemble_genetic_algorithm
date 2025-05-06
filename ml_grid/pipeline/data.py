@@ -204,13 +204,53 @@ class pipe:
         self.drop_list = remove_constant_columns(
             X=self.df, drop_list=self.drop_list, verbose=self.verbose)
 
-        final_column_list = [
+        self.final_column_list = [
             self.X
             for self.X in self.pertubation_columns
             if (self.X not in self.drop_list)
         ]
+        
+        # Add safety mechanism to retain minimum features
+        min_required_features = 5  # Set your minimum threshold
+        core_protected_columns = ['age', 'male', 'client_idcode']  # Columns to protect
 
-        self.X = self.df[final_column_list].copy()
+        if not self.final_column_list:
+            print("WARNING: All features pruned! Activating safety retention...")
+            
+            # Try to keep protected columns first
+            safety_columns = [col for col in core_protected_columns 
+                            if col in self.df.columns and col in self.pertubation_columns]
+            
+            # If no protected columns, use first available columns
+            if not safety_columns:
+                safety_columns = [col for col in self.pertubation_columns 
+                                if col in self.df.columns][:min_required_features]
+            
+            # Update final columns and drop list
+            self.final_column_list = safety_columns
+            self.drop_list = [col for col in self.drop_list 
+                            if col not in self.final_column_list]
+            
+            print(f"Retaining minimum features: {self.final_column_list}")
+
+            # Add two random features if list still empty
+            if not self.final_column_list:
+                print("Warning no feature columns retained, selecting two at random")
+                final_column_list = []
+                final_column_list.append(random.choice(self.orignal_feature_names))
+                final_column_list.append(random.choice(self.orignal_feature_names))
+
+        # Ensure we still have at least 1 feature
+        if not self.final_column_list:
+            raise ValueError("CRITICAL: Unable to retain any features despite safety measures")
+
+        if not self.final_column_list:
+            raise ValueError("All features pruned. No columns remaining in final_column_list.")
+
+        
+        
+
+        self.X = self.df[self.final_column_list].copy()
 
         self.X = clean_up_class().handle_duplicated_columns(self.X)
 
