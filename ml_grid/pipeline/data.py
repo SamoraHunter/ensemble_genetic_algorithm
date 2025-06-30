@@ -5,7 +5,10 @@ from ml_grid.model_classes_ga.logistic_regression_model import (
 from ml_grid.pipeline import read_in
 from ml_grid.pipeline.column_names import get_pertubation_columns
 from ml_grid.pipeline.data_clean_up import clean_up_class
-from ml_grid.pipeline.data_constant_columns import remove_constant_columns, remove_constant_columns_with_debug
+from ml_grid.pipeline.data_constant_columns import (
+    remove_constant_columns,
+    remove_constant_columns_with_debug,
+)
 from ml_grid.pipeline.data_correlation_matrix import handle_correlation_matrix
 from ml_grid.pipeline.data_feature_importance_methods import feature_importance_methods
 from ml_grid.pipeline.data_outcome_list import handle_outcome_list
@@ -200,37 +203,43 @@ class pipe:
         self.drop_list = handle_outcome_list(
             drop_list=self.drop_list, outcome_variable=self.outcome_variable
         )
-        
+
         self.drop_list = remove_constant_columns(
-            X=self.df, drop_list=self.drop_list, verbose=self.verbose)
+            X=self.df, drop_list=self.drop_list, verbose=self.verbose
+        )
 
         self.final_column_list = [
             self.X
             for self.X in self.pertubation_columns
             if (self.X not in self.drop_list)
         ]
-        
+
         # Add safety mechanism to retain minimum features
         min_required_features = 5  # Set your minimum threshold
-        core_protected_columns = ['age', 'male', 'client_idcode']  # Columns to protect
+        core_protected_columns = ["age", "male", "client_idcode"]  # Columns to protect
 
         if not self.final_column_list:
             print("WARNING: All features pruned! Activating safety retention...")
-            
+
             # Try to keep protected columns first
-            safety_columns = [col for col in core_protected_columns 
-                            if col in self.df.columns and col in self.pertubation_columns]
-            
+            safety_columns = [
+                col
+                for col in core_protected_columns
+                if col in self.df.columns and col in self.pertubation_columns
+            ]
+
             # If no protected columns, use first available columns
             if not safety_columns:
-                safety_columns = [col for col in self.pertubation_columns 
-                                if col in self.df.columns][:min_required_features]
-            
+                safety_columns = [
+                    col for col in self.pertubation_columns if col in self.df.columns
+                ][:min_required_features]
+
             # Update final columns and drop list
             self.final_column_list = safety_columns
-            self.drop_list = [col for col in self.drop_list 
-                            if col not in self.final_column_list]
-            
+            self.drop_list = [
+                col for col in self.drop_list if col not in self.final_column_list
+            ]
+
             print(f"Retaining minimum features: {self.final_column_list}")
 
             # Add two random features if list still empty
@@ -242,13 +251,18 @@ class pipe:
 
         # Ensure we still have at least 1 feature
         if not self.final_column_list:
-            raise ValueError("CRITICAL: Unable to retain any features despite safety measures")
+            raise ValueError(
+                "CRITICAL: Unable to retain any features despite safety measures"
+            )
 
         if not self.final_column_list:
-            raise ValueError("All features pruned. No columns remaining in final_column_list.")
+            raise ValueError(
+                "All features pruned. No columns remaining in final_column_list."
+            )
 
-        
-        
+        self.final_column_list = [
+            col for col in self.final_column_list if col in self.df.columns
+        ]
 
         self.X = self.df[self.final_column_list].copy()
 
@@ -271,21 +285,20 @@ class pipe:
                 f"len final droplist: {len(self.drop_list)} \ {len(list(self.df.columns))}"
             )
             # print('\n'.join(map(str, self.drop_list[0:5])))
-            
+
         # screen for nan and string variables, raise error if found in self.X
-        
+
         # Check for NaNs
         if self.X.isnull().values.any():
             raise ValueError("DataFrame contains NaN values.")
 
         # Check for string (object or string) columns or values
-        if self.X.select_dtypes(include=['object', 'string']).shape[1] > 0:
+        if self.X.select_dtypes(include=["object", "string"]).shape[1] > 0:
             raise ValueError("DataFrame contains string (non-numeric) columns.")
 
         # Optionally: check for any string values hidden in numeric-looking columns
         if self.X.applymap(lambda x: isinstance(x, str)).any().any():
             raise ValueError("DataFrame contains string values within numeric columns.")
-        
 
         print("------------------------")
 
@@ -297,13 +310,12 @@ class pipe:
             self.X_test_orig,
             self.y_test_orig,
         ) = get_data_split(X=self.X, y=self.y, local_param_dict=self.local_param_dict)
-        
+
         # Handle columns made constant by splitting
-        self.X_train, self.X_test, self.X_test_orig = remove_constant_columns_with_debug(
-            self.X_train,
-            self.X_test,
-            self.X_test_orig,
-            verbosity=self.verbose
+        self.X_train, self.X_test, self.X_test_orig = (
+            remove_constant_columns_with_debug(
+                self.X_train, self.X_test, self.X_test_orig, verbosity=self.verbose
+            )
         )
         target_n_features = self.local_param_dict.get("n_features")
 
