@@ -98,6 +98,11 @@ conda activate ga_env  # or source activate ga_env
 ```
 This ensures all required dependencies are available for successful execution
 
+## Data pipeline and genetic algorithm
+
+![Alt text](assets/ga_data_diagram.png)
+
+
 ## License
 
 MIT License
@@ -137,14 +142,6 @@ This software is based primarily on Machine learning methodology originally desc
 
 Agius, R., Brieghel, C., Andersen, M.A. et al. Machine learning can identify newly diagnosed patients with CLL at high risk of infection. Nat Commun 11, 363 (2020). https://doi.org/10.1038/s41467-019-14225-8
 
-## Requirements.txt
-
-You can install the required packages by running:
-
-```bash
-pip install -r requirements.txt
-
-```
 
 ## Appendix
 
