@@ -1,5 +1,19 @@
 # Ensemble Genetic Algorithm
 
+# Table of Contents
+
+- [Ensemble Genetic Algorithm](#ensemble-genetic-algorithm)
+  - [Description](#description)
+  - [Project Requirements](#project-requirements)
+  - [Project Dataset requirements](#project-dataset-requirements)
+  - [Environment Information](#environment-information)
+  - [Usage](#usage)
+    - [Example Configuration](#example-configuration)
+  - [📘 FAQ / User Guide](#-faq--user-guide)
+  - [Data pipeline and genetic algorithm](#data-pipeline-and-genetic-algorithm)
+  - [License](#license)
+
+
 **Description**: Genetic algorithm to evolve a machine learning ensemble for binary classification.
 
 Prerequisites:
