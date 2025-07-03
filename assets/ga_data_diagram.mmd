@@ -1,0 +1,124 @@
+graph TD
+    A[Input Data Matrix D<br>n rows, m feature columns<br>Binary Classification] --> B{Data Space Permutations<br>Blocks of Features by Category<br>e.g., BMI, Clinical Notes, Drugs};
+
+    B --> C{Iterate over Data Slices};
+
+    C --> D[Main Protocol for Each Data Slice];
+
+    subgraph Data Pre-processing pipe class
+        D --> P1{Read In Input Data<br>read_in.read/read_sample};
+        P1 --> P2[Apply Perturbation Columns<br> get_pertubation_columns];
+        P2 --> P3[Handle Correlation Matrix<br>handle_correlation_matrix];
+        P3 --> P4[Handle Percent Missing<br>handle_percent_missing];
+        P4 --> P5[Handle Outcome List<br>handle_outcome_list];
+        P5 --> P6[Remove Constant Columns<br>remove_constant_columns];
+        P6 --> P7[Determine Final Column List<br>Safety Mechanism for Min Features];
+        P7 --> P8[Handle Duplicated Columns<br>clean_up_class.handle_duplicated_columns];
+        P8 --> P9[Screen Non-Float Types<br>clean_up_class.screen_non_float_types];
+        P9 --> P10[Handle Column Names<br>clean_up_class.handle_column_names];
+        P10 --> P11{Data Scaling Optional<br>data_scale_methods.standard_scale_method};
+        P11 --> P12[Validate Data Types NaN/String Check];
+    end
+
+    P12 --> E{Data Splitting};
+    E --> E1[Training Data X_train, y_train];
+    E --> E2[Test Data X_test, y_test, X_test_orig, y_test_orig];
+    E --> E3[Validation Data Implicit in GA evaluation];
+
+    E1 & E2 --> F[Post-Split Column Handling];
+    F --> F1[Remove Constant Columns After Split<br>remove_constant_columns_with_debug];
+    F1 --> F2{Feature Importance Optional<br>feature_importance_methods.handle_feature_importance_methods};
+
+    F2 --> G[Main Genetic Algorithm];
+
+    subgraph Main Genetic Algorithm run class
+        G --> GA_Init[Initialize GA Parameters<br>nb_params, pop_params, g_params];
+        GA_Init --> GA_DeapSetup[DEAP Creator & Toolbox Setup<br>FitnessMax, Individual, evaluate function];
+
+        GA_DeapSetup --> GA_IterateParams{Iterate through Parameter Grid<br>nb_val, pop_val, g_val};
+
+        subgraph Genetic Algorithm Loop for each param combination
+            GAL_Start[Start Iteration];
+            GAL_Start --> GAL_RegToolbox[Register Toolbox Elements<br>ensembleGenerator, individual, population, mate, mutate, select];
+            GAL_RegToolbox --> GAL_Pop[Generate Initial Population pop_val];
+            GAL_Pop --> GAL_EvalInit[Evaluate Initial Population Fitness<br>evaluate_weighted_ensemble_auc];
+
+            GAL_EvalInit --> GAL_Loop{Generation Loop<br>g &lt; g_val AND AUC &lt; 0.999 AND NOT early stop};
+            GAL_Loop --> GAL_Select[Select Next Generation Individuals selTournament];
+            GAL_Select --> GAL_Clone[Clone Selected Individuals];
+            GAL_Clone --> GAL_Crossover[Apply Crossover cxTwoPoint<br> probability CXPB];
+            GAL_Crossover --> GAL_Mutate[Apply Mutation mutateEnsemble<br> probability MUTPB];
+            GAL_Mutate --> GAL_EvalInvalid[Evaluate Individuals with Invalid Fitness];
+            GAL_EvalInvalid --> GAL_UpdatePop[Update Population with Offspring];
+            GAL_UpdatePop --> GAL_Stats[Gather Fitness Stats min, max, mean, std];
+            GAL_Stats --> GAL_FindBest[Find Best Individual in Current Pop<br>argmax on evaluate];
+            GAL_FindBest --> GAL_GenEval[Calculate Generation Ensemble Score AUC on y_test];
+            GAL_GenEval --> GAL_EarlyStop[Check Early Stopping Condition<br>gen_eval_score_threshold_early_stopping];
+            GAL_EarlyStop --> GAL_Loop;
+        end
+
+        GAL_Loop --> GA_Finalize[Identify Overall Highest Scoring Ensemble];
+        GA_Finalize --> GA_Output1[Print Best Ensemble Model Details];
+        GA_Output1 --> GA_Output2[Measure and Print Ensemble Diversity];
+        GA_Output2 --> GA_Output3[Generate Final AUC Plot<br>using y_test_orig];
+        GA_Output3 --> GA_Output4[Update Project Score Log];
+        GA_Output4 --> GA_Output5[Save Best Ensemble Model pickle];
+        GA_Output5 --> GA_Output6[Plot Generation Progress Fitness];
+        GA_Output6 --> GA_Cleanup[Cleanup DEAP Creator and Toolbox gc.collect];
+        GA_Cleanup --> GA_IterateParams;
+        GA_IterateParams --> H[Optimal Ensemble Result];
+    end
+
+    style A fill:#D4EDDA,stroke:#28A745,stroke-width:2px,color:#000
+    style B fill:#FFF3CD,stroke:#FFC107,stroke-width:2px,color:#000
+    style C fill:#FFEFE0,stroke:#FD7E14,stroke-width:2px,color:#000
+    style D fill:#D1ECF1,stroke:#17A2B8,stroke-width:2px,color:#000
+    style E fill:#E2F0CB,stroke:#28A745,stroke-width:2px,color:#000
+    style F fill:#ADD8E6,stroke:#007BFF,stroke-width:2px,color:#000
+    style G fill:#F8D7DA,stroke:#DC3545,stroke-width:2px,color:#000
+    style H fill:#C3E6CB,stroke:#28A745,stroke-width:2px,color:#000
+
+    style P1 fill:#D1ECF1,stroke:#17A2B8,stroke-width:1px,color:#000
+    style P2 fill:#D1ECF1,stroke:#17A2B8,stroke-width:1px,color:#000
+    style P3 fill:#D1ECF1,stroke:#17A2B8,stroke-width:1px,color:#000
+    style P4 fill:#D1ECF1,stroke:#17A2B8,stroke-width:1px,color:#000
+    style P5 fill:#D1ECF1,stroke:#17A2B8,stroke-width:1px,color:#000
+    style P6 fill:#D1ECF1,stroke:#17A2B8,stroke-width:1px,color:#000
+    style P7 fill:#D1ECF1,stroke:#17A2B8,stroke-width:1px,color:#000
+    style P8 fill:#D1ECF1,stroke:#17A2B8,stroke-width:1px,color:#000
+    style P9 fill:#D1ECF1,stroke:#17A2B8,stroke-width:1px,color:#000
+    style P10 fill:#D1ECF1,stroke:#17A2B8,stroke-width:1px,color:#000
+    style P11 fill:#D1ECF1,stroke:#17A2B8,stroke-width:1px,color:#000
+    style P12 fill:#D1ECF1,stroke:#17A2B8,stroke-width:1px,color:#000
+
+    style F1 fill:#ADD8E6,stroke:#007BFF,stroke-width:1px,color:#000
+    style F2 fill:#ADD8E6,stroke:#007BFF,stroke-width:1px,color:#000
+
+    style GA_Init fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GA_DeapSetup fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GA_IterateParams fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+
+    style GAL_Start fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GAL_RegToolbox fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GAL_Pop fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GAL_EvalInit fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GAL_Loop fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GAL_Select fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GAL_Clone fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GAL_Crossover fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GAL_Mutate fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GAL_EvalInvalid fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GAL_UpdatePop fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GAL_Stats fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GAL_FindBest fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GAL_GenEval fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GAL_EarlyStop fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+
+    style GA_Finalize fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GA_Output1 fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GA_Output2 fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GA_Output3 fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GA_Output4 fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GA_Output5 fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GA_Output6 fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
+    style GA_Cleanup fill:#F8D7DA,stroke:#DC3545,stroke-width:1px,color:#000
