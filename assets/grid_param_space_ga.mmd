@@ -1,0 +1,63 @@
+graph TD
+    A[Grid Class Constructor] --> B[Initialize Parameters]
+    B --> C[sample_n: 1000]
+    B --> D[test_grid: False]
+    B --> E[global_params]
+    B --> F[verbose level]
+    
+    A --> G[Define Grid Dictionary]
+    G --> H[Weighted Algorithms]
+    G --> I[Base Learner Storage]
+    G --> J[Resampling Methods]
+    G --> K[Feature Selection]
+    G --> L[Genetic Algorithm Params]
+    G --> M[Data Configuration]
+    
+    H --> H1[ann, de, unweighted]
+    I --> I1[use_stored_base_learners: False]
+    I --> I2[store_base_learners: False]
+    J --> J1[undersample, oversample, None]
+    K --> K1[scale: True]
+    K --> K2[n_features: all]
+    K --> K3[feature_selection_method: anova]
+    L --> L1[cxpb: 0.5, 0.75, 0.25]
+    L --> L2[mutpb: 0.2, 0.4, 0.8]
+    L --> L3[indpb: 0.025, 0.05, 0.075]
+    L --> L4[t_size: 3, 6, 9]
+    
+    M --> M1[Demographics: age, sex, bmi, ethnicity]
+    M --> M2[Medical Data: bloods, diagnostic_order, drug_order]
+    M --> M3[Annotations: annotation_n, meta_sp_annotation_n]
+    M --> M4[Clinical: core_02, bed, news]
+    
+    G --> N[c_prod Function]
+    N --> O[Generate All Combinations]
+    O --> P[Cartesian Product of Grid Parameters]
+    P --> Q[Full settings_list]
+    
+    Q --> R[Shuffle Settings List]
+    R --> S[Sample N Settings]
+    S --> T[Create Iterator]
+    
+    A --> U[Define GA Parameters]
+    U --> V[nb_params: 4, 8, 16, 32]
+    U --> W[pop_params: 32, 64]
+    U --> X[g_params: 128]
+    
+    D --> Y{test_grid == True?}
+    Y -->|Yes| Z[Override for Testing]
+    Y -->|No| AA[Use Production Values]
+    
+    Z --> Z1[nb_params: 4, 8]
+    Z --> Z2[pop_params: 8]
+    Z --> Z3[g_params: 4]
+    
+    AA --> V
+    AA --> W
+    AA --> X
+    
+    style A fill:#e1f5fe
+    style G fill:#f3e5f5
+    style N fill:#e8f5e8
+    style U fill:#fff3e0
+    style Y fill:#ffebee

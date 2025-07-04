@@ -1,0 +1,63 @@
+graph TD
+    A[ML Grid Object] --> B[Best Ensemble Models]
+    B --> C{Prediction Method}
+    
+    C -->|Unweighted| D[get_best_y_pred_unweighted]
+    C -->|Weighted DE| E[super_ensemble_weight_finder_differential_evolution]
+    C -->|Weighted ANN| F[get_y_pred_ann_torch_weighting]
+    C -->|Weighted Ensemble| G[get_weighted_ensemble_prediction_de_y_pred_valid]
+    
+    D --> D1[Extract Models from Ensemble]
+    D1 --> D2{Model Type Check}
+    D2 -->|Standard ML| D3[Fit & Predict with Standard Models]
+    D2 -->|PyTorch NN| D4[Predict with Torch Models]
+    D3 --> D5[Create Prediction Matrix]
+    D4 --> D5
+    D5 --> D6[Apply Mode/Voting]
+    D6 --> D7[Final Unweighted Predictions]
+    
+    E --> E1[Extract Stored Predictions]
+    E1 --> E2[Create Prediction Matrix]
+    E2 --> E3[Calculate Unweighted AUC Baseline]
+    E3 --> E4[Define Weight Bounds 0-1]
+    E4 --> E5[Differential Evolution Optimization]
+    E5 --> E6[get_weighted_ensemble_prediction_de_cython]
+    E6 --> E7[Return Optimal Weights]
+    
+    F --> F1[Generate Training Predictions]
+    F1 --> F2{Valid Set?}
+    F2 -->|Yes| F3[Fit Models & Predict on X_train]
+    F2 -->|No| F4[Use Stored Predictions]
+    F3 --> F5[Create Training Prediction Matrix]
+    F4 --> F5
+    F5 --> F6[Generate Test Predictions]
+    F6 --> F7[Create Test Prediction Matrix]
+    F7 --> F8[Train ANN Weight Network]
+    F8 --> F9[Apply ANN Weights]
+    F9 --> F10[Calculate Weighted AUC]
+    F10 --> F11[Return ANN Weighted Predictions]
+    
+    G --> G1[Extract Target Ensemble]
+    G1 --> G2{Valid Set?}
+    G2 -->|Yes| G3[Fit Models & Predict on Validation]
+    G2 -->|No| G4[Use Stored Test Predictions]
+    G3 --> G5[Create Prediction Matrix]
+    G4 --> G5
+    G5 --> G6[Normalize Weights]
+    G6 --> G7[Apply Weighted Matrix Multiplication]
+    G7 --> G8[Collapse to Final Predictions]
+    G8 --> G9[Return Weighted Predictions]
+    
+    D7 --> H[Final Ensemble Predictions]
+    E7 --> I[Optimal Weights] --> G
+    F11 --> H
+    G9 --> H
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style H fill:#e8f5e8
+    style I fill:#fff3e0
+    style D fill:#ffebee
+    style E fill:#f1f8e9
+    style F fill:#e3f2fd
+    style G fill:#fce4ec

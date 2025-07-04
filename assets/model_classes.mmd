@@ -1,0 +1,382 @@
+graph TD
+    subgraph "Model Files"
+        mlp[mlpClassifier_model.py]
+        ada[adaboostClassifier_model.py]
+        dec[decisionTreeClassifier_model.py]
+        dum[dummy_model.py]
+        ela[elasticNeuralNetwork_model.py]
+        ext[extra_trees_model.py]
+        gau[gaussianNB_model.py]
+        grad[gradientBoostingClassifier_model.py]
+        knn[kNearestNeighbors_model.py]
+        logr[logistic_regression_model.py]
+        xgb[XGBoost_model.py]
+        perc[perceptron_model.py]
+        pann[pytorchANNBinaryClassifier_model.py]
+        qda[quadraticDiscriminantAnalysis_model.py]
+        randf[randomForest_model.py]
+        svc[svc_model.py]
+        percdum[perceptron_dummy_model.py]
+    end
+
+    subgraph "Utility Modules ml_grid.util"
+        U_debug[debug_methods_ga]
+        U_feature_select[get_feature_selection_class_ga]
+        U_global_params[global_params]
+        U_model_methods[model_methods_ga]
+        U_param_space[param_space]
+        U_validate_params[validate_param_methods]
+    end
+
+    subgraph "GA Functions ml_grid.ga_functions"
+        G_ann_util[ga_ann_util]
+    end
+
+    subgraph "Workflow_mlpClassifier_model"
+        mlp_S([Start]) --> mlp_A[Initialize Global Parameters]
+        mlp_A --> mlp_B[Perform Feature Selection]
+        mlp_B --> mlp_C{Define Param Space}
+        mlp_C --> mlp_D[Initialize MLPClassifier Model]
+        mlp_D --> mlp_E[Train Model]
+        mlp_E --> mlp_F[Make Predictions]
+        mlp_F --> mlp_G[Evaluate Model]
+        mlp_G --> mlp_H{Debug Output}
+        mlp_G --> mlp_I{Store Model}
+        mlp_H --> mlp_End([End])
+        mlp_I --> mlp_End
+    end
+
+    subgraph "Workflow_adaboostClassifier_model"
+        ada_S([Start]) --> ada_A[Initialize Global Parameters]
+        ada_A --> ada_B[Perform Feature Selection]
+        ada_B --> ada_C{Define Param Space}
+        ada_C --> ada_D[Initialize AdaBoostClassifier Model]
+        ada_D --> ada_E[Train Model]
+        ada_E --> ada_F[Make Predictions]
+        ada_F --> ada_G[Evaluate Model]
+        ada_G --> ada_H{Debug Output}
+        ada_G --> ada_I{Store Model}
+        ada_H --> ada_End([End])
+        ada_I --> ada_End
+    end
+
+    subgraph "Workflow_decisionTreeClassifier_model"
+        dec_S([Start]) --> dec_A[Initialize Global Parameters]
+        dec_A --> dec_B[Perform Feature Selection]
+        dec_B --> dec_C{Define Param Space}
+        dec_C --> dec_D[Validate Max Leaf Nodes]
+        dec_D --> dec_E[Initialize DecisionTreeClassifier Model]
+        dec_E --> dec_F[Train Model]
+        dec_F --> dec_G[Make Predictions]
+        dec_G --> dec_H[Evaluate Model]
+        dec_H --> dec_I{Debug Output}
+        dec_H --> dec_J{Store Model}
+        dec_I --> dec_End([End])
+        dec_J --> dec_End
+    end
+
+    subgraph "Workflow_dummy_model"
+        dum_S([Start]) --> dum_A[Initialize with perceptron_dummy_model]
+        dum_A --> dum_B[Retrieve fitted perceptron & columns]
+        dum_B --> dum_C[Generate Dummy Predictions]
+        dum_C --> dum_End([End])
+    end
+
+    subgraph "Workflow_elasticNeuralNetwork_model"
+        ela_S([Start]) --> ela_A[Initialize Global Parameters]
+        ela_A --> ela_B[Perform Feature Selection]
+        ela_B --> ela_C[Define Hardcoded Param Space]
+        ela_C --> ela_D[Initialize ElasticNet via OneVsRestClassifier]
+        ela_D --> ela_E[Train Model]
+        ela_E --> ela_F[Make Predictions]
+        ela_F --> ela_G[Evaluate Model]
+        ela_G --> ela_H{Debug Output}
+        ela_G --> ela_I{Store Model}
+        ela_H --> ela_End([End])
+        ela_I --> ela_End
+    end
+
+    subgraph "Workflow_extra_trees_model"
+        ext_S([Start]) --> ext_A[Initialize Global Parameters]
+        ext_A --> ext_B[Perform Feature Selection]
+        ext_B --> ext_C[Define Hardcoded Param Space]
+        ext_C --> ext_D[Initialize ExtraTreesClassifier Model]
+        ext_D --> ext_E[Train Model]
+        ext_E --> ext_F[Make Predictions]
+        ext_F --> ext_G[Evaluate Model]
+        ext_G --> ext_H{Debug Output}
+        ext_G --> ext_I{Store Model}
+        ext_H --> ext_End([End])
+        ext_I --> ext_End
+    end
+
+    subgraph "Workflow_gaussianNB_model"
+        gau_S([Start]) --> gau_A[Initialize Global Parameters]
+        gau_A --> gau_B[Perform Feature Selection]
+        gau_B --> gau_C{Define Param Space}
+        gau_C --> gau_D[Initialize GaussianNB Model]
+        gau_D --> gau_E[Train Model]
+        gau_E --> gau_F[Make Predictions]
+        gau_F --> gau_G[Evaluate Model]
+        gau_G --> gau_H{Debug Output}
+        gau_G --> gau_I{Store Model}
+        gau_H --> gau_End([End])
+        gau_I --> gau_End
+    end
+
+    subgraph "Workflow_gradientBoostingClassifier_model"
+        grad_S([Start]) --> grad_A[Initialize Global Parameters]
+        grad_A --> grad_B[Perform Feature Selection]
+        grad_B --> grad_C{Define Param Space}
+        grad_C --> grad_D[Validate Params]
+        grad_D --> grad_E[Initialize GradientBoostingClassifier Model]
+        grad_E --> grad_F[Train Model]
+        grad_F --> grad_G[Make Predictions]
+        grad_G --> grad_H[Evaluate Model]
+        grad_H --> grad_I{Debug Output}
+        grad_H --> grad_J{Store Model}
+        grad_I --> grad_End([End])
+        grad_J --> grad_End
+    end
+
+    subgraph "Workflow_kNearestNeighbors_model"
+        knn_S([Start]) --> knn_A[Initialize Global Parameters]
+        knn_A --> knn_B[Perform Feature Selection]
+        knn_B --> knn_C[Define Hardcoded Param Space]
+        knn_C --> knn_D[Initialize KNeighborsClassifier Model]
+        knn_D --> knn_E[Attempt Train Model]
+        knn_E --> knn_F[Attempt Make Predictions]
+        knn_F --> knn_G[Evaluate Model]
+        knn_G --> knn_H{Debug Output}
+        knn_G --> knn_I{Store Model}
+        knn_H --> knn_End([End])
+        knn_I --> knn_End
+    end
+
+    subgraph "Workflow_logistic_regression_model"
+        logr_S([Start]) --> logr_A[Initialize Global Parameters]
+        logr_A --> logr_B[Perform Feature Selection]
+        logr_B --> logr_C[Define Hardcoded Param Space]
+        logr_C --> logr_D[Initialize LogisticRegression Model]
+        logr_D --> logr_E[Train Model]
+        logr_E --> logr_F[Make Predictions]
+        logr_F --> logr_G[Evaluate Model]
+        logr_G --> logr_H{Debug Output}
+        logr_G --> logr_I{Store Model}
+        logr_H --> logr_End([End])
+        logr_I --> logr_End
+    end
+
+    subgraph "Workflow_XGBoost_model"
+        xgb_S([Start]) --> xgb_A[Initialize Global Parameters]
+        xgb_A --> xgb_B[Perform Feature Selection]
+        xgb_B --> xgb_C[Get Free GPU]
+        xgb_C --> xgb_D[Define Hardcoded Param Space]
+        xgb_D --> xgb_E[Initialize XGBClassifier Model]
+        xgb_E --> xgb_F[Attempt Train Model]
+        xgb_F --> xgb_G[Make Predictions]
+        xgb_G --> xgb_H[Evaluate Model]
+        xgb_H --> xgb_I{Debug Output}
+        xgb_H --> xgb_J{Store Model}
+        xgb_I --> xgb_End([End])
+        xgb_J --> xgb_End
+    end
+
+    subgraph "Workflow_perceptron_model"
+        perc_S([Start]) --> perc_A[Initialize Global Parameters]
+        perc_A --> perc_B[Perform Feature Selection]
+        perc_B --> perc_C[Standardize Data]
+        perc_C --> perc_D[Define Hardcoded Param Space]
+        perc_D --> perc_E[Initialize Perceptron Model]
+        perc_E --> perc_F[Train Model]
+        perc_F --> perc_G[Make Predictions]
+        perc_G --> perc_H[Evaluate Model]
+        perc_H --> perc_I{Debug Output}
+        perc_H --> perc_J{Store Model}
+        perc_I --> perc_End([End])
+        perc_J --> perc_End
+    end
+
+    subgraph "Workflow_pytorchANNBinaryClassifier_model"
+        pann_S([Start]) --> pann_A[Initialize Global Parameters]
+        pann_A --> pann_B[Perform Feature Selection]
+        pann_B --> pann_C[Standardize Data]
+        pann_C --> pann_D[Validate Batch Size]
+        pann_D --> pann_E[Prepare DataLoaders]
+        pann_E --> pann_F[Get Free GPU]
+        pann_F --> pann_G[Initialize PyTorch ANN Model]
+        pann_G --> pann_H[Train Model]
+        pann_H --> pann_I[Make Predictions]
+        pann_I --> pann_J[Evaluate Model]
+        pann_J --> pann_K{Debug Output}
+        pann_J --> pann_L{Store Model}
+        pann_K --> pann_End([End])
+        pann_L --> pann_End
+    end
+
+    subgraph "Workflow_quadraticDiscriminantAnalysis_model"
+        qda_S([Start]) --> qda_A[Initialize Global Parameters]
+        qda_A --> qda_B[Perform Feature Selection]
+        qda_B --> qda_C{Define Param Space}
+        qda_C --> qda_D[Initialize QuadraticDiscriminantAnalysis Model]
+        qda_D --> qda_E[Attempt Train Model]
+        qda_E --> qda_F[Make Predictions]
+        qda_F --> qda_G[Evaluate Model]
+        qda_G --> qda_H{Debug Output}
+        qda_G --> qda_I{Store Model}
+        qda_H --> qda_End([End])
+        qda_I --> qda_End
+    end
+
+    subgraph "Workflow_randomForest_model"
+        randf_S([Start]) --> randf_A[Initialize Global Parameters]
+        randf_A --> randf_B[Perform Feature Selection]
+        randf_B --> randf_C[Define Hardcoded Param Space]
+        randf_C --> randf_D[Initialize RandomForestClassifier Model]
+        randf_D --> randf_E[Train Model]
+        randf_E --> randf_F[Make Predictions]
+        randf_F --> randf_G[Evaluate Model]
+        randf_G --> randf_H{Debug Output}
+        randf_G --> randf_I{Store Model}
+        randf_H --> randf_End([End])
+        randf_I --> randf_End
+    end
+
+    subgraph "Workflow_svc_model"
+        svc_S([Start]) --> svc_A[Initialize Global Parameters]
+        svc_A --> svc_B[Perform Feature Selection]
+        svc_B --> svc_C{Define Param Space}
+        svc_C --> svc_D[Initialize SVC Model]
+        svc_D --> svc_E[Attempt Train Model]
+        svc_E --> svc_F[Make Predictions]
+        svc_F --> svc_G[Evaluate Model]
+        svc_G --> svc_H{Debug Output}
+        svc_G --> svc_I{Store Model}
+        svc_H --> svc_End([End])
+        svc_I --> svc_End
+    end
+
+    subgraph "Workflow_perceptron_dummy_model"
+        percdum_S([Start]) --> percdum_A[Initialize Global Parameters]
+        percdum_A --> percdum_B[Perform Feature Selection]
+        percdum_B --> percdum_C[Standardize Data]
+        percdum_C --> percdum_D[Initialize Perceptron Model]
+        percdum_D --> percdum_E[Train Model]
+        percdum_E --> percdum_F[Make Predictions]
+        percdum_F --> percdum_G[Evaluate Model]
+        percdum_G --> percdum_H{Debug Output}
+        percdum_H --> percdum_End([End])
+    end
+
+    %% Import Dependencies
+    mlp --> U_debug
+    mlp --> U_feature_select
+    mlp --> U_global_params
+    mlp --> U_model_methods
+    mlp --> U_param_space
+
+    ada --> U_debug
+    ada --> U_feature_select
+    ada --> U_global_params
+    ada --> U_model_methods
+    ada --> U_param_space
+
+    dec --> U_debug
+    dec --> U_feature_select
+    dec --> U_global_params
+    dec --> U_model_methods
+    dec --> U_param_space
+    dec --> U_validate_params
+
+    dum --> percdum
+
+    ela --> U_debug
+    ela --> U_feature_select
+    ela --> U_global_params
+    ela --> U_model_methods
+
+    ext --> U_debug
+    ext --> U_feature_select
+    ext --> U_global_params
+    ext --> U_model_methods
+
+    gau --> U_debug
+    gau --> U_feature_select
+    gau --> U_global_params
+    gau --> U_model_methods
+    gau --> U_param_space
+
+    grad --> U_debug
+    grad --> U_feature_select
+    grad --> U_global_params
+    grad --> U_model_methods
+    grad --> U_param_space
+    grad --> U_validate_params
+
+    knn --> U_debug
+    knn --> U_feature_select
+    knn --> U_global_params
+    knn --> U_model_methods
+
+    logr --> U_debug
+    logr --> U_feature_select
+    logr --> U_global_params
+    logr --> U_model_methods
+
+    xgb --> U_debug
+    xgb --> U_feature_select
+    xgb --> U_global_params
+    xgb --> U_model_methods
+    xgb --> G_ann_util
+
+    perc --> U_debug
+    perc --> U_feature_select
+    perc --> U_global_params
+    perc --> U_model_methods
+
+    pann --> U_debug
+    pann --> U_feature_select
+    pann --> U_global_params
+    pann --> U_model_methods
+    pann --> U_validate_params
+    pann --> G_ann_util
+
+    qda --> U_debug
+    qda --> U_feature_select
+    qda --> U_global_params
+    qda --> U_model_methods
+    qda --> U_param_space
+
+    randf --> U_debug
+    randf --> U_feature_select
+    randf --> U_global_params
+    randf --> U_model_methods
+
+    svc --> U_debug
+    svc --> U_feature_select
+    svc --> U_global_params
+    svc --> U_model_methods
+    svc --> U_param_space
+
+    percdum --> U_debug
+    percdum --> U_feature_select
+    percdum --> U_global_params
+
+    %% Link Models to their Workflows
+    mlp -.-> mlp_S
+    ada -.-> ada_S
+    dec -.-> dec_S
+    dum -.-> dum_S
+    ela -.-> ela_S
+    ext -.-> ext_S
+    gau -.-> gau_S
+    grad -.-> grad_S
+    knn -.-> knn_S
+    logr -.-> logr_S
+    xgb -.-> xgb_S
+    perc -.-> perc_S
+    pann -.-> pann_S
+    qda -.-> qda_S
+    randf -.-> randf_S
+    svc -.-> svc_S
+    percdum -.-> percdum_S
