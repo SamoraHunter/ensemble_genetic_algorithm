@@ -10,7 +10,7 @@
   - [Usage](#usage)
     - [Example Configuration](#example-configuration)
   - [📘 FAQ / User Guide](#-faq--user-guide)
-  - [Data pipeline and genetic algorithm](#data-pipeline-and-genetic-algorithm)
+  - [Diagrams](#diagrams)
   - [License](#license)
 
 
@@ -112,10 +112,67 @@ conda activate ga_env  # or source activate ga_env
 ```
 This ensures all required dependencies are available for successful execution
 
+# Diagrams
+
+This section contains visual representations of the genetic algorithm implementation and model architecture.
+
 ## Data pipeline and genetic algorithm
 
-![Alt text](assets/ga_data_diagram.png)
+### GA Data Flow
+![GA Data Diagram](assets/ga_data_diagram.png)
+- **Source**: [assets/ga_data_diagram.mmd](assets/ga_data_diagram.mmd)
+- **Description**: Illustrates the data flow through the genetic algorithm pipeline
 
+### Model Class Structure
+![Model Classes](assets/model_classes.svg)
+- **Source**: [assets/model_classes.mmd](assets/model_classes.mmd)
+- **Description**: Shows the inheritance hierarchy and relationships between model classes
+
+## Genetic Algorithm Components
+
+### Weighting System
+![GA Weighting](assets/ga_weighting.svg)
+- **Source**: [assets/ga_weighting.mmd](assets/ga_weighting.mmd)
+- **Description**: Demonstrates the weighting mechanism used in the genetic algorithm
+
+### Parameter Space Grid
+![Grid Parameter Space GA](assets/grid_param_space_ga.svg)
+- **Source**: [assets/grid_param_space_ga.mmd](assets/grid_param_space_ga.mmd)
+- **Description**: Visualizes the parameter space exploration grid used by the genetic algorithm
+
+## Model Generation Workflows
+
+### SVC Model Generation
+
+<img src="assets/svc_model_gen.svg" width="100" />
+
+<!-- -->
+
+- **Source**: [assets/svc_model_gen.mmd](assets/svc_model_gen.mmd)
+- **Description**: Flow diagram for Support Vector Classifier model generation process
+
+
+### PyTorch Model Generation
+
+<img src="assets/torch_model_gen.svg" width="150" />
+
+<!-- -->
+
+- **Source**: [assets/torch_model_gen.mmd](assets/torch_model_gen.mmd)
+- **Description**: Flow diagram for PyTorch neural network model generation process
+
+### XGBoost Model Generation
+
+<img src="assets/xgb_model_gen.svg" width="200" />
+
+<!-- -->
+
+- **Source**: [assets/xgb_model_gen.mmd](assets/xgb_model_gen.mmd)
+- **Description**: Flow diagram for XGBoost model generation process
+
+## Diagram Format
+
+All diagrams are available in both Mermaid source format (`.mmd`) and rendered formats (`.png`/`.svg`). The Mermaid source files can be edited and re-rendered as needed for documentation updates.
 
 ## License
 
