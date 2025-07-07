@@ -1,0 +1,65 @@
+flowchart TD
+    A[Start: XGBoostModelGenerator] --> B[Initialize Global Parameters]
+    B --> C[Extract Training/Test Data]
+    C --> D[Apply Feature Selection<br/>method='xgb']
+    
+    D --> E[Random Parameter Selection]
+    E --> E1[gamma_n: 0.01-15]
+    E --> E2[reg_alpha_n: 0-5]
+    E --> E3[reg_gamma_n: 0-5]
+    E --> E4[learning_rate_n: 0.01-0.5]
+    E --> E5[subsample_n: 0.7-1.0]
+    E --> E6[colsample_bytree_n: 0.7-1.0]
+    E --> E7[max_depth_n: 3-15]
+    E --> E8[min_child_weight_n: 1-20]
+    E --> E9[n_estimators_n: 10-700]
+    
+    E1 --> F[Get Free GPU]
+    E2 --> F
+    E3 --> F
+    E4 --> F
+    E5 --> F
+    E6 --> F
+    E7 --> F
+    E8 --> F
+    E9 --> F
+    
+    F --> G{GPU Available?}
+    G -->|Yes| H[Create XGBClassifier<br/>tree_method='gpu_hist']
+    G -->|No| I[Set gpu_id='-1']
+    
+    H --> J[Train Model]
+    I --> K[Create XGBClassifier<br/>tree_method='hist']
+    K --> L{Training Success?}
+    J --> L
+    
+    L -->|Success| M[Make Predictions]
+    L -->|Error| N[Fallback: CPU Training<br/>tree_method='hist']
+    N --> M
+    
+    M --> O[Calculate Metrics]
+    O --> P[Matthews Correlation Coefficient]
+    O --> Q[ROC AUC Score]
+    
+    P --> R[Record Training Time]
+    Q --> R
+    
+    R --> S{Verbose >= 2?}
+    S -->|Yes| T[Debug Base Learner]
+    S -->|No| U{Store Base Learners?}
+    T --> U
+    
+    U -->|Yes| V[Store Model & Metrics]
+    U -->|No| W[Return Results]
+    V --> W
+    
+    W --> X[End: Return<br/>mccscore, model, features,<br/>train_time, auc_score, y_pred]
+    
+    style A fill:#e1f5fe
+    style X fill:#c8e6c9
+    style G fill:#fff3e0
+    style L fill:#fff3e0
+    style S fill:#fff3e0
+    style U fill:#fff3e0
+    style H fill:#ffebee
+    style K fill:#ffebee

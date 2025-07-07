@@ -1,0 +1,60 @@
+flowchart TD
+    A[Start: Pytorch_binary_class_ModelGenerator] --> B[Initialize Global Parameters]
+    B --> C[Extract Training/Test Data]
+    C --> D[Feature Selection: ANOVA]
+    D --> E{Scale Data?}
+    E -->|scale=False| F[Apply StandardScaler]
+    E -->|scale=True| G[Skip Scaling]
+    F --> H[Create PyTorch DataLoaders]
+    G --> H
+    H --> I[Define Parameter Space]
+    I --> J[Random Sample Parameters]
+    J --> K[Get Free GPU Device]
+    K --> L[Initialize Binary Classification Model]
+    L --> M[Move Model to Device]
+    M --> N[Setup Loss & Optimizer]
+    N --> O[Training Loop Start]
+    O --> P[For Each Epoch]
+    P --> Q[For Each Batch]
+    Q --> R[Move Data to Device]
+    R --> S[Zero Gradients]
+    S --> T[Predict with Fallback]
+    T --> U{Prediction Success?}
+    U -->|Success| V[Calculate Loss & Accuracy]
+    U -->|Failure| W[Handle Exception & Raise]
+    V --> X[Backward Pass]
+    X --> Y[Optimizer Step]
+    Y --> Z[Update Metrics]
+    Z --> AA{More Batches?}
+    AA -->|Yes| Q
+    AA -->|No| BB{More Epochs?}
+    BB -->|Yes| P
+    BB -->|No| CC[Training Complete]
+    CC --> DD[Test Prediction]
+    DD --> EE{Test Success?}
+    EE -->|Success| FF[Apply Sigmoid & Round]
+    EE -->|Failure| GG[Generate Random Predictions]
+    FF --> HH{Contains NaN?}
+    GG --> HH
+    HH -->|Yes| II[Replace with Random Vector]
+    HH -->|No| JJ[Keep Predictions]
+    II --> KK[Calculate Metrics]
+    JJ --> KK
+    KK --> LL[Compute MCC Score]
+    LL --> MM[Compute AUC Score]
+    MM --> NN[Record Training Time]
+    NN --> OO{Debug Mode?}
+    OO -->|Yes| PP[Debug Base Learner]
+    OO -->|No| QQ{Store Models?}
+    PP --> QQ
+    QQ -->|Yes| RR[Store Model]
+    QQ -->|No| SS[Clear CUDA Cache]
+    RR --> SS
+    SS --> TT[Return Results]
+    TT --> UU[End: Return MCC, Model, Features, Time, AUC, Predictions]
+
+    style A fill:#e1f5fe
+    style UU fill:#c8e6c9
+    style W fill:#ffcdd2
+    style GG fill:#ffcdd2
+    style II fill:#fff3e0

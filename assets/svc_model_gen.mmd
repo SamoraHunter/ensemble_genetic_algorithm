@@ -1,0 +1,37 @@
+flowchart TD
+    A[Start: SVC_ModelGenerator] --> B[Initialize Global Parameters]
+    B --> C[Extract Training/Test Data from ml_grid_object]
+    C --> D[Start Timer]
+    D --> E[Apply Feature Selection - ANOVA]
+    E --> F[Generate Parameter Space Dictionary]
+    F --> G[Define SVC Parameter Space]
+    G --> H[Randomly Sample Parameters from Space]
+    H --> I[Create SVC Model with Sampled Parameters]
+    I --> J[Try: Train Model]
+    J --> K{Training Successful?}
+    
+    K -->|Yes| L[Make Predictions on Test Set]
+    L --> M[Calculate Matthews Correlation Coefficient]
+    M --> N[Calculate ROC AUC Score]
+    N --> O[Calculate Training Time]
+    O --> P{Verbose >= 2?}
+    P -->|Yes| Q[Debug Base Learner]
+    P -->|No| R{Store Base Learners?}
+    Q --> R
+    R -->|Yes| S[Store Model Results]
+    R -->|No| T[Return Success Results]
+    S --> T
+    T --> U[End: Return MCC, Model, Features, Time, AUC, Predictions]
+    
+    K -->|No - Exception| V[Handle Exception]
+    V --> W[Print Error]
+    W --> X[Calculate Training Time]
+    X --> Y[Generate Random Predictions]
+    Y --> Z[End: Return Default Results - MCC=0, AUC=0.5, Random Predictions]
+
+    style A fill:#e1f5fe
+    style U fill:#c8e6c9
+    style Z fill:#ffcdd2
+    style K fill:#fff3e0
+    style P fill:#f3e5f5
+    style R fill:#f3e5f5
