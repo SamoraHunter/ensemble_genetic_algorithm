@@ -1,0 +1,110 @@
+graph TD
+    A[Start: Jupyter Notebook] --> B[Setup Environment & Paths]
+    B --> C[Load Dataset & Configure]
+    C --> D[Initialize ML Grid Object]
+    D --> E[Setup GA Parameters]
+    E --> F[Create Model Function List]
+    
+    F --> G[Main GA Loop: run.execute]
+    G --> H[Parameter Grid Generation]
+    H --> I[For Each Parameter Set]
+    
+    I --> J[Register DEAP Toolbox]
+    J --> K[Create Initial Population]
+    K --> L[Generate Ensemble Members]
+    
+    L --> M{Multiprocessing?}
+    M -->|Yes| N[Pool.imap with do_work]
+    M -->|No| O[Sequential do_work calls]
+    
+    N --> P[Select Model from modelFuncList]
+    O --> P
+    
+    P --> Q{Use Stored Models?}
+    Q -->|Yes| R[get_stored_model]
+    Q -->|No| S[Generate New Model]
+    
+    R --> T[Return Model Instance]
+    S --> T
+    T --> U[Add to Ensemble]
+    
+    U --> V[Evaluate Initial Population]
+    V --> W[Evolution Loop: g < g_val]
+    
+    W --> X[Select Next Generation]
+    X --> Y[Apply Crossover]
+    Y --> Z[Apply Mutation]
+    Z --> AA[mutateEnsemble]
+    
+    AA --> BB[Evaluate New Generation]
+    BB --> CC[Calculate Fitness Stats]
+    CC --> DD[Find Best Individual]
+    
+    DD --> EE[Calculate gen_eval_score]
+    EE --> FF{Early Stopping?}
+    FF -->|Yes| GG[Stop Evolution]
+    FF -->|No| HH[Continue Evolution]
+    
+    HH --> W
+    GG --> II[Get Best Ensemble]
+    II --> JJ[Generate Final Predictions]
+    JJ --> KK[Plot AUC Results]
+    KK --> LL[Save Results & Models]
+    
+    LL --> MM[Update Score Log]
+    MM --> NN[Save Generation Progress]
+    NN --> OO[Pickle Best Model]
+    
+    OO --> PP{More Parameter Sets?}
+    PP -->|Yes| I
+    PP -->|No| QQ[Complete]
+    
+    subgraph "Model Types"
+        R1[Logistic Regression]
+        R2[Random Forest]
+        R3[XGBoost]
+        R4[SVM]
+        R5[Neural Networks]
+        R6[AdaBoost]
+        R7[Extra Trees]
+        R8[KNN]
+        R9[Dummy Model]
+    end
+    
+    subgraph "GA Components"
+        GA1[Population Size]
+        GA2[Generations]
+        GA3[Crossover Rate]
+        GA4[Mutation Rate]
+        GA5[Tournament Size]
+        GA6[Individual Size]
+    end
+    
+    subgraph "Evaluation Metrics"
+        EM1[AUC Score]
+        EM2[Fitness Values]
+        EM3[Diversity Score]
+        EM4[Generation Progress]
+    end
+    
+    P -.-> R1
+    P -.-> R2
+    P -.-> R3
+    P -.-> R4
+    P -.-> R5
+    P -.-> R6
+    P -.-> R7
+    P -.-> R8
+    P -.-> R9
+    
+    E -.-> GA1
+    E -.-> GA2
+    E -.-> GA3
+    E -.-> GA4
+    E -.-> GA5
+    E -.-> GA6
+    
+    DD -.-> EM1
+    CC -.-> EM2
+    II -.-> EM3
+    EE -.-> EM4
