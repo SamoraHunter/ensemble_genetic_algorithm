@@ -118,6 +118,11 @@ This section contains visual representations of the genetic algorithm implementa
 
 ## Data pipeline and genetic algorithm
 
+### GA Example usage, data grid and GA grid permutations, system flow (example_usage.ipynb)
+![GA Data Diagram](assets/example_usage_permutations.svg)
+- **Source**: [assets/example_usage_permutations.mmd](assets/example_usage_permutations.mmd)
+- **Description**: Illustrates the genetic algorithm search over grid parameters. (See example usage).
+
 ### GA Data Flow
 ![GA Data Diagram](assets/ga_data_diagram.png)
 - **Source**: [assets/ga_data_diagram.mmd](assets/ga_data_diagram.mmd)
