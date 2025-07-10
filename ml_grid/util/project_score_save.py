@@ -315,10 +315,10 @@ class project_score_save_class:
 
             # line['outcome_var'] = y_test.name
 
-            # line['nb_val'] = [nb_val]
-            # line['pop_val'] = [pop_val]
-            # line['g_val'] = [g_val]
-            # line['g'] = [g]
+            line["nb_val"] = [ml_grid_object.nb_val]
+            line["pop_val"] = [ml_grid_object.pop_val]
+            line["g_val"] = [ml_grid_object.g_val]
+            line["g"] = [ml_grid_object.g]
             print("current_algorithm")
             print(current_algorithm)
 

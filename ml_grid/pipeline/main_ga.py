@@ -13,6 +13,7 @@ import pandas as pd
 import tqdm
 from deap import algorithms, base, creator, tools
 from IPython.display import clear_output
+
 # from ml_grid.ga_functions.ga_plots.ga_progress import plot_generation_progress_fitness
 from ml_grid.ga_functions.ga_plots.ga_progress import plot_generation_progress_fitness
 from ml_grid.model_classes_ga.logistic_regression_model import (
@@ -161,12 +162,12 @@ class run:
                 nb_val = param_grid[i][0]
                 pop_val = param_grid[i][1]
                 g_val = param_grid[i][2]
-                
+
                 try:
                     clear_output(wait=True)
                 except Exception as e:
                     print("failed to clear output before run", e)
-                
+
                 print(
                     "Evolving ensemble: ",
                     "nb_val:",
@@ -271,8 +272,8 @@ class run:
                 highest_scoring_ensemble = (0, None)
 
                 while g < g_val and gen_eval_score < 0.999 and stop_early == False:
-                    
-                    if(self.ml_grid_object.verbose<9 and g % 2==0):
+
+                    if self.ml_grid_object.verbose < 9 and g % 2 == 0:
                         clear_output(wait=False)
                     # while g < 50: alt ::  while g < g_val and  ?? eval some how measure AUC or mcc of ensemble?
                     # for i in tqdm(range(0, g_val)):
@@ -446,6 +447,10 @@ class run:
                 method_name = str(best)
                 pg = "nan"
                 n_iter_v = "nan"
+                self.ml_grid_object.nb_val = nb_val
+                self.ml_grid_object.pop_val = pop_val
+                self.ml_grid_object.g_val = g_val
+                self.ml_grid_object.g = g
 
                 try:
                     print("Writing grid perturbation to log")
