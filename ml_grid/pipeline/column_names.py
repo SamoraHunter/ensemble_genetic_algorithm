@@ -14,6 +14,65 @@ def filter_substring_list(string, substr):
 
 
 def get_pertubation_columns(all_df_columns, local_param_dict, drop_term_list):
+    """
+    Categorize and filter DataFrame columns for perturbation analysis in clinical/medical data.
+
+    This function processes clinical dataset columns, categorizing them by data type
+    (e.g., blood tests, medications, demographics) and returns relevant columns for
+    perturbation analysis based on configuration parameters, while identifying
+    columns to be dropped.
+
+    Parameters
+    ----------
+    all_df_columns : list
+        List of all column names from the DataFrame to be processed.
+    local_param_dict : dict
+        Configuration dictionary containing:
+        - 'data': dict with boolean flags for each data category
+          (age, sex, bmi, ethnicity, bloods, diagnostic_order, drug_order,
+          annotation_n, meta_sp_annotation_n, annotation_mrc_n,
+          meta_sp_annotation_mrc_n, core_02, bed, vte_status, hosp_site,
+          core_resus, news, date_time_stamp, appointments)
+        - 'outcome_var_n': identifier for the outcome variable
+    drop_term_list : list
+        List of terms/substrings to identify columns that should be dropped
+        from analysis.
+
+    Returns
+    -------
+    tuple
+        A tuple containing:
+        - pertubation_columns (list): Column names selected for perturbation
+          analysis based on enabled categories in local_param_dict
+        - drop_list (list): Column names to be dropped, including index levels,
+          unnamed columns, client ID codes, and columns matching drop_term_list
+
+    Notes
+    -----
+    The function categorizes columns into the following clinical data types:
+    - Demographics: age, sex, BMI, ethnicity
+    - Laboratory: blood test results with various statistical measures
+    - Clinical orders: diagnostic tests and drug orders
+    - Annotations: various count-based clinical annotations
+    - Hospital data: bed assignments, site information, resuscitation status
+    - Temporal: date/time stamps and appointments
+
+    Blood test columns are filtered to avoid overlap with other categories,
+    particularly VTE status and other clinical indicators.
+
+    Verbosity levels (controlled by global_parameters().verbose):
+    - >= 1: Print category counts
+    - >= 2: Generate plots of category distributions
+
+    Examples
+    --------
+    >>> columns = ['age', 'male', 'hemoglobin_mean', 'vte_status_active']
+    >>> params = {'data': {'age': True, 'sex': True, 'bloods': False},
+    ...           'outcome_var_n': 1}
+    >>> drop_terms = ['temp_col']
+    >>> pert_cols, drop_cols = get_pertubation_columns(columns, params, drop_terms)
+    >>> print(pert_cols)  # ['age', 'male']
+    """
 
     global_params = global_parameters()
 
@@ -80,6 +139,24 @@ def get_pertubation_columns(all_df_columns, local_param_dict, drop_term_list):
         filter(lambda k: "_count_subject_present" in k, all_df_columns)
     )
 
+    not_meta_sp_annotation_count_list = list(
+        filter(lambda k: "_count_subject_not_present" in k, all_df_columns)
+    )
+
+    meta_rp_annotation_count_list = list(
+        filter(lambda k: "_count_relative_present" in k, all_df_columns)
+    )
+
+    not_meta_rp_annotation_count_list = list(
+        filter(lambda k: "_count_relative_not_present" in k, all_df_columns)
+    )
+
+    meta_sp_annotation_count_list.extend(not_meta_sp_annotation_count_list)
+
+    meta_sp_annotation_count_list.extend(meta_rp_annotation_count_list)
+
+    meta_sp_annotation_count_list.extend(not_meta_rp_annotation_count_list)
+
     annotation_count_list = list(
         filter(
             lambda k: "_count" in k and "_count_subject_present" not in k,
@@ -113,6 +190,26 @@ def get_pertubation_columns(all_df_columns, local_param_dict, drop_term_list):
         filter(lambda k: "_count_subject_present_mrc_cs" in k, all_df_columns)
     )
 
+    not_meta_sp_annotation_mrc_count_list = list(
+        filter(lambda k: "_count_subject_not_present_mrc_cs" in k, all_df_columns)
+    )
+
+    relative_meta_rp_annotation_mrc_count_list = list(
+        filter(lambda k: "_count_relative_present_mrc_cs" in k, all_df_columns)
+    )
+
+    not_relative_meta_rp_annotation_mrc_count_list = list(
+        filter(lambda k: "_count_relative_not_present_mrc_cs" in k, all_df_columns)
+    )
+
+    meta_sp_annotation_mrc_count_list.extend(not_meta_sp_annotation_mrc_count_list)
+
+    meta_sp_annotation_mrc_count_list.extend(relative_meta_rp_annotation_mrc_count_list)
+
+    meta_sp_annotation_mrc_count_list.extend(
+        not_relative_meta_rp_annotation_mrc_count_list
+    )
+
     core_02_list = list(filter(lambda k: "core_02_" in k, all_df_columns))
 
     bed_list = list(filter(lambda k: "bed_" in k, all_df_columns))
@@ -130,6 +227,50 @@ def get_pertubation_columns(all_df_columns, local_param_dict, drop_term_list):
     date_time_stamp_list = list(
         filter(lambda k: "date_time_stamp" in k, all_df_columns)
     )
+
+    # Combine these into a single conceptual list for overlap check later
+    meta_sp_annotation_all_counts = (
+        meta_sp_annotation_count_list
+        + not_meta_sp_annotation_count_list
+        + meta_rp_annotation_count_list
+        + not_meta_rp_annotation_count_list
+    )
+    # Combine these into a single conceptual list for overlap check later
+    meta_sp_annotation_mrc_all_counts = (
+        meta_sp_annotation_mrc_count_list
+        + not_meta_sp_annotation_mrc_count_list
+        + relative_meta_rp_annotation_mrc_count_list
+        + not_relative_meta_rp_annotation_mrc_count_list
+    )
+
+    # --- Post-Processing: Remove overlaps from bloods_list ---
+    # Create a set of all columns in other categories
+    all_other_categorized_cols = set()
+
+    # Add all columns from other specific lists to this set
+    all_other_categorized_cols.update(annotation_count_list)
+    all_other_categorized_cols.update(
+        meta_sp_annotation_all_counts
+    )  # Use the combined list
+    all_other_categorized_cols.update(diagnostic_order_list)
+    all_other_categorized_cols.update(drug_order_list)
+    all_other_categorized_cols.update(bmi_list)
+    all_other_categorized_cols.update(ethnicity_list)
+    all_other_categorized_cols.update(annotation_mrc_count_list)
+    all_other_categorized_cols.update(
+        meta_sp_annotation_mrc_all_counts
+    )  # Use the combined list
+    all_other_categorized_cols.update(core_02_list)
+    all_other_categorized_cols.update(bed_list)
+    all_other_categorized_cols.update(vte_status_list)
+    all_other_categorized_cols.update(hosp_site_list)
+    all_other_categorized_cols.update(core_resus_list)
+    all_other_categorized_cols.update(news_list)
+    all_other_categorized_cols.update(date_time_stamp_list)
+    all_other_categorized_cols.update(appointments_list)
+
+    # Filter bloods_list: keep only elements NOT found in any other category to avoid vte status and others being added to bloods.
+    bloods_list = [col for col in bloods_list if col not in all_other_categorized_cols]
 
     candidate_feature_category_lists = [
         meta_sp_annotation_count_list,
