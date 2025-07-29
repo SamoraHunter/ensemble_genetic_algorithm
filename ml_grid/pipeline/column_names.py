@@ -370,4 +370,18 @@ def get_pertubation_columns(all_df_columns, local_param_dict, drop_term_list):
     if verbose >= 2:
         plot_dict_values(local_param_dict.get("data"))
 
+    def deduplicate_list(input_list):
+        """
+        De-duplicates a list while preserving the original order of elements.
+
+        Args:
+            input_list: The list to be de-duplicated.
+
+        Returns:
+            A new list with duplicate elements removed, preserving the original order.
+        """
+        return list(dict.fromkeys(input_list))
+
+    pertubation_columns = deduplicate_list(pertubation_columns)
+
     return pertubation_columns, drop_list
