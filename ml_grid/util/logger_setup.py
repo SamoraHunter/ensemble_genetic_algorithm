@@ -25,25 +25,25 @@ def setup_logger(log_folder_path="."):
     # Get the current date and time
     current_date_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    # Set up logging with the current date and time in the log file name
-    log_file = os.path.join(logs_dir, f"{current_date_time}_ensemble_GA.log")
-    logging.basicConfig(
-        filename=log_file,
-        level=logging.DEBUG,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    )
+    # Store original stdout before any modifications
+    if not hasattr(sys, "_original_stdout"):
+        sys._original_stdout = sys.stdout
 
-    # Create a logger
+    # Create a logger and clear any existing handlers
     logger = logging.getLogger(__name__)
+    logger.handlers.clear()  # Remove any existing handlers
+    logger.setLevel(logging.DEBUG)
+    logger.propagate = False  # Prevent propagation to avoid duplicates
 
-    # Define a handler to print log messages to console
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(logging.INFO)
-    formatter = logging.Formatter(
+    # Set up file handler
+    log_file = os.path.join(logs_dir, f"{current_date_time}_ensemble_GA.log")
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setLevel(logging.DEBUG)
+    file_formatter = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
-    console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
+    file_handler.setFormatter(file_formatter)
+    logger.addHandler(file_handler)
 
     # Define a trace function for logging
     def tracefunc(frame, event, arg):
@@ -53,25 +53,77 @@ def setup_logger(log_folder_path="."):
                 logger.debug(
                     f"{event}: {frame.f_code.co_filename} - Line {frame.f_lineno}"
                 )
-
         return tracefunc
 
     # Register the trace function globally for all events
     sys.settrace(tracefunc)
 
-    # Redirect stdout to the logger
-    class LoggerWriter:
-        def __init__(self, logger, level):
+    # Create a custom stdout writer that writes to both original stdout and log file
+    class DualWriter:
+        def __init__(self, logger, original_stdout):
             self.logger = logger
-            self.level = level
+            self.original_stdout = original_stdout
 
         def write(self, message):
             if message.strip():
-                self.logger.log(self.level, message.strip())
+                # Write to original stdout (console) - this shows immediately
+                self.original_stdout.write(message)
+                self.original_stdout.flush()
+
+                # Also write to log file through logger
+                # Create log record manually to avoid formatter overhead for simple prints
+                log_record = logging.LogRecord(
+                    name=self.logger.name,
+                    level=logging.INFO,
+                    pathname="",
+                    lineno=0,
+                    msg=message.strip(),
+                    args=(),
+                    exc_info=None,
+                )
+                # Only send to file handler, not console handler (to avoid duplication)
+                file_handler.emit(log_record)
 
         def flush(self):
-            pass
+            self.original_stdout.flush()
 
-    sys.stdout = LoggerWriter(logger, logging.INFO)
+        def isatty(self):
+            return self.original_stdout.isatty()
+
+    # Replace stdout with our dual writer
+    sys.stdout = DualWriter(logger, sys._original_stdout)
+
+    # Function to log messages that appear both in console and file with formatting
+    def log_info(message):
+        # This will appear in console with timestamp formatting and in log file
+        formatted_msg = (
+            f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - INFO - {message}"
+        )
+        sys._original_stdout.write(formatted_msg + "\n")
+        sys._original_stdout.flush()
+        logger.info(message)
+
+    def log_debug(message):
+        # Debug only goes to log file
+        logger.debug(message)
+
+    def log_error(message):
+        formatted_msg = (
+            f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - ERROR - {message}"
+        )
+        sys._original_stdout.write(formatted_msg + "\n")
+        sys._original_stdout.flush()
+        logger.error(message)
+
+    # Add these methods to the logger for easy access
+    logger.log_info = log_info
+    logger.log_debug = log_debug
+    logger.log_error = log_error
 
     return logger
+
+
+def restore_stdout():
+    """Helper function to restore original stdout if needed"""
+    if hasattr(sys, "_original_stdout"):
+        sys.stdout = sys._original_stdout
