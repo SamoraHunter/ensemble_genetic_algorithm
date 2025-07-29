@@ -2,7 +2,10 @@ import numpy as np
 import pandas as pd
 from typing import List, Optional
 
-def remove_constant_columns(X: pd.DataFrame, drop_list: Optional[List[str]] = None, verbose: int = 1) -> List[str]:
+
+def remove_constant_columns(
+    X: pd.DataFrame, drop_list: Optional[List[str]] = None, verbose: int = 1
+) -> List[str]:
     """
     Identifies columns in X where all values are the same (constant) and returns their names.
 
@@ -50,51 +53,108 @@ def remove_constant_columns(X: pd.DataFrame, drop_list: Optional[List[str]] = No
 
     return drop_list
 
-def remove_constant_columns_with_debug(X_train, X_test, X_test_orig, verbosity=2):
-    if verbosity > 0:
-        # Debug message: Initial shapes of X_train, X_test, X_test_orig
-        print(f"Initial X_train shape: {X_train.shape}")
-        print(f"Initial X_test shape: {X_test.shape}")
-        print(f"Initial X_test_orig shape: {X_test_orig.shape}")
-    
-    # Calculate the variance for each column in X_train
-    train_variances = X_train.var(axis=0)
-    if verbosity > 1:
-        print(f"Variance of X_train columns:\n{train_variances}")
-    
-    # Identify and remove constant columns in X_train
-    constant_columns_train = train_variances[train_variances == 0].index
-    if verbosity > 0:
-        print(f"Constant columns in X_train: {list(constant_columns_train)}")
-    
-    # Calculate the variance for each column in X_test
-    test_variances = X_test.var(axis=0)
-    if verbosity > 1:
-        print(f"Variance of X_test columns:\n{test_variances}")
-    
-    # Identify constant columns in X_test
-    constant_columns_test = test_variances[test_variances == 0].index
-    if verbosity > 0:
-        print(f"Constant columns in X_test: {list(constant_columns_test)}")
-    
-    # Combine constant columns from both X_train and X_test
-    constant_columns = constant_columns_train.union(constant_columns_test)
-    
-    # Remove the constant columns from both X_train and X_test
-    X_train = X_train.loc[:, ~X_train.columns.isin(constant_columns)]
-    X_test = X_test.loc[:, ~X_test.columns.isin(constant_columns)]
-    
-    # Also remove the same constant columns from X_test_orig
-    X_test_orig = X_test_orig.loc[:, ~X_test_orig.columns.isin(constant_columns)]
-    
-    if verbosity > 0:
-        # Debug message: Shape after removing constant columns from X_train, X_test, X_test_orig
-        print(f"Shape of X_train after removing constant columns: {X_train.shape}")
-        print(f"Shape of X_test after removing constant columns: {X_test.shape}")
-        print(f"Shape of X_test_orig after removing constant columns: {X_test_orig.shape}")
-    
-    # Return the modified X_train, X_test, and X_test_orig, with y_test_orig unchanged
-    return X_train, X_test, X_test_orig
+
+# def remove_constant_columns_with_debug(X_train, X_test, X_test_orig, verbosity=2):
+#     if verbosity > 0:
+#         # Debug message: Initial shapes of X_train, X_test, X_test_orig
+#         print(f"Initial X_train shape: {X_train.shape}")
+#         print(f"Initial X_test shape: {X_test.shape}")
+#         print(f"Initial X_test_orig shape: {X_test_orig.shape}")
+
+#     # Calculate the variance for each column in X_train
+#     train_variances = X_train.var(axis=0)
+#     if verbosity > 1:
+#         print(f"Variance of X_train columns:\n{train_variances}")
+
+#     # Identify and remove constant columns in X_train
+#     constant_columns_train = train_variances[train_variances == 0].index
+#     if verbosity > 0:
+#         print(f"Constant columns in X_train: {list(constant_columns_train)}")
+
+#     # Calculate the variance for each column in X_test
+#     test_variances = X_test.var(axis=0)
+#     if verbosity > 1:
+#         print(f"Variance of X_test columns:\n{test_variances}")
+
+#     # Identify constant columns in X_test
+#     constant_columns_test = test_variances[test_variances == 0].index
+#     if verbosity > 0:
+#         print(f"Constant columns in X_test: {list(constant_columns_test)}")
+
+#     # Combine constant columns from both X_train and X_test
+#     constant_columns = constant_columns_train.union(constant_columns_test)
+
+#     # Remove the constant columns from both X_train and X_test
+#     X_train = X_train.loc[:, ~X_train.columns.isin(constant_columns)]
+#     X_test = X_test.loc[:, ~X_test.columns.isin(constant_columns)]
+
+#     # Also remove the same constant columns from X_test_orig
+#     X_test_orig = X_test_orig.loc[:, ~X_test_orig.columns.isin(constant_columns)]
+
+#     if verbosity > 0:
+#         # Debug message: Shape after removing constant columns from X_train, X_test, X_test_orig
+#         print(f"Shape of X_train after removing constant columns: {X_train.shape}")
+#         print(f"Shape of X_test after removing constant columns: {X_test.shape}")
+#         print(f"Shape of X_test_orig after removing constant columns: {X_test_orig.shape}")
+
+#     # Return the modified X_train, X_test, and X_test_orig, with y_test_orig unchanged
+#     return X_train, X_test, X_test_orig
 
 # Example usage with verbosity level 2 (most verbose)
 # X_train, X_test, X_test_orig = remove_constant_columns_with_debug(X_train, X_test, X_test_orig, verbosity=2)
+
+
+def remove_constant_columns_with_debug(X_train, X_test, X_test_orig, verbosity=2):
+    if verbosity > 0:
+        print(f"Initial X_train shape: {X_train.shape}")
+        print(f"Initial X_test shape: {X_test.shape}")
+        print(f"Initial X_test_orig shape: {X_test_orig.shape}")
+
+    # Calculate variance for each dataset
+    train_variances = X_train.var(axis=0)
+    test_variances = X_test.var(axis=0)
+    test_orig_variances = X_test_orig.var(axis=0)  # ADD THIS
+
+    if verbosity > 1:
+        print(f"Variance of X_train columns:\n{train_variances}")
+        print(f"Variance of X_test columns:\n{test_variances}")
+        print(f"Variance of X_test_orig columns:\n{test_orig_variances}")  # ADD THIS
+
+    # Identify constant columns in each dataset
+    constant_columns_train = train_variances[train_variances == 0].index
+    constant_columns_test = test_variances[test_variances == 0].index
+    constant_columns_test_orig = test_orig_variances[
+        test_orig_variances == 0
+    ].index  # ADD THIS
+
+    if verbosity > 0:
+        print(f"Constant columns in X_train: {list(constant_columns_train)}")
+        print(f"Constant columns in X_test: {list(constant_columns_test)}")
+        print(
+            f"Constant columns in X_test_orig: {list(constant_columns_test_orig)}"
+        )  # ADD THIS
+
+    # Combine constant columns from ALL THREE datasets
+    constant_columns = constant_columns_train.union(constant_columns_test).union(
+        constant_columns_test_orig
+    )  # MODIFY THIS
+
+    if verbosity > 0:
+        print(f"Total constant columns to remove: {list(constant_columns)}")
+
+    # Remove the constant columns from all datasets
+    X_train = X_train.loc[:, ~X_train.columns.isin(constant_columns)]
+    X_test = X_test.loc[:, ~X_test.columns.isin(constant_columns)]
+    X_test_orig = X_test_orig.loc[:, ~X_test_orig.columns.isin(constant_columns)]
+
+    if verbosity > 0:
+        print(f"Final X_train shape: {X_train.shape}")
+        print(f"Final X_test shape: {X_test.shape}")
+        print(f"Final X_test_orig shape: {X_test_orig.shape}")
+
+        # Verify all datasets have same columns
+        assert (
+            set(X_train.columns) == set(X_test.columns) == set(X_test_orig.columns)
+        ), "Column mismatch after constant column removal!"
+
+    return X_train, X_test, X_test_orig
