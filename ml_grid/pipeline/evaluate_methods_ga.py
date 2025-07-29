@@ -16,6 +16,10 @@ from ml_grid.ga_functions.ga_ensemble_weight_finder_de import (
 # )
 from ml_grid.ga_functions.ga_unweighted import get_best_y_pred_unweighted
 
+from ml_grid.util.ensemble_diversity_methods import (
+    apply_diversity_penalty,
+    measure_diversity_wrapper,
+)
 import numpy
 import numpy as np
 import pandas as pd
@@ -80,7 +84,9 @@ def get_y_pred_resolver(ensemble, ml_grid_object, valid=False):
         try:
             y_pred = get_best_y_pred_unweighted(ensemble, ml_grid_object, valid=valid)
         except Exception as e:
-            print("exception on y_pred = get_best_y_pred_unweighted(ensemble, ml_grid_object, valid=valid)")
+            print(
+                "exception on y_pred = get_best_y_pred_unweighted(ensemble, ml_grid_object, valid=valid)"
+            )
             print(ensemble)
             print("valid", valid)
             raise e
@@ -151,17 +157,24 @@ def evaluate_weighted_ensemble_auc(individual, ml_grid_object):
 
     # ?? how does the diversity weighting and the order of operations interact with the ensemble weights already
     # measure and incorporate diversity
-    diversity_metric = measure_binary_vector_diversity(individual)
+    diversity_metric = measure_diversity_wrapper(individual, method="comprehensive")
 
-    diversity_parameter = local_param_dict.get("div_p")
-    #     final_score = (auc* diversity_metric * diversity_parameter)/2
-    #     final_score_mcc = (mcc* diversity_metric * diversity_parameter)/2
+    diversity_parameter = local_param_dict.get(
+        "div_p"
+    )  # user specified, if >0, div score used.
 
-    # Simple diversity incorporation
-    auc_div = auc * ((-1 + (diversity_metric + diversity_parameter)))
-    # div metric should decrease score as 1=similar, we want to penalise similarity of prediction
+    diversity_params = {
+        "penalty_method": "linear",  # or "quadratic", "exponential", "threshold"
+        "penalty_strength": local_param_dict.get(
+            "div_p", 0.3
+        ),  # User specified penalty magnitude.
+        "min_score_factor": 0.1,  # Prevent scores going below 10%
+        "similarity_threshold": 0.7,  # For threshold method
+    }
 
-    mcc_div = mcc * ((-1 + (diversity_metric + diversity_parameter)))
+    auc_div, mcc_div = apply_diversity_penalty(
+        auc, mcc, diversity_metric, diversity_params
+    )
 
     # blank init with headers in main log_store_dataframe_path
     ensemble_model_list = []
