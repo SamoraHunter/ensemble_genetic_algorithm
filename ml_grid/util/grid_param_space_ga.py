@@ -65,7 +65,7 @@ class Grid:
             ],  # Number of outcome variable, outcome varaible should be named "outcome_var_1", "outcome_var_2", etc
             "div_p": [
                 0
-            ],  # Whether to use diversity weighted scoring for base learner. Experimental.
+            ],  # Whether to use diversity weighted scoring for base learner. If >0 this metric penalised by diversity score is used to evaluate ensembles.
             "percent_missing": [
                 99.9,
                 99.8,
