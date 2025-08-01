@@ -1,18 +1,13 @@
-from io import StringIO
 import itertools
 import random
-import subprocess
 import time
-import pandas as pd
-import torchmetrics
-
 from tqdm import tqdm
 import torch
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import torch.nn as nn
 
-from sklearn import datasets, feature_selection, linear_model, metrics, svm, tree
+from sklearn import metrics
 
 from sklearn.metrics import (
     accuracy_score,
@@ -38,191 +33,38 @@ from ml_grid.ga_functions.ga_ann_util import (
 )
 
 
-# should call from import:
-
-
-# def get_y_pred_ann_torch_weighting(best, ml_grid_object, valid=False):
-#     y_test = ml_grid_object.y_test
-#     X_test_orig = ml_grid_object.X_test_orig
-#     y_test_orig = ml_grid_object.y_test_orig
-#     y_train = ml_grid_object.y_train
-#     X_train = ml_grid_object.X_train
-
-#     y_test_ann = y_test.copy()
-
-#     model_train_time_warning_threshold = 15
-#     start = time.time()
-
-#     target_ensemble = best[0]
-#     # Get prediction matrix
-#     # print('Get prediction matrix')
-#     if valid:
-#         print(f"get_y_pred_ann_torch_weighting {valid}")
-#         x_test = X_test_orig.copy()
-#         y_test_ann = y_test_orig.copy()
-
-#         prediction_array = []
-
-#         for i in tqdm(range(0, len(target_ensemble))):
-#             # For model i, predict it's x_test
-#             feature_columns = list(
-#                 target_ensemble[i][2]
-#             )  # get features model was trained on
-
-#             if type(target_ensemble[i][1]) is not BinaryClassification:
-#                 model = target_ensemble[i][1]
-
-#                 model.fit(X_train[feature_columns], y_train)
-
-#                 prediction_array.append(
-#                     model.predict(X_train[feature_columns])
-#                 )  # Use model to predict x train
-
-#             else:
-#                 test_data = TestData(torch.FloatTensor(X_train[feature_columns].values))
-#                 test_loader = DataLoader(dataset=test_data, batch_size=1)
-
-#                 device = torch.device("cpu")
-#                 model = target_ensemble[i][1]
-#                 model.to(device)  # Has this model been fitted??
-#                 y_hat = model(test_data.X_data.to(device))
-
-#                 y_hat = torch.round(torch.sigmoid(y_hat)).cpu().detach().numpy()
-
-#                 y_hat = y_hat.astype(int).flatten()
-#                 prediction_array.append(y_hat)
-
-#         prediction_matrix_X_train = np.matrix(prediction_array)
-#         prediction_matrix_X_train = prediction_matrix_X_train.astype(float)
-#         prediction_matrix_raw_X_train = (
-#             prediction_matrix_X_train  # Store predictions from x_train into matrix
-#         )
-
-#         X_prediction_matrix_raw_X_train = prediction_matrix_raw_X_train.T
-
-#         # Produce test results for valid
-#         prediction_array = []
-#         for i in tqdm(range(0, len(target_ensemble))):
-#             feature_columns = list(target_ensemble[i][2])
-#             if type(target_ensemble[i][1]) is not BinaryClassification:
-#                 prediction_array.append(
-#                     target_ensemble[i][1].predict(x_test[feature_columns])
-#                 )  # Generate predictions from stored models on validset
-
-#             else:
-#                 test_data = TestData(torch.FloatTensor(x_test[feature_columns].values))
-#                 test_loader = DataLoader(dataset=test_data, batch_size=1)
-
-#                 device = torch.device("cpu")
-#                 model = target_ensemble[i][1]
-#                 model.to(device)
-#                 y_hat = model(test_data.X_data.to(device))
-
-#                 y_hat = torch.round(torch.sigmoid(y_hat)).cpu().detach().numpy()
-
-#                 y_hat = y_hat.astype(int).flatten()
-#                 prediction_array.append(y_hat)
-
-#         prediction_matrix_X_test = np.matrix(prediction_array)
-#         prediction_matrix_X_test = prediction_matrix_X_test.astype(float)
-#         prediction_matrix_raw_X_test = prediction_matrix_X_test
-
-#         prediction_matrix_raw_X_test = (
-#             prediction_matrix_raw_X_test.T
-#         )  # Transpose predictions into columns for each model. X >>y
-#         test_data = TestData(torch.FloatTensor(prediction_matrix_raw_X_test))
-
-#     elif valid == False:
-#         # Make predictions on xtrain and y train, feed results into nn to learn weights to map ensemble to true. Apply nn to test ensemble preds
-#         prediction_array = []
-#         for i in tqdm(range(0, len(target_ensemble))):
-#             prediction_array.append(
-#                 target_ensemble[i][5]
-#             )  # Get stored y_pred from x_test (non validation set)
-
-#         prediction_matrix_X_train = np.matrix(prediction_array)
-#         prediction_matrix_X_train = prediction_matrix_X_train.astype(float)
-#         prediction_matrix_raw_X_train = prediction_matrix_X_train
-
-#         X_prediction_matrix_raw_X_train = (
-#             prediction_matrix_raw_X_train.T
-#         )  # transpose to matrix, columns are each model yhat vector
-
-#         test_data = TestData(
-#             torch.FloatTensor(X_prediction_matrix_raw_X_train)
-#         )  # set test data to train set, only learn weights from training
-#         # y_test = y_train.copy()
-#         prediction_matrix_raw_X_test = X_prediction_matrix_raw_X_train
-
-#     train_data = TrainData(
-#         torch.FloatTensor(X_prediction_matrix_raw_X_train),
-#         torch.FloatTensor(np.array(y_train)),
-#     )  # data set to learn weights for x_train model preds to y_train labels
-
-#     # print(len(prediction_array[0]))
-#     # print(prediction_matrix_raw_X_test.shape)
-
-#     y_pred_unweighted = []
-#     for i in range(0, len(prediction_array[0])):
-#         y_pred_unweighted.append(round(np.mean(prediction_matrix_raw_X_test.T[:, i])))
-
-#     auc = metrics.roc_auc_score(y_test_ann, y_pred_unweighted)
-
-#     mccscore_unweighted = matthews_corrcoef(y_test_ann, y_pred_unweighted)
-
-#     y_pred_ensemble = train_ann_weight(
-#         X_prediction_matrix_raw_X_train.shape[1],
-#         int(X_prediction_matrix_raw_X_train.shape[0]),
-#         train_data,
-#         test_data,
-#     )
-
-#     # print("Ensemble ANN weighting training AUC: ", auc_score_weighted)
-
-#     if any(np.isnan(y_pred_ensemble)):
-#         print("Torch model nan, returning random y pred vector")
-#         # zero_vector = [x for x in range(0, len(y_pred))]
-#         # y_pred = zero_vector
-#         random_y_pred_vector = (
-#             np.random.choice(
-#                 a=[False, True],
-#                 size=(
-#                     len(
-#                         y_test_ann,
-#                     )
-#                 ),
-#             )
-#         ).astype(int)
-#         y_pred = random_y_pred_vector
-#         y_pred_ensemble = random_y_pred_vector
-#     else:
-#         # plot_auc(y_hat, f"Deep ANN Torch {para_str}")
-#         pass
-
-#     auc_score_weighted = metrics.roc_auc_score(y_test_ann, y_pred_ensemble)
-
-#     mccscore_weighted = matthews_corrcoef(y_test_ann, y_pred_ensemble)
-
-#     auc_score_weighted = round(metrics.roc_auc_score(y_test_ann, y_pred_ensemble), 4)
-#     print("ANN unweighted ensemble AUC: ", auc)
-#     print("ANN weighted   ensemble AUC: ", auc_score_weighted)
-#     print("ANN weighted   ensemble AUC difference: ", auc_score_weighted - auc)
-#     print("ANN unweighted ensemble MCC: ", mccscore_unweighted)
-#     print("ANN weighted   ensemble MCC: ", mccscore_weighted)
-
-#     # score = (1-de.fun)
-#     # optimal_weights = de.x
-
-#     end = time.time()
-#     model_train_time = int(end - start)
-#     #
-#     # print(len(y_pred_ensemble))
-#     torch.cuda.empty_cache()  # exp
-
-#     return y_pred_ensemble
-
-
 def get_y_pred_ann_torch_weighting(best, ml_grid_object, valid=False):
+    """
+    Generates ensemble predictions using an Artificial Neural Network (ANN) weighting scheme for a set of models.
+
+    This function takes a list of models (the "best" ensemble) and a machine learning grid object, and computes
+    predictions for either the validation or test set. It supports both traditional scikit-learn models and custom
+    PyTorch-based binary classifiers. The function constructs a prediction matrix from the ensemble, trains an ANN
+    to learn optimal weights for combining the ensemble predictions, and returns the final weighted predictions.
+
+    Parameters
+    ----------
+    best : list
+        The ensemble of models and associated metadata. Each element is expected to be a tuple containing model
+        information, including the model object and the feature columns used.
+    ml_grid_object : object
+        An object containing training and test data, as well as configuration parameters such as verbosity.
+        Must have attributes: y_test, X_test_orig, y_test_orig, y_train, X_train, and verbose.
+    valid : bool, optional (default=False)
+        If True, predictions are made on the validation set; otherwise, predictions are made on the test set.
+
+    Returns
+    -------
+    y_pred_ensemble : numpy.ndarray
+        The final ensemble predictions as a 1D array, weighted by the trained ANN.
+
+    Notes
+    -----
+    - The function prints detailed progress and warnings depending on the verbosity level set in `ml_grid_object`.
+    - Handles both scikit-learn and custom PyTorch models for binary classification.
+    - If the ANN produces NaN predictions, a random prediction vector is returned as a fallback.
+    - Computes and prints AUC and MCC scores for both unweighted and ANN-weighted ensembles if verbosity is high.
+    """
 
     if ml_grid_object.verbose >= 11:
         print("get_y_pred_ann_torch_weighting")
@@ -249,26 +91,8 @@ def get_y_pred_ann_torch_weighting(best, ml_grid_object, valid=False):
 
         prediction_array = []
 
-        for i in tqdm(range(0, len(target_ensemble))):
+        for i in range(0, len(target_ensemble)):
             feature_columns = list(target_ensemble[i][2])
-
-            existing_columns = [
-                col
-                for col in feature_columns
-                if col in X_train.columns and col in x_test.columns
-            ]
-
-            missing_columns = [
-                col for col in existing_columns if col not in feature_columns
-            ]
-
-            if ml_grid_object.verbose >= 1 and len(missing_columns) >= 1:
-                print("Warning: The following columns do not exist in feature_columns:")
-                print("\n".join(missing_columns))
-            else:
-                pass
-                # print("All existing columns are present in feature_columns.")
-            feature_columns = existing_columns.copy()
 
             if type(target_ensemble[i][1]) is not BinaryClassification:
                 model = target_ensemble[i][1]
@@ -298,7 +122,7 @@ def get_y_pred_ann_torch_weighting(best, ml_grid_object, valid=False):
         X_prediction_matrix_raw_X_train = prediction_matrix_raw_X_train.T
 
         prediction_array = []
-        for i in tqdm(range(0, len(target_ensemble))):
+        for i in range(0, len(target_ensemble)):
             feature_columns = list(target_ensemble[i][2])
             if type(target_ensemble[i][1]) is not BinaryClassification:
                 prediction_array.append(
@@ -340,7 +164,7 @@ def get_y_pred_ann_torch_weighting(best, ml_grid_object, valid=False):
         X_prediction_matrix_raw_X_train = prediction_matrix_raw_X_train.T
         test_data = TestData(torch.FloatTensor(X_prediction_matrix_raw_X_train))
 
-        prediction_matrix_raw_X_test = X_prediction_matrix_raw_X_train  # missing line?
+        prediction_matrix_raw_X_test = X_prediction_matrix_raw_X_train
 
     train_data = TrainData(
         torch.FloatTensor(X_prediction_matrix_raw_X_train),
@@ -374,28 +198,43 @@ def get_y_pred_ann_torch_weighting(best, ml_grid_object, valid=False):
                 ),
             )
         ).astype(int)
-        y_pred = random_y_pred_vector
+
         y_pred_ensemble = random_y_pred_vector
 
     auc_score_weighted = metrics.roc_auc_score(y_test_ann, y_pred_ensemble)
     mccscore_weighted = matthews_corrcoef(y_test_ann, y_pred_ensemble)
 
     auc_score_weighted = round(metrics.roc_auc_score(y_test_ann, y_pred_ensemble), 4)
-    print("ANN unweighted ensemble AUC: ", auc)
-    print("ANN weighted   ensemble AUC: ", auc_score_weighted)
-    print("ANN weighted   ensemble AUC difference: ", auc_score_weighted - auc)
-    print("ANN unweighted ensemble MCC: ", mccscore_unweighted)
-    print("ANN weighted   ensemble MCC: ", mccscore_weighted)
+
+    if ml_grid_object.verbose >= 5:
+        print("ANN unweighted ensemble AUC: ", auc)
+        print("ANN weighted   ensemble AUC: ", auc_score_weighted)
+        print("ANN weighted   ensemble AUC difference: ", auc_score_weighted - auc)
+        print("ANN unweighted ensemble MCC: ", mccscore_unweighted)
+        print("ANN weighted   ensemble MCC: ", mccscore_weighted)
 
     end = time.time()
     model_train_time = int(end - start)
+    if ml_grid_object.verbose >= 5:
+        print("Model training time: ", model_train_time)
     torch.cuda.empty_cache()
 
     return y_pred_ensemble
 
 
 def train_ann_weight(input_shape, batch_size, train_data, test_data):
+    """
+    Train an ANN weighted ensemble model with a random sample of the global parameter space and return the predictions.
 
+    Parameters:
+    input_shape (int): The number of features in the input data.
+    batch_size (int): The batch size for training.
+    train_data (TrainData): The training data.
+    test_data (TestData): The test data.
+
+    Returns:
+    y_pred_ensemble (numpy.array): The predictions of the ANN weighted ensemble model.
+    """
     try:
         free_gpu = str(get_free_gpu())
     except:
@@ -426,10 +265,7 @@ def train_ann_weight(input_shape, batch_size, train_data, test_data):
         point = dict(zip(additional_grid.keys(), values))
         # merge the general settings
         settings = {**point}
-        # print(settings)
         size_test.append(settings)
-
-    # print(len(size_test))
 
     # Select a random sample from the global parameter space
     sample_parameter_space = {}
@@ -442,15 +278,7 @@ def train_ann_weight(input_shape, batch_size, train_data, test_data):
     for key in additional_grid.keys():
         additional_param_sample[key] = random.choice(additional_grid.get(key))
 
-    # print(sample_parameter_space)
-
-    # print(additional_param_sample)
-
-    # os.environ["CUDA_VISIBLE_DEVICES"]=free_gpu
-
     device = torch.device(f"cuda:{free_gpu}" if torch.cuda.is_available() else "cpu")
-
-    # print(device)
 
     train_loader = DataLoader(
         dataset=train_data,
@@ -463,7 +291,6 @@ def train_ann_weight(input_shape, batch_size, train_data, test_data):
     model = BinaryClassification(**sample_parameter_space)
 
     model.to(device)
-    # print(model)
 
     criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(
@@ -487,7 +314,6 @@ def train_ann_weight(input_shape, batch_size, train_data, test_data):
 
             epoch_loss += loss.item()
             epoch_acc += acc.item()
-        # print(f'Epoch {e+0:03}: | Loss: {epoch_loss/len(train_loader):.5f} | Acc: {epoch_acc/len(train_loader):.3f} | AUC: {torchmetrics.functional.auc(y_batch, y_pred, reorder=True)}')
 
     print(
         f"Epoch {e+0:03}: | Loss: {epoch_loss/len(train_loader):.5f} | Acc: {epoch_acc/len(train_loader):.3f} "  # | AUC: {torchmetrics.functional.auc(y_batch, y_pred, reorder=True)
