@@ -44,7 +44,10 @@ def logisticRegressionModelGenerator(ml_grid_object, local_param_dict):
     # print(score)
     y_pred = model.predict(X_test)
     mccscore = metrics.matthews_corrcoef(y_test, y_pred)
-    auc_score = round(metrics.roc_auc_score(y_test, y_pred), 4)
+    try:
+        auc_score = round(metrics.roc_auc_score(y_test, y_pred), 4)
+    except ValueError:
+        auc_score = 0.5
     end = time.time()
     model_train_time = int(end - start)
     if verbose >= 2:

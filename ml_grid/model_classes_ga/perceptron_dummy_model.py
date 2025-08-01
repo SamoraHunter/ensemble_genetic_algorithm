@@ -45,7 +45,10 @@ def perceptronModelGen_dummy(ml_grid_object, local_param_dict):
     # Predict
     y_pred = model.predict(X_test_std)
     mccscore = matthews_corrcoef(y_test, y_pred)
-    auc_score = round(roc_auc_score(y_test, y_pred), 4)
+    try:
+        auc_score = round(roc_auc_score(y_test, y_pred), 4)
+    except ValueError:
+        auc_score = 0.5
 
     end = time.time()
     model_train_time = int(end - start)
