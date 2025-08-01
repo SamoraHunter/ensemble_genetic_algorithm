@@ -380,48 +380,51 @@ class run:
 
                 # Get stored highest ensemble
                 best = highest_scoring_ensemble[1]
+                if self.verbose >= 1:
+                    print("\n")
+                    print("Best Ensemble Model: ")
+                    for i in range(0, len(best[0])):
+                        print(best[0][i][1], "n features: ", len(best[0][i][2]))
 
-                print("\n")
-                print("Best Ensemble Model: ")
-                for i in range(0, len(best[0])):
-                    print(best[0][i][1], "n features: ", len(best[0][i][2]))
-
-                print(
-                    f"Best Ensemble diversity score: {measure_binary_vector_diversity(best)}"
-                )
+                if self.verbose >= 1:
+                    print(
+                        f"Best Ensemble diversity score: {measure_binary_vector_diversity(best)}"
+                    )
 
                 end = time.time()
-                print(end - start)
+                if self.verbose >= 1:
+                    print(end - start)
 
                 try:
-                    print(
-                        "Getting final final best pred for plot with validation set, get weights from xtrain ytrain"
-                    )
+                    if self.verbose >= 1:
+                        print(
+                            "Getting final final best pred for plot with validation set, get weights from xtrain ytrain"
+                        )
                     best_pred_orig = get_y_pred_resolver(
                         ensemble=best, ml_grid_object=self.ml_grid_object, valid=True
                     )
-
-                    plot_auc(
-                        best_pred_orig,
-                        "best_pop="
-                        + str(pop_val)
-                        + "_g="
-                        + str(g_val)
-                        + "_nb="
-                        + str(nb_val),
-                    )
-                    print(
-                        "nb_val:",
-                        nb_val,
-                        "pop_val:",
-                        pop_val,
-                        "g_val:",
-                        g_val,
-                        "AUC: ",
-                        metrics.roc_auc_score(self.y_test_orig, best_pred_orig),
-                        "g:",
-                        g,
-                    )
+                    if self.verbose >= 1:
+                        plot_auc(
+                            best_pred_orig,
+                            "best_pop="
+                            + str(pop_val)
+                            + "_g="
+                            + str(g_val)
+                            + "_nb="
+                            + str(nb_val),
+                        )
+                        print(
+                            "nb_val:",
+                            nb_val,
+                            "pop_val:",
+                            pop_val,
+                            "g_val:",
+                            g_val,
+                            "AUC: ",
+                            metrics.roc_auc_score(self.y_test_orig, best_pred_orig),
+                            "g:",
+                            g,
+                        )
                 except Exception as e:
                     print("Failed to get best y pred and plot auc")
                     print(e)
@@ -452,8 +455,32 @@ class run:
                 self.ml_grid_object.g_val = g_val
                 self.ml_grid_object.g = g
 
+                # Convert model definition to string for low file size
+                best_str = best.copy()
+
+                best_str_converted = best.copy()
+
+                original_features = self.ml_grid_object.orignal_feature_names
+
+                for i in range(0, len(best_str[0])):
+                    best_str[0][i] = list(best_str[0][i])
+                    best_str[0][i][1] = str(best_str[0][i][1])
+
+                    best_str_converted[0][i] = list(best_str_converted[0][i])
+                    best_str_converted[0][i][1] = str(best_str_converted[0][i][1])
+
+                    # Convert feature list to binary vector
+                    current_features = best_str_converted[0][i][2]
+                    binary_feature_vector = [
+                        1 if f in current_features else 0 for f in original_features
+                    ]
+                    best_str_converted[0][i][2] = binary_feature_vector
+
+                    best_str_converted[0][i] = tuple(best_str_converted[0][i])
+
                 try:
-                    print("Writing grid perturbation to log")
+                    if self.verbose >= 1:
+                        print("Writing grid perturbation to log")
                     # Is for valid or no? Pass valid and set orig or ytest...
                     # write line to best grid scores---------------------
                     self.project_score_save_object.update_score_log(
@@ -467,20 +494,14 @@ class run:
                         start=start,
                         n_iter_v=n_iter_v,
                         valid=True,
+                        generation_progress_list=generation_progress_list,
+                        best_ensemble=best_str_converted,
                     )
 
                 except Exception as e:
                     print(e)
                     print("Failed to upgrade grid entry")
                     raise
-
-                # Convert model definition to string for low file size
-                best_str = best.copy()
-
-                for i in range(0, len(best_str[0])):
-                    best_str[0][i] = list(best_str[0][i])
-                    best_str[0][i][1] = str(best_str[0][i][1])
-                    best_str[0][i] = tuple(best_str[0][i])
 
                 plot_path = f"{self.ml_grid_object.base_project_dir+self.global_param_str + additional_naming}/"
 

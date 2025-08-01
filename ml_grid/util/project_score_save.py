@@ -84,18 +84,11 @@ class project_score_save_class:
             "indpb",
             "t_size",
             "valid",
+            "generation_progress_list",
+            "best_ensemble",
         ]
 
-        column_list = column_list + ["BL_" + str(x) for x in range(0, 64)]
-
-        metric_names = []
-        for metric in self.metric_list:
-            metric_names.append(f"{metric}_m")
-            metric_names.append(f"{metric}_std")
-
-        column_list.extend(metric_names)
-
-        # column_list = column_list +['BL_' + str(x) for x in range(0, 64)]
+        # column_list = column_list + ["BL_" + str(x) for x in range(0, 64)]
 
         df = pd.DataFrame(data=None, columns=column_list)
 
@@ -120,6 +113,8 @@ class project_score_save_class:
         start,
         n_iter_v,
         valid=False,
+        generation_progress_list=[],
+        best_ensemble="",
     ):
 
         if ml_grid_object.verbose >= 1:
@@ -219,22 +214,13 @@ class project_score_save_class:
                 "indpb",
                 "t_size",
                 "valid",
+                "generation_progress_list",
+                "best_ensemble",
             ]
 
-            column_list = column_list + ["BL_" + str(x) for x in range(0, 64)]
-
-            metric_names = []
-            for metric in self.metric_list:
-                metric_names.append(f"{metric}_m")
-                metric_names.append(f"{metric}_std")
-
-            column_list.extend(metric_names)
-
-            # column_list = column_list +['BL_' + str(x) for x in range(0, 64)]
+            # column_list = column_list + ["BL_" + str(x) for x in range(0, 64)]
 
             line = pd.DataFrame(data=None, columns=column_list)
-
-            # best_pred_orig = grid.best_estimator_.predict(X_test_orig)
 
             if valid:
                 y_true = self.y_test_orig
@@ -253,13 +239,13 @@ class project_score_save_class:
 
             # get info from current settings iter...local_param_dict ml_grid_object
             for key in ml_grid_object.local_param_dict:
-                # print(key)
+
                 if key != "data":
                     if key in column_list:
                         line[key] = [ml_grid_object.local_param_dict.get(key)]
                 else:
                     for key_1 in ml_grid_object.local_param_dict.get("data"):
-                        # print(key_1)
+
                         if key_1 in column_list:
                             line[key_1] = [
                                 ml_grid_object.local_param_dict.get("data").get(key_1)
@@ -273,7 +259,7 @@ class project_score_save_class:
                     current_f_vector.append(1)
                 else:
                     current_f_vector.append(0)
-            # f_list.append(np.array(current_f_vector))
+
             f_list.append(current_f_vector)
 
             line["algorithm_implementation"] = [current_algorithm]
@@ -300,42 +286,32 @@ class project_score_save_class:
             line["t_fits"] = pg
             line["n_fits"] = n_iter_v
             line["i"] = self.param_space_index  # 0 # should be index of the iterator
-            # scores from mlgrid are cross val obj. here they are single float.
-            # line["fit_time_m"] = scores["fit_time"].mean()
-            # line["fit_time_std"] = scores["fit_time"].std()
-
-            # line["score_time_m"] = scores["score_time"].mean()
-            # line["score_time_std"] = scores["score_time"].std()
-
-            # for metric in self.metric_list:
-            #     line[f"{metric}_m"] = scores[f"test_{metric}"].mean()
-            #     line[f"{metric}_std"] = scores[f"test_{metric}"].std()
-
-            #           line["valid"] = bool(valid)
-
-            # line['outcome_var'] = y_test.name
 
             line["nb_val"] = [ml_grid_object.nb_val]
             line["pop_val"] = [ml_grid_object.pop_val]
             line["g_val"] = [ml_grid_object.g_val]
             line["g"] = [ml_grid_object.g]
-            print("current_algorithm")
-            print(current_algorithm)
+            line["generation_progress_list"] = [generation_progress_list]
+            line["best_ensemble"] = [str(best_ensemble)]
 
-            for iii in range(0, len(current_algorithm[0])):
-                f_list = []
-                current_f = current_algorithm[0][iii][2]
+            if ml_grid_object.verbose >= 1:
+                print("current_algorithm")
+                print(current_algorithm)
 
-                current_f_vector = []
-                for elem in ml_grid_object.orignal_feature_names:
-                    if elem in current_f:
-                        current_f_vector.append(1)
-                    else:
-                        current_f_vector.append(0)
-                # f_list.append(np.array(current_f_vector))
-                f_list.append(current_f_vector)
+            # for iii in range(0, len(current_algorithm[0])):
+            #     f_list = []
+            #     current_f = current_algorithm[0][iii][2]
 
-                line["BL_" + str(iii)] = [f_list]
+            #     current_f_vector = []
+            #     for elem in ml_grid_object.orignal_feature_names:
+            #         if elem in current_f:
+            #             current_f_vector.append(1)
+            #         else:
+            #             current_f_vector.append(0)
+
+            #     f_list.append(current_f_vector)
+
+            #     line["BL_" + str(iii)] = [f_list]
 
             print(line)
 
@@ -345,7 +321,7 @@ class project_score_save_class:
                 header=False,
                 index=True,
             )
-            # ---------------------------
+
         except Exception as e:
             print(e)
             print(traceback.format_exc())
