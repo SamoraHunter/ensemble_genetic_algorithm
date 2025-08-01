@@ -1,59 +1,31 @@
 import time
-from ml_grid.ga_functions.ga_de_weight_method import (
-    get_weighted_ensemble_prediction_de_y_pred_valid,
-)
-from ml_grid.ga_functions.ga_unweighted import get_best_y_pred_unweighted
-
-# from ml_grid.pipeline.evaluate_methods_ga import (
-#     get_weighted_ensemble_prediction_de_cython,
-# )
-
-import numpy
+from ml_grid.ga_functions.ga_ann_util import normalize
 import numpy as np
 import pandas as pd
 import scipy
-import torch
-import tqdm
-from ml_grid.pipeline import torch_binary_classification_method_ga
-from ml_grid.pipeline.torch_binary_classification_method_ga import (
-    BinaryClassification,
-    TestData,
-)
-
 from ml_grid.util.global_params import global_parameters
 from sklearn import metrics
-
-import numpy as np
-import torch
-import numpy
-from torch.utils.data import Dataset, DataLoader
-
-from numpy.linalg import norm
-
-
-# redundant? weights only derived from xtrain, weight vec is size of ensemble not train set
-
-import numpy as np
 from numpy.linalg import norm
 from sklearn import metrics
 
 round_v = np.vectorize(round)
 
 
-def normalize(weights):
-    # calculate l1 vector norm
-    result = norm(weights, 1)
-    # check for a vector of all zeros
-    if result == 0.0:
-        return weights
-    # return normalized vector (unit norm)
-    return weights / result
-
-
 def get_weighted_ensemble_prediction_de_cython(weights, prediction_matrix_raw, y_test):
-    """Function used by DE algo to search for optimal weights with scoring"""
-
-    
+    """
+    Computes the weighted ensemble prediction for a set of models using the provided weights,
+    and evaluates the prediction using ROC AUC score.
+    Args:
+        weights (array-like): Array of weights for each model in the ensemble.
+        prediction_matrix_raw (array-like): 2D array where each row corresponds to the predictions
+            from a single model for all test samples.
+        y_test (array-like): Ground truth labels for the test samples.
+    Returns:
+        float: 1 minus the ROC AUC score of the weighted ensemble prediction.
+    Raises:
+        Exception: If an error occurs during the computation of the ROC AUC score, prints
+            debugging information and re-raises the exception.
+    """
 
     clean_prediction_matrix = prediction_matrix_raw.copy()
     weights = normalize(weights)
@@ -61,8 +33,8 @@ def get_weighted_ensemble_prediction_de_cython(weights, prediction_matrix_raw, y
     weighted_prediction_matrix_array = (
         np.array(clean_prediction_matrix) * weights[:, None]
     )
-    collapsed_weighted_prediction_matrix_array = (
-        weighted_prediction_matrix_array.sum(axis=0)
+    collapsed_weighted_prediction_matrix_array = weighted_prediction_matrix_array.sum(
+        axis=0
     )
 
     y_pred_best = round_v(collapsed_weighted_prediction_matrix_array)
@@ -78,23 +50,46 @@ def get_weighted_ensemble_prediction_de_cython(weights, prediction_matrix_raw, y
         raise e
 
 
-
-
 # Only get weights from xtrain/ytrain, never get weights from xtest y test. Use weights on x_validation yhat to compare to ytrue_valid
 def super_ensemble_weight_finder_differential_evolution(
     best, ml_grid_object, valid=False
 ):
+    """
+    Finds the optimal ensemble weights for a set of models using Differential Evolution optimization.
+
+    This function takes a list of models (with their predictions) and a machine learning grid object,
+    and uses the Differential Evolution algorithm to find the set of weights that maximize the ensemble's
+    ROC AUC score on the test set.
+
+    Args:
+        best (list): A list containing the best ensemble models and their associated data. Each element
+            should contain model information, including predictions on the test set at index 5.
+        ml_grid_object (object): An object containing training and test data, as well as other relevant
+            attributes (e.g., X_train, X_test, y_train, y_test, X_test_orig, y_test_orig, verbose).
+        valid (bool, optional): Unused parameter, kept for compatibility. Defaults to False.
+
+    Returns:
+        np.ndarray: The optimal weights for the ensemble models as determined by Differential Evolution.
+
+    Raises:
+        Exception: If the Differential Evolution optimization fails, the exception is printed and re-raised.
+
+    Notes:
+        - The function prints the unweighted ensemble AUC and the best weighted score.
+        - Uses `get_weighted_ensemble_prediction_de_cython` as the objective function for optimization.
+        - Assumes that the predictions in `best` are aligned with `y_test`.
+        - The function is designed for binary classification tasks (uses ROC AUC).
+    """
     X_test_orig = ml_grid_object.X_test_orig
     y_test_orig = ml_grid_object.y_test_orig
     X_train = ml_grid_object.X_train
     X_test = ml_grid_object.X_test
     y_train = ml_grid_object.y_train
     y_test = ml_grid_object.y_test
-    
+
     y_test = y_test.copy()  # WRITEABLE error fix?
     if isinstance(y_test, pd.Series):
         y_test = y_test.values
-    
 
     # debug = ml_grid_object.debug  # set in data? ????
 
@@ -125,12 +120,6 @@ def super_ensemble_weight_finder_differential_evolution(
         y_pred_best.append(round(np.mean(prediction_matrix_raw[:, i])))
     auc = metrics.roc_auc_score(y_test, y_pred_best)
     print("Unweighted ensemble AUC: ", auc)
-
-    # Set valid set after #don't set valid ever
-    # print("super_ensemble_weight_finder_differential_evolution", valid)
-    #     if(valid):
-    #         x_test = X_test_orig.copy()
-    #         y_test = y_test_orig.copy()
 
     bounds = [(0, 1) for x in range(0, len(best[0]))]
 
@@ -176,7 +165,7 @@ def super_ensemble_weight_finder_differential_evolution(
                 model_train_time,
                 model_train_time_warning_threshold,
             )
-    
+
     print("best weighted score: ", score, "difference:", score - auc)
     # print("best weights", optimal_weights, optimal_weights.shape)
     return optimal_weights
