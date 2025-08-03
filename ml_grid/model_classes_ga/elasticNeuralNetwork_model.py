@@ -13,6 +13,31 @@ from ml_grid.util.model_methods_ga import store_model
 
 
 def elasticNeuralNetworkModelGenerator(ml_grid_object, local_param_dict):
+    """
+    Generates, trains, and evaluates an elastic net-based neural network model using OneVsRestClassifier.
+
+    This function performs the following steps:
+    1. Retrieves global and local parameters.
+    2. Applies ANOVA-based feature selection to the training and test data.
+    3. Randomly samples hyperparameters for the ElasticNet model.
+    4. Initializes a OneVsRestClassifier with the ElasticNet estimator.
+    5. Fits the model to the training data.
+    6. Evaluates the model using MCC, ROC AUC, and other metrics.
+    7. Optionally stores the trained model and related information.
+
+    Args:
+        ml_grid_object: An object containing training and test data, as well as global parameters.
+        local_param_dict (dict): Dictionary of local parameters for the model.
+
+    Returns:
+        tuple: A tuple containing:
+            - mccscore (float): Matthews correlation coefficient score on the test set.
+            - model (object): The trained OneVsRestClassifier model.
+            - feature_names (list): List of selected feature names used for training.
+            - model_train_time (int): Time taken to train the model (in seconds).
+            - auc_score (float): ROC AUC score on the test set.
+            - y_pred (array-like): Predicted labels for the test set.
+    """
     global_parameter_val = global_parameters()
 
     verbose = global_parameter_val.verbose

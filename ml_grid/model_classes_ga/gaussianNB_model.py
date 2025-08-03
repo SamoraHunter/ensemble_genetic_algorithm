@@ -10,6 +10,34 @@ from ml_grid.util.param_space import ParamSpace
 
 
 def GaussianNB_ModelGenerator(ml_grid_object, local_param_dict):
+    """Trains a Gaussian Naive Bayes classifier with random hyperparameter search.
+
+    This function conducts a single training and evaluation trial for a GaussianNB
+    model. It first applies ANOVA F-test feature selection to the data. It then
+    randomly samples hyperparameters ('priors', 'var_smoothing') from a
+    predefined search space.
+
+    The model is trained using these hyperparameters and evaluated on the test
+    set. Performance is measured by the Matthews Correlation Coefficient (MCC)
+    and ROC AUC score. The function can also handle debugging logs and model
+    storage based on global settings.
+
+    Args:
+        ml_grid_object (MLGridObject): An object containing the project's data
+            (X_train, y_train, etc.) and configuration settings.
+        local_param_dict (dict): A dictionary of local parameters for this
+            specific model run, including 'param_space_size'.
+
+    Returns:
+        tuple: A tuple containing the following evaluation metrics and artifacts:
+            - mccscore (float): The Matthews Correlation Coefficient.
+            - model (GaussianNB): The trained scikit-learn model object.
+            - list: The list of feature names used for training.
+            - model_train_time (int): The training time in seconds.
+            - auc_score (float): The ROC AUC score.
+            - y_pred (np.ndarray): The model's predictions on the test set.
+    """
+
     global_parameter_val = global_parameters()
 
     verbose = global_parameter_val.verbose

@@ -10,6 +10,30 @@ from ml_grid.util.model_methods_ga import store_model
 
 
 def extraTreesModelGenerator(ml_grid_object, local_param_dict):
+    """
+    Generates, trains, and evaluates an ExtraTreesClassifier model using specified parameters and feature selection.
+
+    This function performs the following steps:
+    - Retrieves training and testing data from the provided ml_grid_object.
+    - Applies ANOVA-based feature selection to the data.
+    - Randomly initializes hyperparameters for the ExtraTreesClassifier.
+    - Trains the model on the selected features.
+    - Evaluates the model using accuracy, Matthews correlation coefficient (MCC), and ROC AUC score.
+    - Optionally stores the trained model and debugging information based on configuration.
+
+    Args:
+        ml_grid_object: An object containing training and testing data, as well as global parameters.
+        local_param_dict (dict): A dictionary of local parameters for model storage and configuration.
+
+    Returns:
+        tuple: A tuple containing:
+            - mccscore (float): The Matthews correlation coefficient of the model on the test set.
+            - model (ExtraTreesClassifier): The trained ExtraTreesClassifier model.
+            - feature_names (list): List of selected feature names used for training.
+            - model_train_time (int): Time taken to train the model (in seconds).
+            - auc_score (float): ROC AUC score of the model on the test set.
+            - y_pred (array-like): Predicted labels for the test set.
+    """
     global_parameter_val = global_parameters()
 
     verbose = global_parameter_val.verbose
