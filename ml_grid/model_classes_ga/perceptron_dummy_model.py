@@ -11,6 +11,32 @@ from ml_grid.util.global_params import global_parameters
 
 
 def perceptronModelGen_dummy(ml_grid_object, local_param_dict):
+    """Generates and trains a simple Perceptron model for dummy/baseline purposes.
+
+    This function creates a basic Perceptron classifier with a fixed set of
+    hyperparameters. It is primarily intended to be used by the
+    `DummyModelGenerator` to provide a consistent, pre-trained model object
+    that can be used as a placeholder in ensembles.
+
+    The process includes:
+    1.  Applying ANOVA-based feature selection.
+    2.  Scaling the feature data using StandardScaler.
+    3.  Training a Perceptron model with a randomly chosen `max_iter` from a
+        small, predefined list.
+    4.  Evaluating the model's performance on the test set.
+
+    Args:
+        ml_grid_object: An object containing the project's data (e.g.,
+            X_train, y_train, X_test, y_test) and configuration settings.
+        local_param_dict (dict): A dictionary of local parameters, maintained
+            for API consistency but not directly used for hyperparameter tuning.
+
+    Returns:
+        tuple: A tuple containing mccscore (float), the trained model object,
+        a list of feature names, the model training time (int), the
+        auc_score (float), and the predictions (np.ndarray).
+
+    """
 
     global_parameter_val = global_parameters()
 

@@ -66,6 +66,37 @@ def predict_with_fallback(model, X_batch, y_batch):
     return y_pred
 
 def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
+    """Generates, trains, and evaluates a PyTorch-based binary classification ANN.
+
+    This function performs a single trial of training and evaluating a custom
+    PyTorch Artificial Neural Network (ANN). It uses a random search approach
+    for hyperparameter tuning.
+
+    The process includes:
+    1.  Applying ANOVA-based feature selection.
+    2.  Optionally scaling the data using StandardScaler.
+    3.  Preparing PyTorch DataLoader for training.
+    4.  Randomly sampling hyperparameters (e.g., batch size, layer size,
+        dropout, epochs, learning rate) from a predefined search space.
+    5.  Selecting an available GPU or defaulting to CPU.
+    6.  Training the PyTorch `BinaryClassification` model.
+    7.  Evaluating the model's performance on the test set using Matthews
+        Correlation Coefficient (MCC) and ROC AUC score.
+    8.  Handling potential NaN predictions with a random fallback.
+    9.  Optionally storing the trained model and its metadata.
+
+    Args:
+        ml_grid_object: An object containing the project's data (e.g.,
+            X_train, y_train, X_test, y_test) and configuration settings.
+        local_param_dict (dict): A dictionary of local parameters for this
+            specific model run, which may include 'scale'.
+
+    Returns:
+        tuple: A tuple containing mccscore (float), the trained model object,
+        a list of feature names, the model training time (int), the
+        auc_score (float), and the predictions (np.ndarray).
+
+    """
     global_parameter_val = global_parameters()
 
     verbose = global_parameter_val.verbose
@@ -85,7 +116,8 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
         ml_grid_object
     ).get_featured_selected_training_data(method="anova")
 
-    if scale == False:
+
+    if scale == True:
         scaler = StandardScaler()
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.transform(X_test)

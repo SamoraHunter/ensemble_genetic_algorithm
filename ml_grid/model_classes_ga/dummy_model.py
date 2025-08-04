@@ -4,15 +4,61 @@ from ml_grid.model_classes_ga.perceptron_dummy_model import perceptronModelGen_d
 
 
 class DummyModelGenerator:
+    """A generator for creating a baseline 'dummy' model result.
+
+    This class serves as a placeholder or baseline for the model generation
+    process within the genetic algorithm. Instead of training a new model, it
+    leverages a pre-trained simple Perceptron model and generates random
+    predictions to establish a performance floor.
+
+    This is useful for debugging the ensemble pipeline and ensuring that evolved
+    ensembles perform better than random chance.
+
+    Warnings: this may throw a column name related error if included in the model pipeline,
+    It is not intended to be used in a production setting.
+
+    Attributes:
+        fitted_perceptron (Perceptron): A pre-trained scikit-learn Perceptron model.
+        dummy_columns (list): A list of feature names corresponding to the
+            `fitted_perceptron`.
+    """
+
     def __init__(self, ml_grid_object, local_param_dict):
-        self.fitted_perceptron = perceptronModelGen_dummy(
-            ml_grid_object, local_param_dict
-        )[1]
-        self.dummy_columns = perceptronModelGen_dummy(ml_grid_object, local_param_dict)[
-            2
-        ]
+        """Initializes the DummyModelGenerator.
+
+        Args:
+            ml_grid_object: An object containing project data and configurations.
+            local_param_dict (dict): A dictionary of local parameters for the run.
+        """
+        (
+            _,
+            self.fitted_perceptron,
+            self.dummy_columns,
+            _,
+            _,
+            _,
+        ) = perceptronModelGen_dummy(ml_grid_object, local_param_dict)
 
     def dummy_model_gen(self, ml_grid_object, local_param_dict):
+        """Generates a tuple representing a dummy model's evaluation.
+
+        This method returns a standard model result tuple but with fixed or random
+        values. The model itself is a pre-fitted Perceptron, and the predictions
+        are random.
+
+        Args:
+            ml_grid_object: An object containing project data (e.g., y_test).
+            local_param_dict (dict): A dictionary of local parameters (unused).
+
+        Returns:
+            tuple: A tuple containing:
+                - mccscore (float): A fixed MCC score of 0.5.
+                - model (Perceptron): The pre-fitted Perceptron model.
+                - feature_names (list): The list of feature names for the model.
+                - model_train_time (int): A fixed training time of 0.
+                - auc_score (float): A random ROC AUC score between 0.5 and 1.0.
+                - y_pred (np.ndarray): A vector of random binary predictions.
+        """
         y_test = ml_grid_object.y_test
         mccscore = 0.5
         model_train_time = 0

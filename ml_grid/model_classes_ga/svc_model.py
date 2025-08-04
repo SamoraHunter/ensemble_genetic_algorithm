@@ -11,6 +11,37 @@ from ml_grid.util.param_space import ParamSpace
 
 
 def SVC_ModelGenerator(ml_grid_object, local_param_dict):
+    """Generates, trains, and evaluates a Support Vector Classifier (SVC) model.
+
+    This function performs a single trial of training and evaluating an SVC
+    model. It uses a random search approach for hyperparameter tuning.
+
+    The process includes:
+    1.  Applying ANOVA-based feature selection.
+    2.  Randomly sampling hyperparameters from a comprehensive, predefined
+        search space covering kernel types, regularization (C), and other
+        key parameters.
+    3.  Training the SVC model with the selected parameters.
+    4.  Handling potential exceptions during model fitting by returning a
+        default, low-performing result.
+    5.  Evaluating the model's performance on the test set using Matthews
+        Correlation Coefficient (MCC) and ROC AUC score.
+    6.  Optionally storing the trained model and its metadata.
+
+    Args:
+        ml_grid_object: An object containing the project's data (e.g.,
+            X_train, y_train, X_test, y_test) and configuration settings.
+        local_param_dict (dict): A dictionary of local parameters for this
+            specific model run, which may include 'param_space_size'.
+
+    Returns:
+        tuple: A tuple containing mccscore (float), the trained model object,
+        a list of feature names, the model training time (int), the
+        auc_score (float), and the predictions (np.ndarray). In case of an
+        error during training, a default tuple with an MCC of 0 and AUC of
+        0.5 is returned.
+
+    """
     global_parameter_val = global_parameters()
 
     verbose = global_parameter_val.verbose

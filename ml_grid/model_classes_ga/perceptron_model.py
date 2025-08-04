@@ -10,6 +10,33 @@ from ml_grid.util.model_methods_ga import store_model
 
 
 def perceptronModelGenerator(ml_grid_object, local_param_dict):
+    """Generates, trains, and evaluates a Perceptron model.
+
+    This function performs a single trial of training and evaluating a
+    Perceptron model. It uses a simple random search for the `max_iter`
+    hyperparameter.
+
+    The process includes:
+    1.  Applying ANOVA-based feature selection.
+    2.  Scaling the feature data using StandardScaler.
+    3.  Randomly sampling the `max_iter` hyperparameter from a predefined list.
+    4.  Training the Perceptron model with the selected parameters.
+    5.  Evaluating the model's performance on the test set using Matthews
+        Correlation Coefficient (MCC) and ROC AUC score.
+    6.  Optionally storing the trained model and its metadata.
+
+    Args:
+        ml_grid_object: An object containing the project's data (e.g.,
+            X_train, y_train, X_test, y_test) and configuration settings.
+        local_param_dict (dict): A dictionary of local parameters for this
+            specific model run (used for model storage).
+
+    Returns:
+        tuple: A tuple containing mccscore (float), the trained model object,
+        a list of feature names, the model training time (int), the
+        auc_score (float), and the predictions (np.ndarray).
+
+    """
     global_parameter_val = global_parameters()
 
     verbose = global_parameter_val.verbose

@@ -10,6 +10,33 @@ from ml_grid.util.model_methods_ga import store_model
 
 
 def randomForestModelGenerator(ml_grid_object, local_param_dict):
+    """Generates, trains, and evaluates a RandomForestClassifier model.
+
+    This function performs a single trial of training and evaluating a
+    RandomForestClassifier. It uses a random search approach for
+    hyperparameter tuning from a hardcoded parameter space.
+
+    The process includes:
+    1.  Applying RandomForest-based feature selection to the data.
+    2.  Randomly sampling hyperparameters from a predefined search space.
+    3.  Training the RandomForestClassifier with the selected parameters.
+    4.  Evaluating the model's performance on the test set using Matthews
+        Correlation Coefficient (MCC) and ROC AUC score.
+    5.  Optionally storing the trained model and its metadata.
+
+    Args:
+        ml_grid_object: An object containing the project's data (e.g.,
+            X_train, y_train, X_test, y_test) and configuration settings.
+        local_param_dict (dict): A dictionary of local parameters for this
+            specific model run, used for model storage but not for
+            hyperparameter generation in this implementation.
+
+    Returns:
+        tuple: A tuple containing mccscore (float), the trained model object,
+        a list of feature names, the model training time (int), the
+        auc_score (float), and the predictions (np.ndarray).
+
+    """
     global_parameter_val = global_parameters()
 
     verbose = global_parameter_val.verbose
@@ -27,7 +54,6 @@ def randomForestModelGenerator(ml_grid_object, local_param_dict):
     ).get_featured_selected_training_data(method="randomforest")
 
     # Initialise parameter space-----------------------------------------------------------------
-    num_trees = 30
     max_features_n = random.choice(list(np.arange(0.05, 0.2, 0.001)))
     min_samples_leaf_n = random.choice([2, 5, 8, 10, 15, 20, 25, 40, 50])
     n_estimators_n = random.choice(
@@ -78,9 +104,6 @@ def randomForestModelGenerator(ml_grid_object, local_param_dict):
 
     # Fit model-------------------------------------------------------------------------------------
     model.fit(X_train, y_train)
-    y_train_hat = model.predict(X_train)
-    score = model.score(X_test, y_test)
-    # print(score)
     y_pred = model.predict(X_test)
     mccscore = matthews_corrcoef(y_test, y_pred)
     auc_score = round(roc_auc_score(y_test, y_pred), 4)
