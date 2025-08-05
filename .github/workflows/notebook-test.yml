@@ -25,6 +25,7 @@ jobs:
           sudo update-ca-certificates
 
       - name: Debug mounted cert
+        continue-on-error: true
         run: ls -l /usr/local/share/ca-certificates && cat /usr/local/share/ca-certificates/kch_certauth.crt
 
       - name: Install ping utility
