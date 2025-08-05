@@ -10,12 +10,22 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Install Act dependencies 
-        if: ${{ env.ACT }} 
-        run: | 
-          apt-get update && apt-get install sudo -y 
+      - name: Install dependencies for local (act) runner
+        if: ${{ env.ACT }}
+        run: |
+          apt-get update
+          apt-get install -y sudo git curl gnupg
+
+      - name: Install CA cert tools and trust internal CA
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates
+          sudo update-ca-certificates
+
+      - name: Debug mounted cert
+        run: ls -l /usr/local/share/ca-certificates && cat /usr/local/share/ca-certificates/kch_certauth.crt
 
       - name: Install ping utility
         run: |
@@ -24,57 +34,68 @@ jobs:
 
       - name: Set timezone to UTC
         run: |
-          export DEBIAN_FRONTEND=noninteractive
-          if [ -n "$ACT" ]; then
-            ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
-            echo "Etc/UTC" > /etc/timezone
-            apt-get update
-            apt-get install -y tzdata
-            dpkg-reconfigure -f noninteractive tzdata
-          else
-            sudo ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
-            echo "Etc/UTC" | sudo tee /etc/timezone
-            sudo apt-get update
-            sudo apt-get install -y tzdata
-            sudo dpkg-reconfigure -f noninteractive tzdata
-          fi
-
-      - name: Install Python 3.10 and Git
-        run: |
-          export DEBIAN_FRONTEND=noninteractive
+          # Use sudo for all commands to ensure permissions in all runner environments
+          sudo ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
+          echo "Etc/UTC" | sudo tee /etc/timezone
           sudo apt-get update
-          sudo apt-get install -y gnupg lsb-release software-properties-common curl git
+          sudo apt-get install -y tzdata
+          sudo dpkg-reconfigure -f noninteractive tzdata
 
-          echo "deb [trusted=yes] http://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/deadsnakes-ppa.list
+      - name: Install Python 3.10, Git, and set CA environment
+        run: |
+          sudo apt-get update
+          # lsb-release is still useful, but software-properties-common is not needed and causes issues.
+          sudo apt-get install -y lsb-release
+
+          # Properly and securely add the GPG key for the deadsnakes PPA
+          # This part is perfect and doesn't need software-properties-common
+          sudo gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys BA6932366A755776
+          sudo gpg --export BA6932366A755776 | sudo gpg --dearmor -o /usr/share/keyrings/deadsnakes-archive-keyring.gpg
+
+          # Add the PPA repository, signed by the new key
+          echo "deb [signed-by=/usr/share/keyrings/deadsnakes-archive-keyring.gpg] http://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/deadsnakes-ppa.list
+          
           sudo apt-get update
           sudo apt-get install -y python3.10 python3.10-venv python3.10-distutils
 
-          # Set Python 3.10 as default
-          ln -sf /usr/bin/python3.10 /usr/local/bin/python
-          ln -sf /usr/bin/python3.10 /usr/local/bin/python3
+          # Set Python 3.10 as default using symbolic links
+          sudo ln -sf /usr/bin/python3.10 /usr/local/bin/python
+          sudo ln -sf /usr/bin/python3.10 /usr/local/bin/python3
 
-          curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
-          python3.10 -m ensurepip --upgrade
-          ln -sf /usr/local/bin/pip3.10 /usr/local/bin/pip
-          ln -sf /usr/local/bin/pip3.10 /usr/local/bin/pip3
+          # Install pip using the recommended bootstrap script
+          curl -sS https://bootstrap.pypa.io/get-pip.py | sudo python3.10
+          sudo ln -sf /usr/local/bin/pip3.10 /usr/local/bin/pip
+          sudo ln -sf /usr/local/bin/pip3.10 /usr/local/bin/pip3
 
           python --version
           pip --version
 
-      - name: Set environment variables
-        run: |
-          echo "PYTHONHTTPSVERIFY=0" >> $GITHUB_ENV
-          echo "CURL_CA_BUNDLE=" >> $GITHUB_ENV
-          echo "SSL_CERT_FILE=" >> $GITHUB_ENV
-          echo "GIT_SSL_NO_VERIFY=true" >> $GITHUB_ENV
+          # **FIX:** Set the certificate path for all subsequent steps in the job
+          echo "SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt" >> $GITHUB_ENV
+          echo "REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt" >> $GITHUB_ENV
 
       - name: Setup GA project
         run: |
           cd $GITHUB_WORKSPACE
-          # Make install.sh executable if it isn't already
-          chmod +x install.sh
-          # Run the installation script
-          ./install.sh
+          python3 -m venv ga_env
+          source ga_env/bin/activate
+
+          echo "---- Creating a temporary, CPU-only requirements file ----"
+          # This command reads your original requirements.txt but skips any lines
+          # containing 'torch', 'triton', or 'nvidia', and saves the result to a new file.
+          grep -vE "torch|triton|nvidia" requirements.txt > cpu-requirements.txt
+
+          echo "---- Installing CPU-only PyTorch separately ----"
+          # First, install the specific CPU version of PyTorch we need.
+          pip install torch==2.0.1 --index-url https://download.pytorch.org/whl/cpu
+
+          echo "---- Installing the rest of the packages from the filtered file ----"
+          # Now, install from our clean, temporary requirements file.
+          pip install -r cpu-requirements.txt
+          
+          # This part is still useful for notebook compatibility
+          pip install ipykernel
+          python -m ipykernel install --user --name=ga_env
 
       - name: Debug virtual environment
         run: |
@@ -85,7 +106,10 @@ jobs:
           python --version
 
       - name: Run tests
+        env:
+          CUDA_VISIBLE_DEVICES: ""
         run: |
           cd $GITHUB_WORKSPACE
           source "$VENV_PATH/bin/activate"
-          pytest notebooks/test_notebook.py
+          # Add -s and -v flags for verbose output that shows print statements in real-time
+          pytest -v -s notebooks/test_notebook.py
