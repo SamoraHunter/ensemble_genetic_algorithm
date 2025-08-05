@@ -117,7 +117,7 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
     ).get_featured_selected_training_data(method="anova")
 
 
-    if scale == True:
+    if scale == False:
         scaler = StandardScaler()
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.transform(X_test)
