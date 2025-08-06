@@ -45,11 +45,9 @@ jobs:
       - name: Install Python 3.10, Git, and set CA environment
         run: |
           sudo apt-get update
-          # lsb-release is still useful, but software-properties-common is not needed and causes issues.
           sudo apt-get install -y lsb-release
 
           # Properly and securely add the GPG key for the deadsnakes PPA
-          # This part is perfect and doesn't need software-properties-common
           sudo gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys BA6932366A755776
           sudo gpg --export BA6932366A755776 | sudo gpg --dearmor -o /usr/share/keyrings/deadsnakes-archive-keyring.gpg
 
@@ -63,15 +61,7 @@ jobs:
           sudo ln -sf /usr/bin/python3.10 /usr/local/bin/python
           sudo ln -sf /usr/bin/python3.10 /usr/local/bin/python3
 
-          # Install pip using the recommended bootstrap script
-          curl -sS https://bootstrap.pypa.io/get-pip.py | sudo python3.10
-          sudo ln -sf /usr/local/bin/pip3.10 /usr/local/bin/pip
-          sudo ln -sf /usr/local/bin/pip3.10 /usr/local/bin/pip3
-
-          python --version
-          pip --version
-
-          # **FIX:** Set the certificate path for all subsequent steps in the job
+          # Set the certificate path for all subsequent steps in the job
           echo "SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt" >> $GITHUB_ENV
           echo "REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt" >> $GITHUB_ENV
 
