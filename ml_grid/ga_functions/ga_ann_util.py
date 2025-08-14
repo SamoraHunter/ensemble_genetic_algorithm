@@ -14,7 +14,7 @@ class BinaryClassification(nn.Module):
     Args:
         column_length (int): Number of input features.
         deep_layers_1 (int): Number of additional fully connected hidden layers after the initial two layers.
-        batch_size (int): Number of neurons in each hidden layer.
+        hidden_layer_size (int): Number of neurons in each hidden layer.
         dropout_val (float): Dropout probability for regularization.
 
     Attributes:
@@ -33,23 +33,23 @@ class BinaryClassification(nn.Module):
         Output shape: (batch_size, 1)
     """
 
-    def __init__(self, column_length, deep_layers_1, batch_size, dropout_val):
+    def __init__(self, column_length, deep_layers_1, hidden_layer_size, dropout_val):
         super(BinaryClassification, self).__init__()
         # Number of input features is 12.
-        self.layer_1 = nn.Linear(column_length, batch_size)
-        self.layer_2 = nn.Linear(batch_size, batch_size)
+        self.layer_1 = nn.Linear(column_length, hidden_layer_size)
+        self.layer_2 = nn.Linear(hidden_layer_size, hidden_layer_size)
         layers = []
         for i in range(0, deep_layers_1):
-            layers.append(nn.Linear(batch_size, batch_size))
+            layers.append(nn.Linear(hidden_layer_size, hidden_layer_size))
 
         self.deep_layers = nn.Sequential(*layers)
 
-        self.layer_out = nn.Linear(batch_size, 1)
+        self.layer_out = nn.Linear(hidden_layer_size, 1)
 
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(p=dropout_val)
-        self.batchnorm1 = torch.nn.BatchNorm1d(batch_size)
-        self.batchnorm2 = nn.BatchNorm1d(batch_size)
+        self.batchnorm1 = torch.nn.BatchNorm1d(hidden_layer_size)
+        self.batchnorm2 = nn.BatchNorm1d(hidden_layer_size)
 
     def forward(self, inputs):
         x = self.relu(self.layer_1(inputs))

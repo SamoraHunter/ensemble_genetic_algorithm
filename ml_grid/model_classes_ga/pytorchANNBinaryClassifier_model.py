@@ -137,7 +137,7 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
     parameter_space = {
         "column_length": [len(X_train.columns)],
         #'epochs': [50, 200],
-        "batch_size": [
+        "hidden_layer_size": [
             max(2, int(X_train.shape[0] / 100)),
             max(2, int(X_train.shape[0] / 200)),
         ],
@@ -191,7 +191,7 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
 
     train_loader = DataLoader(
         dataset=train_data,
-        batch_size=sample_parameter_space["batch_size"],
+        batch_size=sample_parameter_space["hidden_layer_size"],
         shuffle=True,
         drop_last=True
     )

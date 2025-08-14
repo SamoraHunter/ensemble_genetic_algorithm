@@ -1,0 +1,43 @@
+flowchart TD
+    subgraph "ga_eval_ann_weight_method.py: get_y_pred_ann_torch_weighting_eval"
+        A[Start] --> B{Is valid?};
+
+        B -- Yes --> C[Set Validation Mode];
+        C --> C1[x_test = X_test_orig.copy] --> C1a[y_test_ann = y_test_orig.copy];
+        C1a --> D;
+
+        B -- No --> T[Set Test Mode];
+        T --> T1[x_test = X_test.copy] --> T1a[y_test_ann = y_test.copy];
+        T1a --> D;
+
+        D[Generate Predictions on Training Data for ANN Training];
+        D --> E{For each model in ensemble};
+        E -- Loop --> F{Model Type?};
+        F -- scikit-learn --> G[Fit model on X_train and Predict on X_train];
+        G --> H[Append prediction to array];
+        F -- PyTorch --> I[Predict on X_train with PyTorch model];
+        I --> H;
+        H -- Next model --> E;
+        E -- Done looping --> J[Create Training Prediction Matrix X_prediction_matrix_raw_X_train];
+
+        J --> K[Generate Predictions on Target Data Test/Validation];
+        K --> L{For each model in ensemble};
+        L -- Loop --> M{Model Type?};
+        M -- scikit-learn --> N[Predict on x_test];
+        N --> O[Append prediction to array];
+        M -- PyTorch --> P[Predict on x_test with PyTorch model];
+        P --> O;
+        O -- Next model --> L;
+        L -- Done looping --> Q[Create Target Prediction Matrix prediction_matrix_raw_X_test];
+
+        Q --> R[Prepare DataLoaders for ANN];
+        R --> S[Calculate Unweighted Ensemble Performance AUC & MCC];
+        S --> U[Train Weighting ANN y_pred_ensemble = train_ann_weight];
+        U --> V{NaN in predictions?};
+        V -- Yes --> W[Generate Random Prediction Vector];
+        W --> X;
+        V -- No --> X;
+        X[Calculate Weighted Ensemble Performance AUC & MCC];
+        X --> Y[torch.cuda.empty_cache];
+        Y --> Z[Return Weighted Predictions y_pred_ensemble];
+    end
