@@ -131,7 +131,9 @@ class GA_results_explorer:
         else:
             return []
 
-    def plot_config_anova_feature_importances(self, outcome_variable="auc", plot_dir=None):
+    def plot_config_anova_feature_importances(
+        self, outcome_variable="auc", plot_dir=None
+    ):
         """
         Performs an ANOVA F-test for each configuration parameter against a given
         outcome variable and plots the resulting F-statistics as a measure of
@@ -245,8 +247,13 @@ class GA_results_explorer:
             try:
                 if not os.path.exists(plot_dir):
                     os.makedirs(plot_dir)
-                plt.savefig(os.path.join(plot_dir, f"config_anova_{outcome_variable}.png"), bbox_inches='tight')
-                print(f"📈 Plot saved to {os.path.join(plot_dir, f'config_anova_{outcome_variable}.png')}")
+                plt.savefig(
+                    os.path.join(plot_dir, f"config_anova_{outcome_variable}.png"),
+                    bbox_inches="tight",
+                )
+                print(
+                    f"📈 Plot saved to {os.path.join(plot_dir, f'config_anova_{outcome_variable}.png')}"
+                )
             except Exception as e:
                 print(f"⚠️ Could not save plot to '{plot_dir}': {e}")
         plt.show()
@@ -255,7 +262,9 @@ class GA_results_explorer:
         print("\nANOVA F-test Results (sorted by importance):")
         print(results_df.to_string())
 
-    def plot_run_details_anova_feature_importances(self, outcome_variable="auc", plot_dir=None):
+    def plot_run_details_anova_feature_importances(
+        self, outcome_variable="auc", plot_dir=None
+    ):
         """
         Performs an ANOVA F-test for each run detail against a given outcome
         variable and plots the resulting F-statistics as a measure of importance.
@@ -370,7 +379,7 @@ class GA_results_explorer:
                 os.path.join(plot_dir, f"anova_run_details_{outcome_variable}.png"),
                 dpi=300,
                 bbox_inches="tight",
-            )    
+            )
             plt.close()
 
         plt.show()
@@ -379,7 +388,9 @@ class GA_results_explorer:
         print("\nANOVA F-test Results (sorted by importance):")
         print(results_df.to_string())
 
-    def plot_combined_anova_feature_importances(self, outcome_variable="auc", plot_dir=None):
+    def plot_combined_anova_feature_importances(
+        self, outcome_variable="auc", plot_dir=None
+    ):
         """
         Performs ANOVA F-tests for both configuration parameters and run details,
         then visualizes their importance on a single, combined plot.
@@ -476,7 +487,7 @@ class GA_results_explorer:
         plt.legend(title="Parameter Type", fontsize=12, title_fontsize=14)
 
         plt.tight_layout()
-        
+
         if plot_dir:
             plt.savefig(
                 os.path.join(plot_dir, f"combined_anova_{outcome_variable}.png"),
@@ -486,7 +497,6 @@ class GA_results_explorer:
 
         plt.show()
         plt.close()
-
 
         # Print the detailed results table
         print("\nCombined ANOVA F-test Results (sorted by importance):")
@@ -654,7 +664,6 @@ class GA_results_explorer:
         plt.ylabel("Initial Feature", fontsize=12)
 
         plt.tight_layout()
-        
 
         if plot_dir is not None:
             plot_path = os.path.join(plot_dir, "initial_feature_importance.png")
@@ -668,7 +677,9 @@ class GA_results_explorer:
         print("\nInitial Feature Importance (sorted):")
         print(results_df.to_string())
 
-    def plot_base_learner_feature_importance(self, outcome_variable="auc", plot_dir=None):
+    def plot_base_learner_feature_importance(
+        self, outcome_variable="auc", plot_dir=None
+    ):
         """
         Analyzes the importance of features used across all base learners.
 
@@ -789,7 +800,7 @@ class GA_results_explorer:
         plt.ylabel("Base Learner Feature", fontsize=12)
 
         plt.tight_layout()
-        
+
         if plot_dir is not None:
             plot_path = os.path.join(plot_dir, "base_learner_feature_importance.png")
             plt.savefig(plot_path)
@@ -920,13 +931,12 @@ class GA_results_explorer:
             plt.xlabel("Frequency (Total Count Across All Runs)", fontsize=12)
             plt.ylabel("Feature", fontsize=12)
             plt.tight_layout()
-            
+
             if plot_dir is not None:
                 plot_path = os.path.join(plot_dir, f"{param_type}_frequency.png")
                 plt.savefig(plot_path)
                 print(f"✅ Frequency plot saved to: {plot_path}")
             plt.show()
-        
 
         else:
             print(
@@ -1058,7 +1068,6 @@ class GA_results_explorer:
         )
         plt.ylabel(f"Performance ({outcome_variable.upper()})", fontsize=12)
         plt.grid(True, which="both", linestyle="--", linewidth=0.5)
-        
 
         if plot_dir is not None:
             plot_path = os.path.join(plot_dir, "ensemble_feature_diversity.png")
@@ -1068,9 +1077,12 @@ class GA_results_explorer:
         plt.show()
         plt.close()
 
-
     def plot_performance_tradeoff(
-        self, performance_metric="auc", cost_metric="run_time", hue_parameter="pop_val", plot_dir=None
+        self,
+        performance_metric="auc",
+        cost_metric="run_time",
+        hue_parameter="pop_val",
+        plot_dir=None,
     ):
         """
         Creates a scatter plot to visualize the trade-off between a performance
@@ -1138,7 +1150,6 @@ class GA_results_explorer:
         )
 
         plt.tight_layout(rect=[0, 0, 0.88, 1])  # Adjust layout to make space for legend
-        
 
         if plot_dir is not None:
             plot_path = os.path.join(plot_dir, "performance_tradeoff.png")
@@ -1153,7 +1164,7 @@ class GA_results_explorer:
         history_column="generation_progress_list",
         performance_metric="auc",
         highlight_best=True,
-        plot_dir=None
+        plot_dir=None,
     ):
         """
         Plots the convergence curves for all runs on a single graph.
@@ -1245,17 +1256,18 @@ class GA_results_explorer:
             ax.set_ylim(bottom=max(0, min_fitness * 0.95))
 
         plt.tight_layout()
-        
+
         if plot_dir is not None:
             plot_path = os.path.join(plot_dir, "convergence_curves.png")
             plt.savefig(plot_path)
             print(f"✅ Convergence plot saved to: {plot_path}")
 
-            
         plt.show()
         plt.close()
 
-    def plot_interaction_heatmap(self, param1, param2, performance_metric="auc", plot_dir=None):
+    def plot_interaction_heatmap(
+        self, param1, param2, performance_metric="auc", plot_dir=None
+    ):
         """
         Creates a heatmap to visualize the interaction between two hyperparameters
         on a given performance metric.
@@ -1316,7 +1328,6 @@ class GA_results_explorer:
         plt.xlabel(param2.replace("_", " ").title(), fontsize=12)
         plt.ylabel(param1.replace("_", " ").title(), fontsize=12)
         plt.tight_layout()
-        
 
         if plot_dir is not None:
             plot_path = os.path.join(plot_dir, "interaction_heatmap.png")
@@ -1324,11 +1335,14 @@ class GA_results_explorer:
             print(f"✅ Interaction heatmap saved to: {plot_path}")
 
         plt.show()
-        plt.close()   
+        plt.close()
 
     def plot_feature_stability(
-        self, performance_metric="auc", top_percent=10.0, feature_type="base_learner",
-        plot_dir=None
+        self,
+        performance_metric="auc",
+        top_percent=10.0,
+        feature_type="base_learner",
+        plot_dir=None,
     ):
         """
         Analyzes and plots the selection frequency of features within the top-performing runs.
@@ -1417,7 +1431,7 @@ class GA_results_explorer:
         plt.xlabel(f"Frequency in Top Performing Runs", fontsize=12)
         plt.ylabel("Feature", fontsize=12)
         plt.tight_layout()
-        
+
         if plot_dir is not None:
             plot_path = os.path.join(plot_dir, "feature_stability.png")
             plt.savefig(plot_path)
@@ -1525,7 +1539,6 @@ class GA_results_explorer:
         plt.xlabel("Number of Unique Features in Solution", fontsize=12)
         plt.ylabel(f"Performance ({performance_metric.upper()})", fontsize=12)
         plt.tight_layout()
-        
 
         if plot_dir is not None:
             plot_path = os.path.join(plot_dir, "performance_vs_size.png")
@@ -1660,7 +1673,6 @@ class GA_results_explorer:
         plt.title("Co-occurrence of Top Features in Best Ensembles")
         plt.xlabel("Feature")
         plt.ylabel("Feature")
-        
 
         if plot_dir is not None:
             plt.savefig(
@@ -1799,7 +1811,6 @@ class GA_results_explorer:
             )
 
         plt.tight_layout()
-        
 
         if plot_dir is not None:
             plt.savefig(
@@ -1809,6 +1820,93 @@ class GA_results_explorer:
             )
         plt.show()
         plt.close()
+
+    def run_all_plots(
+        self,
+        plot_dir=None,
+        outcome_variable="auc",
+        interaction_params=("pop_val", "g_val"),
+        tradeoff_params=("run_time", "pop_val"),
+    ):
+        """
+        Runs all available plotting methods with sensible defaults to provide a comprehensive overview.
+
+        This is a convenience method to generate a full suite of analysis plots from the
+        GA results.
+
+        Args:
+            plot_dir (str, optional): Directory to save the plots. If None, plots are shown. Defaults to None.
+            outcome_variable (str, optional): The main performance metric for importance plots. Defaults to "auc".
+            interaction_params (tuple, optional): The two parameters for the interaction heatmap.
+                                                  Defaults to ("pop_val", "g_val").
+            tradeoff_params (tuple, optional): The cost and hue parameters for the tradeoff plot.
+                                               Defaults to ("run_time", "pop_val").
+        """
+        print("--- Running All Plots ---")
+
+        # Parameter and Run Detail Importance
+        self.plot_config_anova_feature_importances(
+            outcome_variable=outcome_variable, plot_dir=plot_dir
+        )
+        self.plot_run_details_anova_feature_importances(
+            outcome_variable=outcome_variable, plot_dir=plot_dir
+        )
+        self.plot_combined_anova_feature_importances(
+            outcome_variable=outcome_variable, plot_dir=plot_dir
+        )
+
+        # Distributions
+        self.plot_parameter_distributions(param_type="config", plot_dir=plot_dir)
+        self.plot_parameter_distributions(param_type="run_details", plot_dir=plot_dir)
+        self.plot_algorithm_distribution_in_ensembles(plot_dir=plot_dir)
+
+        # Feature Analysis
+        self.plot_initial_feature_importance(
+            outcome_variable=outcome_variable, plot_dir=plot_dir
+        )
+        self.plot_base_learner_feature_importance(
+            outcome_variable=outcome_variable, plot_dir=plot_dir
+        )
+        self.plot_feature_stability(
+            performance_metric=outcome_variable, plot_dir=plot_dir
+        )
+        self.plot_feature_cooccurrence(
+            performance_metric=outcome_variable, plot_dir=plot_dir
+        )
+
+        # Performance Analysis
+        self.plot_all_convergence(
+            performance_metric=outcome_variable, plot_dir=plot_dir
+        )
+        self.plot_ensemble_feature_diversity(
+            outcome_variable=outcome_variable, plot_dir=plot_dir
+        )
+        self.plot_performance_vs_size(
+            performance_metric=outcome_variable, plot_dir=plot_dir
+        )
+
+        # Specific Interaction/Tradeoff Plots
+        if len(interaction_params) == 2 and all(
+            isinstance(p, str) for p in interaction_params
+        ):
+            self.plot_interaction_heatmap(
+                param1=interaction_params[0],
+                param2=interaction_params[1],
+                performance_metric=outcome_variable,
+                plot_dir=plot_dir,
+            )
+
+        if len(tradeoff_params) == 2 and all(
+            isinstance(p, str) for p in tradeoff_params
+        ):
+            self.plot_performance_tradeoff(
+                performance_metric=outcome_variable,
+                cost_metric=tradeoff_params[0],
+                hue_parameter=tradeoff_params[1],
+                plot_dir=plot_dir,
+            )
+
+        print("--- All Plots Finished ---")
 
 
 def extract_feature_arrays_from_string(raw_ensemble_string: str) -> List[List[int]]:
