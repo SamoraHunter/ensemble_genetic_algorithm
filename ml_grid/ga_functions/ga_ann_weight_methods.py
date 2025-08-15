@@ -222,13 +222,13 @@ def get_y_pred_ann_torch_weighting(best, ml_grid_object, valid=False):
     return y_pred_ensemble
 
 
-def train_ann_weight(input_shape, batch_size, train_data, test_data):
+def train_ann_weight(input_shape, hidden_layer_size, train_data, test_data):
     """
     Train an ANN weighted ensemble model with a random sample of the global parameter space and return the predictions.
 
     Parameters:
     input_shape (int): The number of features in the input data.
-    batch_size (int): The batch size for training.
+    hidden_layer_size (int): The batch size for training.
     train_data (TrainData): The training data.
     test_data (TestData): The test data.
 
@@ -245,8 +245,8 @@ def train_ann_weight(input_shape, batch_size, train_data, test_data):
     parameter_space = {
         "column_length": [input_shape],
         #'epochs': [50, 200],
-        "batch_size": [
-            batch_size
+        "hidden_layer_size": [
+            hidden_layer_size
         ],  # ,int(X_train.shape[0]/100), int(X_train.shape[0]/200)],
         #'learning_rate': lr_space,
         #'learning_rate': [0.1, 0.001, 0.0005, 0.0001],
@@ -282,7 +282,7 @@ def train_ann_weight(input_shape, batch_size, train_data, test_data):
 
     train_loader = DataLoader(
         dataset=train_data,
-        batch_size=sample_parameter_space["batch_size"],
+        batch_size=sample_parameter_space["hidden_layer_size"],
         shuffle=True,
     )
     test_loader = DataLoader(dataset=test_data, batch_size=1)
