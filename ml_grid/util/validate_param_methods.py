@@ -11,13 +11,13 @@ def validate_max_leaf_nodes(param_space):
     return param_space
 
 
-def validate_batch_size(param_space):
-    if "batch_size" in param_space:
-        batch_size = param_space["batch_size"]
+def hidden_layer_size(param_space):
+    if "hidden_layer_size" in param_space:
+        batch_size = param_space["hidden_layer_size"]
         if not isinstance(batch_size, int) or batch_size < 2:
-            # Set a default value if batch_size is invalid
-            param_space["batch_size"] = 2  # Or any other valid value you prefer
-            print("Invalid value for batch_size. Setting it to default value.")
+            # Set a default value if hidden_layer_size is invalid
+            param_space["hidden_layer_size"] = 2  # Or any other valid value you prefer
+            print("Invalid value for hidden_layer_size. Setting it to default value.")
     return param_space
 
 

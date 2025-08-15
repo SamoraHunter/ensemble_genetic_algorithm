@@ -21,7 +21,7 @@ from ml_grid.util.global_params import global_parameters
 from ml_grid.util.model_methods_ga import store_model
 from sklearn.preprocessing import StandardScaler
 
-from ml_grid.util.validate_param_methods import validate_batch_size
+from ml_grid.util.validate_param_methods import hidden_layer_size
 
 
 # def predict_with_fallback(model, X_batch):
@@ -168,7 +168,7 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
     for key in parameter_space.keys():
         sample_parameter_space[key] = random.choice(parameter_space.get(key))
 
-    sample_parameter_space = validate_batch_size(sample_parameter_space)
+    sample_parameter_space = hidden_layer_size(sample_parameter_space)
 
     additional_param_sample = random.choice(size_test)
 
