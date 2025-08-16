@@ -1548,65 +1548,6 @@ class GA_results_explorer:
         plt.show()
         plt.close()
 
-    def calculate_cooccurrence_matrix(self, top_runs_df, top_n_features, feature_type):
-        """
-        Calculate the co-occurrence matrix of top features in the best-performing runs.
-
-        Parameters
-        ----------
-        top_runs_df : pandas DataFrame
-            A DataFrame containing the top-performing runs.
-        top_n_features : int
-            The number of top features to include in the co-occurrence matrix.
-        feature_type : str
-            The type of features to analyze ('initial' or 'base_learner').
-
-        Returns
-        -------
-        cooccurrence_matrix : pandas DataFrame
-            A DataFrame representing the co-occurrence matrix of top features.
-        """
-        # Extract feature names from the top runs
-        feature_names = []
-        for index, row in top_runs_df.iterrows():
-            feature_arrays = row["feature_arrays"]
-            for feature_array in feature_arrays:
-                feature_names.extend(
-                    [
-                        f
-                        for i, f in enumerate(self.original_feature_names)
-                        if feature_array[i] == 1
-                    ]
-                )
-
-        # Get the top N features
-        top_features = (
-            pd.Series(feature_names).value_counts().head(top_n_features).index.tolist()
-        )
-
-        # Create a co-occurrence matrix
-        cooccurrence_matrix = pd.DataFrame(0, index=top_features, columns=top_features)
-
-        # Iterate over the top runs and update the co-occurrence matrix
-        for index, row in top_runs_df.iterrows():
-            feature_arrays = row["feature_arrays"]
-            for feature_array in feature_arrays:
-                features = [
-                    f
-                    for i, f in enumerate(self.original_feature_names)
-                    if feature_array[i] == 1
-                ]
-                for feature1 in features:
-                    for feature2 in features:
-                        if (
-                            feature1 != feature2
-                            and feature1 in top_features
-                            and feature2 in top_features
-                        ):
-                            cooccurrence_matrix.loc[feature1, feature2] += 1
-
-        return cooccurrence_matrix
-
     def plot_feature_cooccurrence(
         self,
         performance_metric="auc",
