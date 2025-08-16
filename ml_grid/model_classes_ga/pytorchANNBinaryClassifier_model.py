@@ -57,13 +57,13 @@ def predict_with_fallback(model, X_batch, y_batch):
         print("Failed ypred fallback")
         print("X_batch shape,", X_batch.shape)
         print("Y_batch.shape", y_batch.shape)
-        #print("Y_pred.shape", y_pred.shape, type(y_pred), )
+        # print("Y_pred.shape", y_pred.shape, type(y_pred), )
         raise e
-
 
         y_pred = torch.randint(2, size=X_batch.shape, device=X_batch.device)
 
     return y_pred
+
 
 def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
     """Generates, trains, and evaluates a PyTorch-based binary classification ANN.
@@ -116,7 +116,6 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
         ml_grid_object
     ).get_featured_selected_training_data(method="anova")
 
-
     if scale == False:
         scaler = StandardScaler()
         X_train = scaler.fit_transform(X_train)
@@ -146,7 +145,7 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
         "deep_layers_1": [2, 4, 8, 16, 32],
         "dropout_val": [0.1, 0.01, 0.001],
     }
-    #print("parameter_space", parameter_space)
+    # print("parameter_space", parameter_space)
 
     additional_grid = {
         "epochs": [10, 50, 100],
@@ -193,9 +192,9 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
         dataset=train_data,
         batch_size=sample_parameter_space["hidden_layer_size"],
         shuffle=True,
-        drop_last=True
+        drop_last=True,
     )
-    #test_loader = DataLoader(dataset=test_data, batch_size=1)
+    # test_loader = DataLoader(dataset=test_data, batch_size=1)
 
     # fit model with random sample of global parameter space
     model = BinaryClassification(**sample_parameter_space)
@@ -215,24 +214,34 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
             X_batch, y_batch = X_batch.to(device), y_batch.to(device)
             optimizer.zero_grad()
 
-            #y_pred = model(X_batch)
-            #print(X_batch.shape)
-            #print(type(X_batch)) #torch torch.Tensor
+            # y_pred = model(X_batch)
+            # print(X_batch.shape)
+            # print(type(X_batch)) #torch torch.Tensor
             try:
-                y_pred = predict_with_fallback(model = model, X_batch = X_batch, y_batch=y_batch)
+                y_pred = predict_with_fallback(
+                    model=model, X_batch=X_batch, y_batch=y_batch
+                )
 
             except Exception as e:
                 print(e)
                 print("Failed ypred fallback")
                 print("X_batch shape,", X_batch.shape)
                 print("Y_batch.shape", y_batch.shape)
-                print("Y_pred.shape", y_pred.shape, type(y_pred), )
+                print(
+                    "Y_pred.shape",
+                    y_pred.shape,
+                    type(y_pred),
+                )
                 raise e
 
             loss = criterion(y_pred, y_batch.unsqueeze(1))
             acc = binary_acc(y_pred, y_batch.unsqueeze(1))
 
             loss.backward()
+
+            # Clip gradients to prevent exploding gradients
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+
             optimizer.step()
 
             epoch_loss += loss.item()
@@ -265,25 +274,14 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
 
             y_pred = np.random.randint(2, size=X_test_length)
 
-    if any(np.isnan(y_pred)):
-        if ml_grid_object.verbose > 1:
-            print("Torch model nan, returning random y pred vector")
-        # zero_vector = [x for x in range(0, len(y_pred))]
-        # y_pred = zero_vector
-        random_y_pred_vector = (
-            np.random.choice(
-                a=[False, True],
-                size=(
-                    len(
-                        y_test,
-                    )
-                ),
-            )
-        ).astype(int)
-        y_pred = random_y_pred_vector
-    else:
-        # plot_auc(y_hat, f"Deep ANN Torch {para_str}")
-        pass
+    # Check for and replace any NaN values before returning
+    if np.isnan(y_pred).any():
+        print(
+            "Warning: NaN values detected in predictions. Replacing them with random 0 or 1."
+        )
+        y_pred = np.nan_to_num(y_pred, nan=np.random.randint(2)).astype(
+            int
+        )  # Replaces nan with random 0 or 1
 
     mccscore = matthews_corrcoef(y_test, y_pred)
 
