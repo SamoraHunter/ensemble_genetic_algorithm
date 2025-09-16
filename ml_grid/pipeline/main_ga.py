@@ -255,10 +255,12 @@ class run:
                 # Begin the evolution
                 chance_dummy_best_pred = [x for x in range(0, len(self.y_test))]
 
-                gen_eval_score = metrics.roc_auc_score(
-                    self.y_test, chance_dummy_best_pred
-                )
-
+                try:
+                    gen_eval_score = metrics.roc_auc_score(
+                        self.y_test, chance_dummy_best_pred
+                    )
+                except ValueError:
+                    gen_eval_score = 0.5
                 gen_eval_score_counter = 0
 
                 pbar = tqdm.tqdm(total=g_val + 1)
@@ -343,7 +345,10 @@ class run:
                         best, ml_grid_object=self.ml_grid_object, valid=False
                     )
 
-                    gen_eval_score = metrics.roc_auc_score(self.y_test, y_pred)
+                    try:
+                        gen_eval_score = metrics.roc_auc_score(self.y_test, y_pred)
+                    except ValueError:
+                        gen_eval_score = 0.5  # Assign random chance score if AUC is not defined
                     print(f"gen_eval_score == {gen_eval_score} Generation {g}")
                     generation_progress_list.append(gen_eval_score)
 
@@ -419,12 +424,15 @@ class run:
                             "pop_val:",
                             pop_val,
                             "g_val:",
-                            g_val,
-                            "AUC: ",
-                            metrics.roc_auc_score(self.y_test_orig, best_pred_orig),
-                            "g:",
-                            g,
-                        )
+                            g_val, end=" ")
+                        try:
+                            final_auc = metrics.roc_auc_score(self.y_test_orig, best_pred_orig)
+                            print(
+                                "AUC: ", final_auc,
+                                "g:", g,
+                            )
+                        except ValueError:
+                            print("AUC: undefined (only one class in y_true), g:", g)
                 except Exception as e:
                     print("Failed to get best y pred and plot auc")
                     print(e)
@@ -445,7 +453,10 @@ class run:
                 # with open(f'{self.global_param_str+self.additional_naming}/results_master_lists/master_result_list_{date}.pkl', 'wb') as f:
                 #     pickle.dump(master_result_list, f)
 
-                scores = metrics.roc_auc_score(self.y_test_orig, best_pred_orig)
+                try:
+                    scores = metrics.roc_auc_score(self.y_test_orig, best_pred_orig)
+                except ValueError:
+                    scores = 0.5
                 current_algorithm = best
                 method_name = str(best)
                 pg = "nan"
