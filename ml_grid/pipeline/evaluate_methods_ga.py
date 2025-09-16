@@ -145,7 +145,11 @@ def evaluate_weighted_ensemble_auc(individual, ml_grid_object):
 
     # print(y_test.shape, y_pred.shape, )
     # should write mcc parallel instead of auc also, need pair functions
-    auc = metrics.roc_auc_score(y_test, y_pred)
+    try:
+        auc = metrics.roc_auc_score(y_test, y_pred)
+    except ValueError:
+        # Handle case where only one class is present in y_true
+        auc = 0.5
     mcc = metrics.matthews_corrcoef(y_test, y_pred)
     f1 = metrics.f1_score(y_test, y_pred, average="binary")
     precision = metrics.precision_score(y_test, y_pred, average="binary")
