@@ -1,5 +1,8 @@
 import random
 import time
+from typing import Any, Dict, List, Tuple
+import numpy as np
+from sklearn import metrics
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import matthews_corrcoef, roc_auc_score
 from ml_grid.util.debug_methods_ga import debug_base_learner
@@ -9,30 +12,34 @@ from ml_grid.util.model_methods_ga import store_model
 from ml_grid.util.param_space import ParamSpace
 
 
-def GaussianNB_ModelGenerator(ml_grid_object, local_param_dict):
-    """Trains a Gaussian Naive Bayes classifier with random hyperparameter search.
+def GaussianNB_ModelGenerator(
+    ml_grid_object: Any, local_param_dict: Dict
+) -> Tuple[float, GaussianNB, List[str], int, float, np.ndarray]:
+    """Generates, trains, and evaluates a GaussianNB model.
 
-    This function conducts a single training and evaluation trial for a GaussianNB
-    model. It first applies ANOVA F-test feature selection to the data. It then
-    randomly samples hyperparameters ('priors', 'var_smoothing') from a
-    predefined search space.
+    This function performs a single trial of training and evaluating a
+    GaussianNB model. It uses a random search approach for hyperparameter
+    tuning.
 
-    The model is trained using these hyperparameters and evaluated on the test
-    set. Performance is measured by the Matthews Correlation Coefficient (MCC)
-    and ROC AUC score. The function can also handle debugging logs and model
-    storage based on global settings.
+    The process includes:
+    1.  Applying ANOVA-based feature selection.
+    2.  Randomly sampling hyperparameters from a predefined search space.
+    3.  Training the GaussianNB model with the selected parameters.
+    4.  Evaluating the model's performance on the test set using Matthews
+        Correlation Coefficient (MCC) and ROC AUC score.
+    5.  Optionally storing the trained model and its metadata.
 
     Args:
-        ml_grid_object (MLGridObject): An object containing the project's data
-            (X_train, y_train, etc.) and configuration settings.
-        local_param_dict (dict): A dictionary of local parameters for this
-            specific model run, including 'param_space_size'.
+        ml_grid_object (Any): An object containing the project's data (e.g.,
+            X_train, y_train, X_test, y_test) and configuration settings.
+        local_param_dict (Dict): A dictionary of local parameters for this
+            specific model run, which may include 'param_space_size'.
 
     Returns:
-        tuple: A tuple containing the following evaluation metrics and artifacts:
+        A tuple containing the following elements:
             - mccscore (float): The Matthews Correlation Coefficient.
-            - model (GaussianNB): The trained scikit-learn model object.
-            - list: The list of feature names used for training.
+            - model (GaussianNB): The trained model object.
+            - feature_names (List[str]): A list of feature names used for training.
             - model_train_time (int): The training time in seconds.
             - auc_score (float): The ROC AUC score.
             - y_pred (np.ndarray): The model's predictions on the test set.
@@ -98,7 +105,7 @@ def GaussianNB_ModelGenerator(ml_grid_object, local_param_dict):
     y_pred = model.predict(X_test)
     mccscore = matthews_corrcoef(y_test, y_pred)
 
-    auc_score = round(roc_auc_score(y_test, y_pred), 4)
+    auc_score = round(metrics.roc_auc_score(y_test, y_pred), 4)
     end = time.time()
     model_train_time = int(end - start)
 

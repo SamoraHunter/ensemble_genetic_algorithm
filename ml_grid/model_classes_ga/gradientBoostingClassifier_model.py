@@ -1,6 +1,9 @@
 import random
 import time
+from typing import Any, Dict, List, Tuple
+import numpy as np
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn import metrics
 from sklearn.metrics import matthews_corrcoef, roc_auc_score
 from ml_grid.util.debug_methods_ga import debug_base_learner
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
@@ -15,7 +18,9 @@ from ml_grid.util.validate_param_methods import (
 )
 
 
-def GradientBoostingClassifier_ModelGenerator(ml_grid_object, local_param_dict):
+def GradientBoostingClassifier_ModelGenerator(
+    ml_grid_object: Any, local_param_dict: Dict
+) -> Tuple[float, GradientBoostingClassifier, List[str], int, float, np.ndarray]:
     """Generates, trains, and evaluates a GradientBoostingClassifier model.
 
     This function performs a single trial of training and evaluating a
@@ -33,16 +38,19 @@ def GradientBoostingClassifier_ModelGenerator(ml_grid_object, local_param_dict):
     6.  Optionally storing the trained model and its metadata.
 
     Args:
-        ml_grid_object: An object containing the project's data (e.g.,
+        ml_grid_object (Any): An object containing the project's data (e.g.,
             X_train, y_train, X_test, y_test) and configuration settings.
-        local_param_dict (dict): A dictionary of local parameters for this
+        local_param_dict (Dict): A dictionary of local parameters for this
             specific model run, which may include 'param_space_size'.
 
     Returns:
-        tuple: A tuple containing mccscore (float), the trained model object,
-        a list of feature names, the model training time (int), the
-        auc_score (float), and the predictions (np.ndarray).
-
+        A tuple containing the following elements:
+            - mccscore (float): The Matthews Correlation Coefficient.
+            - model (GradientBoostingClassifier): The trained model object.
+            - feature_names (List[str]): A list of feature names used for training.
+            - model_train_time (int): The model training time in seconds.
+            - auc_score (float): The ROC AUC score.
+            - y_pred (np.ndarray): The model's predictions on the test set.
     """
     global_parameter_val = global_parameters()
 
@@ -116,7 +124,7 @@ def GradientBoostingClassifier_ModelGenerator(ml_grid_object, local_param_dict):
     y_pred = model.predict(X_test)
     mccscore = matthews_corrcoef(y_test, y_pred)
 
-    auc_score = round(roc_auc_score(y_test, y_pred), 4)
+    auc_score = round(metrics.roc_auc_score(y_test, y_pred), 4)
     end = time.time()
     model_train_time = int(end - start)
 

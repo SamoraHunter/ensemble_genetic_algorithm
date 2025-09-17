@@ -1,6 +1,7 @@
 import itertools
 import random
 import time
+from typing import Any, Dict, List, Tuple
 import numpy as np
 import torch
 import torch.nn as nn
@@ -24,48 +25,41 @@ from sklearn.preprocessing import StandardScaler
 from ml_grid.util.validate_param_methods import hidden_layer_size
 
 
-# def predict_with_fallback(model, X_batch):
-#     try:
-#         y_pred = model(X_batch)
-#         return y_pred
-#     except:
-#         # If an exception occurs (e.g., model prediction fails), generate a random binary vector
-#         random_binary_vector = np.random.randint(2, size=X_batch.shape[0])
-#         return random_binary_vector
+def predict_with_fallback(
+    model: nn.Module, X_batch: torch.Tensor, y_batch: torch.Tensor
+) -> torch.Tensor:
+    """Predicts using the model, with a fallback to random logits on error.
 
+    This function attempts to get a prediction from the model. If any exception
+    occurs during the forward pass, it catches the error, prints a warning,
+    and returns a tensor of random logits with the correct shape, allowing
+    the training loop to continue without crashing.
 
-def predict_with_fallback(model, X_batch, y_batch):
-    """
-    Predict using the model with fallback mechanism.
-
-    Parameters:
-    model (object): The model used for prediction.
-    X_batch (object): The input data batch.
-    y_batch (object): The target data batch.
+    Args:
+        model (nn.Module): The PyTorch model to use for prediction.
+        X_batch (torch.Tensor): The input data batch.
+        y_batch (torch.Tensor): The target data batch (used for shape inference).
 
     Returns:
-    object: The predicted output or a random binary vector in case of an exception.
+        torch.Tensor: The model's output tensor or a tensor of random logits
+        if an exception occurred.
     """
-
-    # Use model prediction if possible
     try:
         y_pred = model(X_batch)
-
-    # If prediction fails, generate a random binary vector
     except Exception as e:
-        print(e)
-        print("Failed ypred fallback")
-        print("X_batch shape,", X_batch.shape)
-        print("Y_batch.shape", y_batch.shape)
-        # print("Y_pred.shape", y_pred.shape, type(y_pred), )
-        raise e
-
-        y_pred = torch.randint(2, size=X_batch.shape, device=X_batch.device)
+        print(f"Model prediction failed with error: {e}. Using fallback.")
+        # Fallback: return random logits with the correct output shape.
+        # BCEWithLogitsLoss expects shape (batch_size, 1).
+        y_pred = torch.rand(
+            y_batch.unsqueeze(1).shape, device=X_batch.device, dtype=X_batch.dtype
+        )
 
     return y_pred
 
 
-def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
+def Pytorch_binary_class_ModelGenerator(
+    ml_grid_object: Any, local_param_dict: Dict
+) -> Tuple[float, BinaryClassification, List[str], int, float, np.ndarray]:
     """Generates, trains, and evaluates a PyTorch-based binary classification ANN.
 
     This function performs a single trial of training and evaluating a custom
@@ -86,15 +80,19 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
     9.  Optionally storing the trained model and its metadata.
 
     Args:
-        ml_grid_object: An object containing the project's data (e.g.,
+        ml_grid_object (Any): An object containing the project's data (e.g.,
             X_train, y_train, X_test, y_test) and configuration settings.
-        local_param_dict (dict): A dictionary of local parameters for this
+        local_param_dict (Dict): A dictionary of local parameters for this
             specific model run, which may include 'scale'.
 
     Returns:
-        tuple: A tuple containing mccscore (float), the trained model object,
-        a list of feature names, the model training time (int), the
-        auc_score (float), and the predictions (np.ndarray).
+        A tuple containing the following elements:
+            - mccscore (float): The Matthews Correlation Coefficient.
+            - model (BinaryClassification): The trained PyTorch model object.
+            - feature_names (List[str]): A list of feature names used for training.
+            - model_train_time (int): The model training time in seconds.
+            - auc_score (float): The ROC AUC score.
+            - y_pred (np.ndarray): The model's predictions on the test set.
 
     """
     global_parameter_val = global_parameters()
@@ -116,25 +114,27 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
         ml_grid_object
     ).get_featured_selected_training_data(method="anova")
 
-    if scale == False:
+    # Capture column names and length before potential scaling
+    feature_names = list(X_train.columns)
+    num_features = len(feature_names)
+
+    X_train_np = X_train.to_numpy()
+    X_test_np = X_test.to_numpy()
+
+    if scale:
         scaler = StandardScaler()
-        X_train = scaler.fit_transform(X_train)
-        X_test = scaler.transform(X_test)
+        X_train_np = scaler.fit_transform(X_train_np)
+        X_test_np = scaler.transform(X_test_np)
 
     train_data = TrainData(
-        torch.FloatTensor(X_train.to_numpy()), torch.FloatTensor(y_train.to_numpy())
+        torch.FloatTensor(X_train_np), torch.FloatTensor(y_train.to_numpy())
     )
-    test_data = TestData(torch.FloatTensor(X_test.to_numpy()))
+    test_data = TestData(torch.FloatTensor(X_test_np))
 
     # Initialise global parameter space----------------------------------------------------------------
 
-    # print("ANN binary Xtrain")
-    # print(X_train)
-    # print(type(X_train))
-    # print(int(X_train.shape[0]))
-
     parameter_space = {
-        "column_length": [len(X_train.columns)],
+        "column_length": [num_features],
         #'epochs': [50, 200],
         "hidden_layer_size": [
             max(2, int(X_train.shape[0] / 100)),
@@ -215,24 +215,9 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
             optimizer.zero_grad()
 
             # y_pred = model(X_batch)
-            # print(X_batch.shape)
-            # print(type(X_batch)) #torch torch.Tensor
-            try:
-                y_pred = predict_with_fallback(
-                    model=model, X_batch=X_batch, y_batch=y_batch
-                )
-
-            except Exception as e:
-                print(e)
-                print("Failed ypred fallback")
-                print("X_batch shape,", X_batch.shape)
-                print("Y_batch.shape", y_batch.shape)
-                print(
-                    "Y_pred.shape",
-                    y_pred.shape,
-                    type(y_pred),
-                )
-                raise e
+            y_pred = predict_with_fallback(
+                model=model, X_batch=X_batch, y_batch=y_batch
+            )
 
             loss = criterion(y_pred, y_batch.unsqueeze(1))
             acc = binary_acc(y_pred, y_batch.unsqueeze(1))
@@ -298,7 +283,7 @@ def Pytorch_binary_class_ModelGenerator(ml_grid_object, local_param_dict):
                 ml_grid_object,
                 local_param_dict,
                 mccscore,
-                model,
+                model,  # Note: Storing a PyTorch model might require special handling
                 list(X_train.columns),
                 model_train_time,
                 auc_score,

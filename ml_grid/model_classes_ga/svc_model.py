@@ -1,8 +1,10 @@
 import random
 import time
+from typing import Any, Dict, List, Tuple
 import numpy as np
 from sklearn.svm import SVC
 from sklearn.metrics import matthews_corrcoef, roc_auc_score
+from sklearn import metrics
 from ml_grid.util.debug_methods_ga import debug_base_learner
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
 from ml_grid.util.global_params import global_parameters
@@ -10,7 +12,9 @@ from ml_grid.util.model_methods_ga import store_model
 from ml_grid.util.param_space import ParamSpace
 
 
-def SVC_ModelGenerator(ml_grid_object, local_param_dict):
+def SVC_ModelGenerator(
+    ml_grid_object: Any, local_param_dict: Dict
+) -> Tuple[float, SVC, List[str], int, float, np.ndarray]:
     """Generates, trains, and evaluates a Support Vector Classifier (SVC) model.
 
     This function performs a single trial of training and evaluating an SVC
@@ -106,7 +110,7 @@ def SVC_ModelGenerator(ml_grid_object, local_param_dict):
         y_pred = model.predict(X_test)
         mccscore = matthews_corrcoef(y_test, y_pred)
 
-        auc_score = round(roc_auc_score(y_test, y_pred), 4)
+        auc_score = round(metrics.roc_auc_score(y_test, y_pred), 4)
         end = time.time()
         model_train_time = int(end - start)
         if verbose >= 2:

@@ -1,5 +1,7 @@
 import random
 import time
+from typing import Any, Dict, List, Tuple
+import numpy as np
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import matthews_corrcoef, roc_auc_score
 from sklearn import metrics
@@ -11,7 +13,9 @@ from ml_grid.util.param_space import ParamSpace
 from ml_grid.util.validate_param_methods import validate_max_leaf_nodes
 
 
-def DecisionTreeClassifierModelGenerator(ml_grid_object, local_param_dict):
+def DecisionTreeClassifierModelGenerator(
+    ml_grid_object: Any, local_param_dict: Dict
+) -> Tuple[float, DecisionTreeClassifier, List[str], int, float, np.ndarray]:
     """Generates, trains, and evaluates a DecisionTreeClassifier model.
 
     This function performs a single trial of training and evaluating a
@@ -27,16 +31,19 @@ def DecisionTreeClassifierModelGenerator(ml_grid_object, local_param_dict):
     5.  Optionally storing the trained model and its metadata.
 
     Args:
-        ml_grid_object: An object containing the project's data (e.g.,
+        ml_grid_object (Any): An object containing the project's data (e.g.,
             X_train, y_train, X_test, y_test) and configuration settings.
-        local_param_dict (dict): A dictionary of local parameters for this
+        local_param_dict (Dict): A dictionary of local parameters for this
             specific model run, which may include 'param_space_size'.
 
     Returns:
-        tuple: A tuple containing mccscore (float), the trained model object,
-        a list of feature names, the model training time (int), the
-        auc_score (float), and the predictions (np.ndarray).
-
+        A tuple containing the following elements:
+            - mccscore (float): The Matthews Correlation Coefficient.
+            - model (DecisionTreeClassifier): The trained model object.
+            - feature_names (List[str]): A list of feature names used for training.
+            - model_train_time (int): The model training time in seconds.
+            - auc_score (float): The ROC AUC score.
+            - y_pred (np.ndarray): The model's predictions on the test set.
     """
     global_parameter_val = global_parameters()
 

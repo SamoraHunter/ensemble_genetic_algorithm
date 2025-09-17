@@ -1,6 +1,7 @@
 import random
 import time
 import numpy as np
+from typing import Any, Dict, List, Tuple
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.metrics import matthews_corrcoef, roc_auc_score
 from ml_grid.util.debug_methods_ga import debug_base_learner
@@ -9,30 +10,37 @@ from ml_grid.util.global_params import global_parameters
 from ml_grid.util.model_methods_ga import store_model
 
 
-def extraTreesModelGenerator(ml_grid_object, local_param_dict):
-    """
-    Generates, trains, and evaluates an ExtraTreesClassifier model using specified parameters and feature selection.
+def extraTreesModelGenerator(
+    ml_grid_object: Any, local_param_dict: Dict
+) -> Tuple[float, ExtraTreesClassifier, List[str], int, float, np.ndarray]:
+    """Generates, trains, and evaluates an ExtraTreesClassifier model.
 
-    This function performs the following steps:
-    - Retrieves training and testing data from the provided ml_grid_object.
-    - Applies ANOVA-based feature selection to the data.
-    - Randomly initializes hyperparameters for the ExtraTreesClassifier.
-    - Trains the model on the selected features.
-    - Evaluates the model using accuracy, Matthews correlation coefficient (MCC), and ROC AUC score.
-    - Optionally stores the trained model and debugging information based on configuration.
+    This function performs a single trial of training and evaluating an
+    ExtraTreesClassifier. It uses a random search approach for hyperparameter
+    tuning from a hardcoded parameter space.
+
+    The process includes:
+    1.  Applying ANOVA-based feature selection.
+    2.  Randomly sampling hyperparameters from a predefined search space.
+    3.  Training the ExtraTreesClassifier with the selected parameters.
+    4.  Evaluating the model's performance on the test set using Matthews
+        Correlation Coefficient (MCC) and ROC AUC score.
+    5.  Optionally storing the trained model and its metadata.
 
     Args:
-        ml_grid_object: An object containing training and testing data, as well as global parameters.
-        local_param_dict (dict): A dictionary of local parameters for model storage and configuration.
+        ml_grid_object (Any): An object containing the project's data (e.g.,
+            X_train, y_train, X_test, y_test) and configuration settings.
+        local_param_dict (Dict): A dictionary of local parameters for this
+            specific model run (used for model storage).
 
     Returns:
-        tuple: A tuple containing:
-            - mccscore (float): The Matthews correlation coefficient of the model on the test set.
-            - model (ExtraTreesClassifier): The trained ExtraTreesClassifier model.
-            - feature_names (list): List of selected feature names used for training.
-            - model_train_time (int): Time taken to train the model (in seconds).
-            - auc_score (float): ROC AUC score of the model on the test set.
-            - y_pred (array-like): Predicted labels for the test set.
+        A tuple containing the following elements:
+            - mccscore (float): The Matthews Correlation Coefficient.
+            - model (ExtraTreesClassifier): The trained model object.
+            - feature_names (List[str]): A list of feature names used for training.
+            - model_train_time (int): The model training time in seconds.
+            - auc_score (float): The ROC AUC score.
+            - y_pred (np.ndarray): The model's predictions on the test set.
     """
     global_parameter_val = global_parameters()
 

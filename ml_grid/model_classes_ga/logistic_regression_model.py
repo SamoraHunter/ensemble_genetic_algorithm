@@ -1,5 +1,7 @@
 import random
 import time
+from typing import Any, Dict, List, Tuple
+import numpy as np
 
 from ml_grid.util.debug_methods_ga import debug_base_learner
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
@@ -9,7 +11,9 @@ from sklearn import metrics
 from sklearn.linear_model import LogisticRegression
 
 
-def logisticRegressionModelGenerator(ml_grid_object, local_param_dict):
+def logisticRegressionModelGenerator(
+    ml_grid_object: Any, local_param_dict: Dict
+) -> Tuple[float, LogisticRegression, List[str], int, float, np.ndarray]:
     """Generates, trains, and evaluates a LogisticRegression model.
 
     This function performs a single trial of training and evaluating a
@@ -26,16 +30,19 @@ def logisticRegressionModelGenerator(ml_grid_object, local_param_dict):
     5.  Optionally storing the trained model and its metadata.
 
     Args:
-        ml_grid_object: An object containing the project's data (e.g.,
+        ml_grid_object (Any): An object containing the project's data (e.g.,
             X_train, y_train, X_test, y_test) and configuration settings.
-        local_param_dict (dict): A dictionary of local parameters for this
+        local_param_dict (Dict): A dictionary of local parameters for this
             specific model run (used for model storage).
 
     Returns:
-        tuple: A tuple containing mccscore (float), the trained model object,
-        a list of feature names, the model training time (int), the
-        auc_score (float), and the predictions (np.ndarray).
-
+        A tuple containing the following elements:
+            - mccscore (float): The Matthews Correlation Coefficient.
+            - model (LogisticRegression): The trained model object.
+            - feature_names (List[str]): A list of feature names used for training.
+            - model_train_time (int): The model training time in seconds.
+            - auc_score (float): The ROC AUC score.
+            - y_pred (np.ndarray): The model's predictions on the test set.
     """
 
     global_parameter_val = global_parameters()

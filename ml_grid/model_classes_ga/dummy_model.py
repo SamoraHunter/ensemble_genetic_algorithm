@@ -1,6 +1,8 @@
 import random
 import numpy as np
+from typing import Any, Dict, List, Tuple
 from ml_grid.model_classes_ga.perceptron_dummy_model import perceptronModelGen_dummy
+from sklearn.linear_model import Perceptron
 
 
 class DummyModelGenerator:
@@ -14,21 +16,22 @@ class DummyModelGenerator:
     This is useful for debugging the ensemble pipeline and ensuring that evolved
     ensembles perform better than random chance.
 
-    Warnings: this may throw a column name related error if included in the model pipeline,
-    It is not intended to be used in a production setting.
+    Warning:
+        This may throw a column name related error if included in the model
+        pipeline. It is not intended to be used in a production setting.
 
     Attributes:
         fitted_perceptron (Perceptron): A pre-trained scikit-learn Perceptron model.
-        dummy_columns (list): A list of feature names corresponding to the
+        dummy_columns (List[str]): A list of feature names corresponding to the
             `fitted_perceptron`.
     """
 
-    def __init__(self, ml_grid_object, local_param_dict):
+    def __init__(self, ml_grid_object: Any, local_param_dict: Dict):
         """Initializes the DummyModelGenerator.
 
         Args:
-            ml_grid_object: An object containing project data and configurations.
-            local_param_dict (dict): A dictionary of local parameters for the run.
+            ml_grid_object (Any): An object containing project data and configurations.
+            local_param_dict (Dict): A dictionary of local parameters for the run.
         """
         (
             _,
@@ -39,7 +42,9 @@ class DummyModelGenerator:
             _,
         ) = perceptronModelGen_dummy(ml_grid_object, local_param_dict)
 
-    def dummy_model_gen(self, ml_grid_object, local_param_dict):
+    def dummy_model_gen(
+        self, ml_grid_object: Any, local_param_dict: Dict
+    ) -> Tuple[float, Perceptron, List[str], int, float, np.ndarray]:
         """Generates a tuple representing a dummy model's evaluation.
 
         This method returns a standard model result tuple but with fixed or random
@@ -47,14 +52,14 @@ class DummyModelGenerator:
         are random.
 
         Args:
-            ml_grid_object: An object containing project data (e.g., y_test).
-            local_param_dict (dict): A dictionary of local parameters (unused).
+            ml_grid_object (Any): An object containing project data (e.g., y_test).
+            local_param_dict (Dict): A dictionary of local parameters (unused).
 
         Returns:
-            tuple: A tuple containing:
+            A tuple containing the following elements:
                 - mccscore (float): A fixed MCC score of 0.5.
                 - model (Perceptron): The pre-fitted Perceptron model.
-                - feature_names (list): The list of feature names for the model.
+                - feature_names (List[str]): The list of feature names for the model.
                 - model_train_time (int): A fixed training time of 0.
                 - auc_score (float): A random ROC AUC score between 0.5 and 1.0.
                 - y_pred (np.ndarray): A vector of random binary predictions.
