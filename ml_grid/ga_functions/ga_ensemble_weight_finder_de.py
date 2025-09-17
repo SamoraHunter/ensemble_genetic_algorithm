@@ -7,24 +7,34 @@ from ml_grid.util.global_params import global_parameters
 from sklearn import metrics
 from numpy.linalg import norm
 from sklearn import metrics
+from typing import Any, List
 
 round_v = np.vectorize(round)
 
 
-def get_weighted_ensemble_prediction_de_cython(weights, prediction_matrix_raw, y_test):
-    """
-    Computes the weighted ensemble prediction for a set of models using the provided weights,
-    and evaluates the prediction using ROC AUC score.
+def get_weighted_ensemble_prediction_de_cython(
+    weights: np.ndarray, prediction_matrix_raw: np.ndarray, y_test: np.ndarray
+) -> float:
+    """Computes weighted ensemble prediction and returns 1 - AUC score.
+
+    This function is used as an objective function for optimization algorithms
+    like Differential Evolution. It takes a set of weights, applies them to
+    a matrix of model predictions, calculates the resulting ensemble
+    prediction, and evaluates it against the ground truth using the ROC AUC
+    score. The function returns `1 - AUC`, so minimizing this value maximizes
+    the AUC.
+
     Args:
-        weights (array-like): Array of weights for each model in the ensemble.
-        prediction_matrix_raw (array-like): 2D array where each row corresponds to the predictions
-            from a single model for all test samples.
-        y_test (array-like): Ground truth labels for the test samples.
+        weights: An array of weights for each model in the ensemble.
+        prediction_matrix_raw: A 2D array where each row contains the
+            predictions from a single model for all test samples.
+        y_test: The ground truth labels for the test samples.
+
     Returns:
-        float: 1 minus the ROC AUC score of the weighted ensemble prediction.
+        The value of `1 - ROC AUC score` for the weighted ensemble prediction.
+
     Raises:
-        Exception: If an error occurs during the computation of the ROC AUC score, prints
-            debugging information and re-raises the exception.
+        Exception: If an error occurs during the ROC AUC score calculation.
     """
 
     clean_prediction_matrix = prediction_matrix_raw.copy()
@@ -52,33 +62,30 @@ def get_weighted_ensemble_prediction_de_cython(weights, prediction_matrix_raw, y
 
 # Only get weights from xtrain/ytrain, never get weights from xtest y test. Use weights on x_validation yhat to compare to ytrue_valid
 def super_ensemble_weight_finder_differential_evolution(
-    best, ml_grid_object, valid=False
-):
-    """
-    Finds the optimal ensemble weights for a set of models using Differential Evolution optimization.
+    best: List, ml_grid_object: Any, valid: bool = False
+) -> np.ndarray:
+    """Finds optimal ensemble weights using Differential Evolution.
 
-    This function takes a list of models (with their predictions) and a machine learning grid object,
-    and uses the Differential Evolution algorithm to find the set of weights that maximize the ensemble's
-    ROC AUC score on the test set.
+    This function uses the Differential Evolution (DE) optimization algorithm
+    to find the optimal set of weights for combining predictions from an
+    ensemble of models. The objective is to maximize the ROC AUC score on the
+    test set. It uses pre-computed predictions stored within the `best`
+    configuration.
 
     Args:
-        best (list): A list containing the best ensemble models and their associated data. Each element
-            should contain model information, including predictions on the test set at index 5.
-        ml_grid_object (object): An object containing training and test data, as well as other relevant
-            attributes (e.g., X_train, X_test, y_train, y_test, X_test_orig, y_test_orig, verbose).
-        valid (bool, optional): Unused parameter, kept for compatibility. Defaults to False.
+        best: A list containing the ensemble configuration. The first element
+            (`best[0]`) is a list of tuples, where each tuple holds model
+            metadata and pre-computed predictions at index 5.
+        ml_grid_object: An object containing data splits (`y_test`) and
+            configuration like `verbose`.
+        valid: Unused parameter, kept for compatibility. Defaults to False.
 
     Returns:
-        np.ndarray: The optimal weights for the ensemble models as determined by Differential Evolution.
+        The array of optimal weights for the ensemble models as determined
+        by Differential Evolution.
 
     Raises:
         Exception: If the Differential Evolution optimization fails, the exception is printed and re-raised.
-
-    Notes:
-        - The function prints the unweighted ensemble AUC and the best weighted score.
-        - Uses `get_weighted_ensemble_prediction_de_cython` as the objective function for optimization.
-        - Assumes that the predictions in `best` are aligned with `y_test`.
-        - The function is designed for binary classification tasks (uses ROC AUC).
     """
     X_test_orig = ml_grid_object.X_test_orig
     y_test_orig = ml_grid_object.y_test_orig

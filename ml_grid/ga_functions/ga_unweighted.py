@@ -1,3 +1,4 @@
+from typing import Any, List
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
@@ -5,30 +6,36 @@ from scipy import stats
 from ml_grid.ga_functions.ga_ann_util import BinaryClassification, TestData
 
 
-def get_best_y_pred_unweighted(best, ml_grid_object, valid=False):
+def get_best_y_pred_unweighted(best: List, ml_grid_object: Any, valid: bool = False) -> List:
     """
-    Generates the ensemble prediction by taking the mode (majority vote) of predictions from multiple models.
+    Generates an unweighted ensemble prediction by majority vote (mode).
+
+    This function generates predictions from an ensemble of models. If `valid`
+    is True, it fits each model on the training data and predicts on the
+    validation set. If `valid` is False, it uses pre-computed predictions
+    stored within the `best` configuration. The final prediction for each
+    sample is the mode of the predictions from all models in the ensemble.
 
     Args:
-        best (list): A list containing the best ensemble configuration. The first element (best[0]) is expected to be a list of tuples,
-            where each tuple contains model information and associated feature columns.
-        ml_grid_object (object): An object containing training and test data, as well as configuration parameters such as verbosity.
-            Expected attributes include:
-                - X_train, X_test: Feature data for training and testing.
-                - y_train: Target data for training.
-                - X_test_orig, y_test_orig: Original test feature and target data.
-                - verbose: Verbosity level for logging.
-        valid (bool, optional): If True, predictions are made on the validation set (original test data).
-            If False, predictions are taken from precomputed values in the ensemble configuration. Defaults to False.
+        best: A list containing the best ensemble configuration. The first
+            element (`best[0]`) is a list of tuples, where each tuple holds
+            model information, the model object, feature columns, and, if
+            `valid` is False, pre-computed predictions.
+        ml_grid_object: An object containing data splits (`X_train`,
+            `y_train`, `X_test_orig`, etc.) and configuration like `verbose`.
+        valid: If True, predict on the validation set by refitting models.
+            If False, use pre-computed predictions. Defaults to False.
 
     Returns:
-        list: The final ensemble predictions, where each prediction is determined by the mode of the individual model predictions for that sample.
+        A list of final ensemble predictions, determined by the mode of
+        individual model predictions for each sample.
 
     Notes:
-        - For non-binary classification models, the model is fitted on the training data and predictions are made on the test/validation set.
-        - For binary classification models (assumed to be PyTorch models), predictions are made using the model's forward pass and thresholded.
-        - In non-validation mode, predictions are directly taken from the ensemble configuration without refitting.
-        - The function assumes that each model in the ensemble is associated with a set of feature columns and either a fitted model or precomputed predictions.
+        - Supports both scikit-learn style models and PyTorch `BinaryClassification` models.
+        - For PyTorch models, predictions are generated via the forward pass and
+          thresholded with `torch.sigmoid`.
+        - In non-validation mode (`valid=False`), predictions are directly taken
+          from `target_ensemble[i][5]`.
     """
 
     if ml_grid_object.verbose >= 1:

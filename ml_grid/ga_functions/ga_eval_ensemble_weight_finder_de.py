@@ -1,5 +1,6 @@
 import time
 from ml_grid.ga_functions.ga_ann_util import BinaryClassification
+from typing import Any, List
 import scipy
 import numpy as np
 from ml_grid.pipeline.torch_binary_classification_method_ga import (
@@ -17,37 +18,34 @@ from ml_grid.ga_functions.ga_ensemble_weight_finder_de import (
 
 
 def super_ensemble_weight_finder_differential_evolution_eval(
-    best, ml_grid_object, valid=False
-):
-    """
-    Finds the optimal ensemble weights for a set of models using differential evolution.
+    best: List, ml_grid_object: Any, valid: bool = False
+) -> np.ndarray:
+    """Finds optimal ensemble weights using Differential Evolution for evaluation.
 
-    This function evaluates an ensemble of models by fitting each model, generating predictions,
-    and then optimizing the weights assigned to each model's predictions to maximize the ensemble's
-    performance (AUC score) on a validation or test set. The optimization is performed using
-    scipy's differential evolution algorithm.
+    This function fits each model in the provided ensemble on the full training
+    data, then generates predictions on a target set (test or validation). It
+    then uses the Differential Evolution (DE) optimization algorithm to find
+    the optimal set of weights for combining these predictions to maximize the
+    ROC AUC score.
 
     Args:
-        best (list): A list representing the current best ensemble configuration. Each element should
-            be a tuple containing model information and feature columns.
-        ml_grid_object (object): An object containing training and test data, as well as configuration
-            parameters such as verbosity. Must have attributes:
-                - X_train, X_test, y_train, y_test, X_test_orig, y_test_orig, verbose
-        valid (bool, optional): If True, use the original test set (validation set) for optimization.
-            If False, use the regular test set. Default is False.
+        best: A list containing the ensemble configuration. The first element
+            (`best[0]`) is a list of tuples, where each tuple holds model
+            information, the model object, and feature columns.
+        ml_grid_object: An object containing data splits (`X_train`, `y_train`,
+            `X_test`, `y_test`, `X_test_orig`, `y_test_orig`) and configuration
+            like `verbose`.
+        valid: If True, optimizes weights based on the validation set
+            (`X_test_orig`). If False, uses the standard test set (`X_test`).
+            Defaults to False.
 
     Returns:
-        numpy.ndarray: The optimal weights for the ensemble models as determined by differential evolution.
+        The array of optimal weights for the ensemble models as determined
+        by Differential Evolution.
 
     Raises:
-        ValueError: If model fitting or prediction fails due to data shape or type issues.
+        ValueError: If model fitting or prediction fails.
         Exception: If the differential evolution optimization fails.
-
-    Notes:
-        - Handles both scikit-learn style models and custom BinaryClassification (PyTorch) models.
-        - Prints warnings and debug information based on the verbosity level of ml_grid_object.
-        - Calculates and prints the unweighted ensemble AUC before optimization.
-        - Returns the weights that maximize the ensemble's AUC score.
     """
     X_test_orig = ml_grid_object.X_test_orig
     y_test_orig = ml_grid_object.y_test_orig

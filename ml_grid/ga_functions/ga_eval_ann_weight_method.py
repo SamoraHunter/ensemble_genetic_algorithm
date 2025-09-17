@@ -1,6 +1,7 @@
 from ml_grid.ga_functions.ga_ann_util import BinaryClassification, TestData, TrainData
 from ml_grid.ga_functions.ga_ann_weight_methods import train_ann_weight
 import torch
+from typing import Any, List
 from torch.utils.data import DataLoader
 import numpy as np
 from sklearn import metrics
@@ -8,35 +9,36 @@ from sklearn.metrics import matthews_corrcoef
 import time
 
 
-def get_y_pred_ann_torch_weighting_eval(best, ml_grid_object, valid=False):
+def get_y_pred_ann_torch_weighting_eval(
+    best: List, ml_grid_object: Any, valid: bool = False
+) -> np.ndarray:
     """
-    Generates ensemble predictions using an ANN-based weighting method for a set of models,
-    and evaluates the ensemble on either the test or validation set.
+    Generates and evaluates ANN-weighted ensemble predictions.
 
     This function fits each model in the provided ensemble on the training data,
-    generates predictions for both training and target (test/validation) datasets,
-    and then trains an ANN to learn optimal weights for combining the model predictions.
-    The function returns the weighted ensemble predictions for the target dataset.
+    generates predictions for both the training set and a target set (test or
+    validation), and then trains an ANN to learn optimal weights for combining
+    the model predictions. The function returns the final weighted ensemble
+    predictions for the target dataset.
 
     Args:
-        best (list): List of tuples representing the ensemble. Each tuple contains
-            (model_name, model_object, feature_columns).
-        ml_grid_object (object): An object containing all necessary data and configuration,
-            including training and test/validation sets, labels, and verbosity level.
-        valid (bool, optional): If True, evaluates on the validation set; otherwise,
-            evaluates on the test set. Default is False.
+        best: A list containing the ensemble configuration. The first element
+            (`best[0]`) is a list of tuples, where each tuple holds model
+            information, the model object, and feature columns.
+        ml_grid_object: An object containing data splits (`X_train`, `y_train`,
+            `X_test`, `X_test_orig`, etc.) and configuration like `verbose`.
+        valid: If True, evaluates on the validation set (`X_test_orig`).
+            If False, evaluates on the standard test set (`X_test`).
+            Defaults to False.
 
     Returns:
-        np.ndarray: The predicted labels for the target dataset (test or validation)
+        The predicted labels for the target dataset (test or validation)
             using the ANN-weighted ensemble.
 
     Notes:
-        - The function supports both scikit-learn models and custom PyTorch models
-          (e.g., BinaryClassification).
-        - It computes and prints AUC and MCC scores for both unweighted and weighted ensembles
-          if verbosity is set appropriately.
-        - Handles NaN predictions from the ANN by returning a random prediction vector.
-        - Uses torch for ANN training and prediction, and clears CUDA cache at the end.
+        - Supports both scikit-learn and custom PyTorch `BinaryClassification` models.
+        - Computes and prints AUC and MCC scores if verbosity is set.
+        - Handles NaN predictions from the ANN by returning a random vector.
     """
 
     if ml_grid_object.verbose >= 11:

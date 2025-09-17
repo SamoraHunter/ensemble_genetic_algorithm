@@ -1,33 +1,33 @@
 from ml_grid.ga_functions.ga_ann_util import BinaryClassification, TestData
 import torch
 from torch.utils.data import Dataset, DataLoader
+from typing import Any, List
 import numpy as np
 from scipy import stats
 
 
-def get_best_y_pred_unweighted_eval(best, ml_grid_object, valid=False):
+def get_best_y_pred_unweighted_eval(best: List, ml_grid_object: Any, valid: bool = False) -> List:
     """
-    Generates ensemble predictions using the unweighted majority vote from a set of models.
+    Generates unweighted ensemble predictions by majority vote for evaluation.
 
-    This function fits each model in the provided ensemble on the training data, makes predictions
-    on either the test or validation set (depending on the `valid` flag), and aggregates the predictions
-    using the statistical mode (majority vote) for each sample.
+    This function fits each model in the provided ensemble on the full training
+    data, then generates predictions on either the test set or a separate
+    validation set. The final prediction for each sample is determined by the
+    mode (majority vote) of the predictions from all models in the ensemble.
 
     Args:
-        best (list): A list containing the ensemble configuration. The first element should be a list of tuples,
-            where each tuple contains information about a model, its instance, and the feature columns to use.
-        ml_grid_object (object): An object containing the dataset splits and configuration. Must have attributes:
-            - X_train, X_test, y_train, X_test_orig, y_test_orig, verbose.
-        valid (bool, optional): If True, predictions are made on the original validation set (X_test_orig, y_test_orig).
-            If False (default), predictions are made on the test set (X_test).
+        best: A list containing the ensemble configuration. The first element
+            (`best[0]`) is a list of tuples, where each tuple holds model
+            information, the model object, and feature columns.
+        ml_grid_object: An object containing data splits (`X_train`, `y_train`,
+            `X_test`, `X_test_orig`, etc.) and configuration like `verbose`.
+        valid: If True, predictions are made on the validation set
+            (`X_test_orig`). If False, predictions are made on the standard
+            test set (`X_test`). Defaults to False.
 
     Returns:
-        list: The ensemble's predicted labels for each sample in the selected test/validation set, determined by majority vote.
-
-    Notes:
-        - Supports both scikit-learn style models and custom BinaryClassification (PyTorch) models.
-        - Assumes all models are classifiers and output integer class labels.
-        - Prints verbose output if `ml_grid_object.verbose` is set.
+        A list of the final ensemble predictions for the selected dataset,
+        determined by majority vote.
     """
 
     if ml_grid_object.verbose >= 1:

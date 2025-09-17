@@ -3,6 +3,7 @@ import random
 import time
 from tqdm import tqdm
 import torch
+from typing import Any, List
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import torch.nn as nn
@@ -33,37 +34,38 @@ from ml_grid.ga_functions.ga_ann_util import (
 )
 
 
-def get_y_pred_ann_torch_weighting(best, ml_grid_object, valid=False):
-    """
-    Generates ensemble predictions using an Artificial Neural Network (ANN) weighting scheme for a set of models.
+def get_y_pred_ann_torch_weighting(
+    best: List, ml_grid_object: Any, valid: bool = False
+) -> np.ndarray:
+    """Generates ANN-weighted ensemble predictions.
 
-    This function takes a list of models (the "best" ensemble) and a machine learning grid object, and computes
-    predictions for either the validation or test set. It supports both traditional scikit-learn models and custom
-    PyTorch-based binary classifiers. The function constructs a prediction matrix from the ensemble, trains an ANN
-    to learn optimal weights for combining the ensemble predictions, and returns the final weighted predictions.
+    This function takes an ensemble of models and uses an Artificial Neural
+    Network (ANN) to learn optimal weights for combining their predictions.
+    If `valid` is True, it fits models on training data, generates predictions
+    on both training and validation sets, then trains the weighting ANN.
+    If `valid` is False, it uses pre-computed predictions from the `best`
+    configuration to train the ANN.
 
-    Parameters
-    ----------
-    best : list
-        The ensemble of models and associated metadata. Each element is expected to be a tuple containing model
-        information, including the model object and the feature columns used.
-    ml_grid_object : object
-        An object containing training and test data, as well as configuration parameters such as verbosity.
-        Must have attributes: y_test, X_test_orig, y_test_orig, y_train, X_train, and verbose.
-    valid : bool, optional (default=False)
-        If True, predictions are made on the validation set; otherwise, predictions are made on the test set.
+    Args:
+        best: A list containing the ensemble configuration. The first element
+            (`best[0]`) is a list of tuples, each representing a model and its
+            metadata (model object, feature columns, and optional pre-computed
+            predictions).
+        ml_grid_object: An object containing data splits (`X_train`, `y_train`,
+            `X_test_orig`, `y_test_orig`, etc.) and configuration like `verbose`.
+        valid: If True, refits models and predicts on the validation set.
+            If False, uses pre-computed predictions. Defaults to False.
 
-    Returns
-    -------
-    y_pred_ensemble : numpy.ndarray
-        The final ensemble predictions as a 1D array, weighted by the trained ANN.
+    Returns:
+        The final ensemble predictions as a 1D NumPy array, weighted by the
+        trained ANN.
 
-    Notes
-    -----
-    - The function prints detailed progress and warnings depending on the verbosity level set in `ml_grid_object`.
-    - Handles both scikit-learn and custom PyTorch models for binary classification.
-    - If the ANN produces NaN predictions, a random prediction vector is returned as a fallback.
-    - Computes and prints AUC and MCC scores for both unweighted and ANN-weighted ensembles if verbosity is high.
+    Notes:
+        - Handles both scikit-learn and custom PyTorch `BinaryClassification` models.
+        - If the ANN produces NaN predictions, a random prediction vector is
+          returned as a fallback.
+        - Computes and prints AUC and MCC scores for both unweighted and
+          ANN-weighted ensembles if verbosity is high.
     """
 
     if ml_grid_object.verbose >= 11:
@@ -222,18 +224,28 @@ def get_y_pred_ann_torch_weighting(best, ml_grid_object, valid=False):
     return y_pred_ensemble
 
 
-def train_ann_weight(input_shape, hidden_layer_size, train_data, test_data):
-    """
-    Train an ANN weighted ensemble model with a random sample of the global parameter space and return the predictions.
+def train_ann_weight(
+    input_shape: int, hidden_layer_size: int, train_data: TrainData, test_data: TestData
+) -> np.ndarray:
+    """Trains an ANN to find ensemble weights and returns predictions.
 
-    Parameters:
-    input_shape (int): The number of features in the input data.
-    hidden_layer_size (int): The batch size for training.
-    train_data (TrainData): The training data.
-    test_data (TestData): The test data.
+    This function initializes a `BinaryClassification` neural network, trains
+    it on the provided training data (which consists of predictions from base
+    models), and then uses the trained network to generate final predictions
+    on the test data. Hyperparameters for the network are chosen randomly
+    from a predefined search space.
+
+    Args:
+        input_shape: The number of input features for the ANN (i.e., the
+            number of models in the ensemble).
+        hidden_layer_size: The batch size for training the ANN.
+        train_data: A `TrainData` object containing the training features
+            (base model predictions) and true labels.
+        test_data: A `TestData` object containing the test features (base
+            model predictions) for which to generate final predictions.
 
     Returns:
-    y_pred_ensemble (numpy.array): The predictions of the ANN weighted ensemble model.
+        A NumPy array of the final predictions from the trained ANN model.
     """
     try:
         free_gpu = str(get_free_gpu())

@@ -1,32 +1,37 @@
 import numpy as np
 import torch
 import numpy
+from typing import Any, List
 from torch.utils.data import DataLoader
 from ml_grid.ga_functions.ga_ann_util import BinaryClassification, TestData, normalize
 
 
 def get_weighted_ensemble_prediction_de_y_pred_valid_eval(
-    best, weights, ml_grid_object, valid=False
-):
+    best: List, weights: np.ndarray, ml_grid_object: Any, valid: bool = False
+) -> np.ndarray:
     """
-    Generate weighted ensemble predictions using a set of models and their corresponding weights.
-    This function fits each model in the provided ensemble on the training data, makes predictions on either
-    the validation or test set (as specified), and combines the predictions using the provided weights.
-    The final ensemble prediction is obtained by summing the weighted predictions and rounding the result.
+    Generates weighted ensemble predictions for evaluation.
+
+    This function fits each model in the provided ensemble on the full training
+    data, then generates predictions on either the test set or a separate
+    validation set. The individual model predictions are then combined
+    using the provided `weights`, normalized by L1 norm, and rounded to produce
+    the final ensemble prediction.
+
     Args:
-        best (list): List of tuples representing the ensemble, where each tuple contains model metadata,
-            the model object, and the list of feature columns used by the model.
-        weights (array-like): Array of weights corresponding to each model in the ensemble.
-        ml_grid_object (object): An object containing training and test data, as well as configuration parameters.
-            Must have the following attributes:
-                - X_train, y_train: Training features and labels.
-                - X_test, X_test_orig: Test features (possibly preprocessed and original).
-                - y_test_orig: Original test labels.
-                - verbose: Verbosity level for logging.
-        valid (bool, optional): If True, predictions are made on the validation set (original test data).
-            If False, predictions are made on the test set. Default is False.
+        best: A list containing the ensemble configuration. The first element
+            (`best[0]`) is a list of tuples, where each tuple holds model
+            information, the model object, and feature columns.
+        weights: Array of weights to apply to each model's predictions.
+        ml_grid_object: An object containing data splits (`X_train`, `y_train`,
+            `X_test`, `X_test_orig`, etc.) and configuration like `verbose`.
+        valid: If True, predictions are made on the validation set
+            (`X_test_orig`). If False, predictions are made on the standard
+            test set (`X_test`). Defaults to False.
+
     Returns:
-        numpy.ndarray: Array of final ensemble predictions after applying weights and rounding.
+        The final weighted ensemble predictions, rounded to the nearest integer
+        (typically 0 or 1 for classification tasks).
     """
 
     round_v = np.vectorize(round)

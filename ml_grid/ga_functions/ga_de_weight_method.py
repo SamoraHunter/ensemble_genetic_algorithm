@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from typing import Any, List
 import numpy
 from torch.utils.data import Dataset, DataLoader
 from numpy.linalg import norm
@@ -8,17 +9,30 @@ from ml_grid.ga_functions.ga_ann_util import BinaryClassification, TestData, nor
 
 
 def get_weighted_ensemble_prediction_de_y_pred_valid(
-    best, weights, ml_grid_object, valid=False
-):
+    best: List, weights: np.ndarray, ml_grid_object: Any, valid: bool = False
+) -> np.ndarray:
     """
-    Generates weighted ensemble predictions for a given set of models and weights, either on the validation set or using precomputed predictions.
+    Generates weighted ensemble predictions for a given set of models and weights.
+
+    This function computes weighted ensemble predictions. If `valid` is True,
+    it fits each model on the training data and predicts on the validation set.
+    If `valid` is False, it uses pre-computed predictions stored within the
+    `best` configuration. The individual model predictions are then combined
+    using the provided `weights`, normalized by L1 norm, and rounded to produce
+    the final ensemble prediction.
+
     Args:
-        best (list): List containing the ensemble configuration. The first element should be a list of tuples, each representing a model and its associated metadata.
-        weights (array-like): Array of weights to apply to each model's predictions in the ensemble.
-        ml_grid_object (object): An object containing training and test data, as well as other configuration parameters. Must have attributes such as X_train, X_test, y_train, X_test_orig, y_test_orig, and verbose.
-        valid (bool, optional): If True, computes predictions on the validation set using the models. If False, uses precomputed predictions from the ensemble configuration. Defaults to False.
+        best: List containing the ensemble configuration. The first element
+            (`best[0]`) is a list of tuples, each representing a model and its
+            associated metadata (model object, feature columns, and predictions).
+        weights: Array of weights to apply to each model's predictions.
+        ml_grid_object: An object containing data splits (`X_train`, `y_train`,
+            `X_test_orig`, etc.) and configuration like `verbose`.
+        valid: If True, predict on the validation set by refitting models.
+            If False, use pre-computed predictions. Defaults to False.
     Returns:
-        numpy.ndarray: The final weighted ensemble predictions, rounded to the nearest integer (typically 0 or 1 for classification tasks).
+        The final weighted ensemble predictions, rounded to the nearest integer
+        (typically 0 or 1 for classification tasks).
     """
 
     round_v = np.vectorize(round)
