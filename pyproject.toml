@@ -1,0 +1,177 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ga-project"
+version = "0.1.0"
+description = "Genetic Algorithm Ensemble Project"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    {name = "Samora Hunter", email = "samorahunter@hotmail.co.uk"},
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+# Core dependencies
+dependencies = [
+    # Core scientific computing
+    "numpy<2",
+    "pandas>=2.2.0",
+    "scipy>=1.14.0",
+    "scikit-learn>=1.5.0",
+    
+    # Machine Learning
+    "torch>=2.0.1",
+    "torchmetrics>=1.4.0",
+    "imbalanced-learn>=0.12.0",
+    "xgboost>=2.1.0",
+    
+    # Visualization
+    "matplotlib>=3.9.0",
+    "seaborn>=0.13.0",
+    
+    # Genetic Algorithms
+    "deap>=1.4.0",
+    
+    # Data processing
+    "polars>=1.9.0",
+    "pyarrow>=19.0.0",
+    
+    # Jupyter/Notebook support
+    "ipykernel>=6.29.0",
+    "ipython>=8.28.0",
+    "ipywidgets>=8.1.0",
+    "jupyterlab-widgets>=3.0.0",
+    
+    # Utilities
+    "tqdm",
+    "tabulate>=0.9.0",
+    "session-info>=1.0.0",
+    "fuzzysearch>=0.7.0",
+    "eventlet>=0.37.0",
+    "scoop>=0.7.2",
+    "pyimpetus>=4.1.0",
+    "statsmodels>=0.14.0",
+    
+    # Visualization extras
+    "graphviz>=0.20.0",
+    "pydot>=3.0.0",
+]
+
+[project.optional-dependencies]
+# Development dependencies
+dev = [
+    "pytest>=8.3.0",
+    "pre-commit",
+    "nbformat",
+    "nbconvert",
+]
+
+# CPU-only PyTorch (for CI/testing)
+cpu = [
+    "torch==2.0.1; extra == 'cpu'",
+]
+
+# Full GPU support
+gpu = [
+    "nvidia-cublas-cu12>=12.6.0",
+    "nvidia-cuda-cupti-cu12>=12.6.0", 
+    "nvidia-cuda-nvrtc-cu12>=12.6.0",
+    "nvidia-cuda-runtime-cu12>=12.6.0",
+    "nvidia-cudnn-cu12>=9.5.0",
+    "nvidia-cufft-cu12>=11.3.0",
+    "nvidia-curand-cu12>=10.3.0",
+    "nvidia-cusolver-cu12>=11.7.0",
+    "nvidia-cusparse-cu12>=12.5.0",
+    "nvidia-nccl-cu12>=2.23.0",
+    "nvidia-nvjitlink-cu12>=12.6.0",
+    "nvidia-nvtx-cu12>=12.6.0",
+    "triton>=2.0.0",
+]
+
+# All dependencies
+all = [
+    "ga-project[dev,gpu]",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/yourusername/ga-project"
+"Bug Reports" = "https://github.com/yourusername/ga-project/issues"
+"Source" = "https://github.com/yourusername/ga-project"
+
+# Tool configurations
+[tool.setuptools]
+packages = {find = {where = ["."], include = ["ml_grid*"]}}
+
+[tool.setuptools.package-data]
+"*" = ["*.txt", "*.rst", "*.md"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-v -s --tb=short"
+testpaths = [
+    "tests",
+    "notebooks",
+]
+python_files = [
+    "test_*.py",
+    "*_test.py",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_first_party = ["ml_grid"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = [
+    "deap.*",
+    "scoop.*",
+    "pyimpetus.*",
+    "eventlet.*",
+    "ml_grid.*",
+]
+ignore_missing_imports = true

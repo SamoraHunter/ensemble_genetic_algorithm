@@ -4,7 +4,7 @@
 
 - [Ensemble Genetic Algorithm](#ensemble-genetic-algorithm)
   - [Description](#description)
-  - [Project Requirements](#project-requirements)
+  - [Installation](#installation)
   - [Project Dataset requirements](#project-dataset-requirements)
   - [Environment Information](#environment-information)
   - [Usage](#usage)
@@ -30,9 +30,53 @@ Applies a grid search over featurespace and genetic algorithm hyperparameters to
 
 **See appendix for in depth description**
 
-## Project Requirements
+## Installation
 
-See requirements.txt
+This project includes a comprehensive setup script to create a dedicated Python virtual environment and install all necessary dependencies.
+
+### Prerequisites
+
+-   **Python**: Version 3.10 or higher.
+-   **Git**: For cloning the repository.
+-   **(Optional) NVIDIA GPU with CUDA**: For GPU-accelerated computations.
+
+### Quick Start
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/SamoraHunter/ensemble_genetic_algorithm.git
+    cd ensemble_genetic_algorithm
+    ```
+
+2.  **Run the setup script:**
+    Make the script executable and then run it.
+    ```bash
+    chmod +x setup.sh
+    ./setup.sh
+    ```
+    This will create a virtual environment named `ga_env`, install the default dependencies, and set up a Jupyter kernel. The environment will be activated for your current terminal session.
+
+### Installation Options
+
+The setup script supports different installation profiles. You can specify one using flags:
+
+-   `./setup.sh --cpu`: Installs the CPU-only version of PyTorch. Ideal for systems without a dedicated GPU.
+-   `./setup.sh --gpu`: Installs dependencies with GPU support (requires a compatible NVIDIA GPU and CUDA toolkit).
+-   `./setup.sh --dev`: Installs all development dependencies, including tools for testing.
+-   `./setup.sh --all`: Installs everything, including GPU and development dependencies.
+
+To see all available options, run:
+```bash
+./setup.sh --help
+```
+
+### Activating the Environment
+
+The setup script activates the `ga_env` environment for your current session. For future sessions, you can activate it manually:
+
+```bash
+source ga_env/bin/activate
+```
 
 ## Project Dataset requirements
 
@@ -40,8 +84,7 @@ A numeric data matrix (Pandas dataframe) with a binary outcome variable with the
 
 ## Environment Information
 
-- **Python**: 3.7.6 (default, Jan 8, 2020, 19:59:22) [GCC 7.3.0]
-- Tested Python 3.10
+- **Python**: >=3.10
 - **Operating System**: Linux-5.4.0-125-generic-x86_64-with-debian-buster-sid
 
 ## Usage
@@ -273,5 +316,3 @@ Agius, R., Brieghel, C., Andersen, M.A. et al. Machine learning can identify new
 6. Fortin, F., De Rainville, F., Gardner, M.G., Parizeau, M., and Gagné, C. (2012) *DEAP: Evolutionary algorithms made easy*, *The Journal of Machine Learning Research*, 13(1), pp. 2171-2175.
 
 7. Virtanen, P., Gommers, R., Oliphant, T.E., Haberland, M., Reddy, T., Cournapeau, D., Burovski, E., Peterson, P., Weckesser, W., and Bright, J. (2020) *SciPy 1.0: fundamental algorithms for scientific computing in Python*, *Nature methods*, 17(3), pp. 261-272.
-
-

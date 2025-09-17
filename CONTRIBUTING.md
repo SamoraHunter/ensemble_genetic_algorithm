@@ -13,11 +13,26 @@ Before you start contributing, please make sure you have:
 1. **Forked** the repository to your GitHub account.
 2. **Cloned** the forked repository to your local machine.
 
-git clone https://github.com/SamoraHunter/ensemble_genetic_algorithm.git
+
+```bash
+git clone https://github.com/YOUR_USERNAME/ensemble_genetic_algorithm.git
+cd ensemble_genetic_algorithm
+```
 
 Created a new branch for your contributions.
+3. **Set up the development environment**. This project uses `pyproject.toml` to manage dependencies. It is recommended to use a virtual environment.
 
+```bash
+python -m venv .venv
+source .venv/bin/activate  # On Windows, use `.venv\Scripts\activate`
+pip install -e .[dev]
+```
+
+4. **Created a new branch** for your contributions.
+
+```bash
 git checkout -b feature/your-feature-name
+```
 
 Making Changes
 Ensure that you are working on the latest code from the main branch.

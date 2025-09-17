@@ -71,21 +71,17 @@ jobs:
           python3 -m venv ga_env
           source ga_env/bin/activate
 
-          echo "---- Creating a temporary, CPU-only requirements file ----"
-          # This command reads your original requirements.txt but skips any lines
-          # containing 'torch', 'triton', or 'nvidia', and saves the result to a new file.
-          grep -vE "torch|triton|nvidia" requirements.txt > cpu-requirements.txt
-
-          echo "---- Installing CPU-only PyTorch separately ----"
+          echo "---- Installing CPU-only PyTorch ----"
           # First, install the specific CPU version of PyTorch we need.
+          # This ensures we don't pull in GPU-enabled builds.
           pip install torch==2.0.1 --index-url https://download.pytorch.org/whl/cpu
 
-          echo "---- Installing the rest of the packages from the filtered file ----"
-          # Now, install from our clean, temporary requirements file.
-          pip install -r cpu-requirements.txt
+          echo "---- Installing project dependencies from pyproject.toml ----"
+          # Install the project in editable mode with the 'dev' dependencies.
+          # pip will see that torch is already installed and satisfy the dependency.
+          pip install -e .[dev]
           
           # This part is still useful for notebook compatibility
-          pip install ipykernel
           python -m ipykernel install --user --name=ga_env
 
       - name: Debug virtual environment
