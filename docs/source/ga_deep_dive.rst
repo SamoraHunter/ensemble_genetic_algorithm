@@ -1,4 +1,4 @@
 Genetic Algorithm Deep Dive
 ===========================
 
-.. include:: docs_wiki/Genetic_Algorithm_Deep_Dive.md
+.. include:: docs_wiki/Technical-Deep-Dive.md

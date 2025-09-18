@@ -55,7 +55,7 @@ Each file in this directory defines a "generator" for a specific machine learnin
 -   Define the hyperparameter search space for its model (using `hyperopt`).
 -   Instantiate its model with a given set of hyperparameters.
 
-The GA engine uses these generators to create the base learners that form the building blocks of the ensembles. This design makes the framework highly extensible. See Adding a New Base Learner.
+The GA engine uses these generators to create the base learners that form the building blocks of the ensembles. This design makes the framework highly extensible. See {doc}`../adding_new_learner`.
 
 ### 7. The Analysis Layer (`GA_results_explorer`)
 
@@ -64,13 +64,13 @@ After all grid search iterations are complete, this class is used to analyze the
 -   Which base learners performed best.
 -   The convergence behavior of the GA.
 
-See Interpreting Experiment Results.
+See {doc}`../interpreting_results`.
 
 ### 8. The Validation Layer (`EnsembleEvaluator`)
 
 This is the final step. The `EnsembleEvaluator` takes the best models identified during the experiment and evaluates them on the hold-out test set—data that was never seen during the entire GA process. This provides a final, unbiased measure of the models' generalization performance.
 
-See Evaluating Final Models.
+See {doc}`../evaluating_models`.
 
 ---
 

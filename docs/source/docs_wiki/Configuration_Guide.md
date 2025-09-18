@@ -17,7 +17,7 @@ Configuration is split into three main areas:
 ## 1. Experiment Script Settings
 
 These are the primary parameters you will change in `notebooks/example_usage.ipynb` for each experiment.
-
+ 
 -   `input_csv_path`: **(Required)** The file path to your input dataset. This must be a CSV file that meets the Project Dataset Requirements.
 -   `n_iter`: The number of grid search iterations to perform. Each iteration runs the genetic algorithm with a different combination of hyperparameters from the GA search space.
 -   `modelFuncList`: A Python list of the model generator classes that the genetic algorithm can use as base learners. You can add or remove models from this list to control the search space. See Adding a New Base Learner.
@@ -59,16 +59,10 @@ To change the search space, you can directly edit the lists within the `grid_par
 
 ```python
 # Before
-self.grid_param_space = {
-    'population_size': [50, 100, 150],
-    # ...
-}
+self.pop_params = [50, 100, 150]
 
 # After
-self.grid_param_space = {
-    'population_size': [200],
-    # ...
-}
+self.pop_params = [200]
 ```
 
 This level of configuration gives you full control over the scope and depth of your hyperparameter search.
