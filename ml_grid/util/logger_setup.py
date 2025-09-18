@@ -5,10 +5,29 @@ import sys
 from IPython.core.getipython import get_ipython
 
 
-def setup_logger(log_folder_path="."):
+def setup_logger(log_folder_path: str = ".") -> logging.Logger:
+    """Sets up a logger that writes to both console and a file.
+
+    This function configures a logger that captures all stdout and redirects it
+    to both the original console stdout and a timestamped log file. It is
+    specifically designed to work within an IPython/Jupyter environment.
+
+    It achieves this by replacing `sys.stdout` with a custom `DualWriter`
+    class. It also sets up a global trace function to log line-by-line
+    execution, which can be very verbose and is intended for deep debugging.
+
+    Args:
+        log_folder_path: The relative path to the directory where logs
+            should be stored. Defaults to the current directory.
+
+    Returns:
+        A configured `logging.Logger` object with custom methods
+        (`log_info`, `log_debug`, `log_error`) attached for convenience.
+    """
     # Get the directory path of the current module
     module_dir = os.path.dirname(os.path.realpath(__file__))
 
+    # This part is specific to running in a Jupyter/IPython environment
     # Get the root directory of the notebook
     notebook_dir = os.path.dirname(
         get_ipython().config["IPKernelApp"]["connection_file"]
@@ -47,7 +66,7 @@ def setup_logger(log_folder_path="."):
 
     # Define a trace function for logging
     def tracefunc(frame, event, arg):
-        # Only log events from files within the notebook directory
+        """A trace function to log line execution for debugging."""
         if notebook_dir in frame.f_code.co_filename:
             if event == "line":
                 logger.debug(
@@ -60,11 +79,20 @@ def setup_logger(log_folder_path="."):
 
     # Create a custom stdout writer that writes to both original stdout and log file
     class DualWriter:
-        def __init__(self, logger, original_stdout):
+        """A custom file-like object to write to two destinations."""
+
+        def __init__(self, logger: logging.Logger, original_stdout: object):
+            """Initializes the DualWriter.
+
+            Args:
+                logger: The logger instance to write to.
+                original_stdout: The original sys.stdout object.
+            """
             self.logger = logger
             self.original_stdout = original_stdout
 
-        def write(self, message):
+        def write(self, message: str):
+            """Writes a message to both the console and the log file."""
             if message.strip():
                 # Write to original stdout (console) - this shows immediately
                 self.original_stdout.write(message)
@@ -85,9 +113,11 @@ def setup_logger(log_folder_path="."):
                 file_handler.emit(log_record)
 
         def flush(self):
+            """Flushes the original stdout buffer."""
             self.original_stdout.flush()
 
         def isatty(self):
+            """Checks if the original stdout is a TTY."""
             return self.original_stdout.isatty()
 
     # Replace stdout with our dual writer
@@ -95,7 +125,7 @@ def setup_logger(log_folder_path="."):
 
     # Function to log messages that appear both in console and file with formatting
     def log_info(message):
-        # This will appear in console with timestamp formatting and in log file
+        """Logs an INFO message to both console and file."""
         formatted_msg = (
             f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - INFO - {message}"
         )
@@ -104,10 +134,11 @@ def setup_logger(log_folder_path="."):
         logger.info(message)
 
     def log_debug(message):
-        # Debug only goes to log file
+        """Logs a DEBUG message to the file only."""
         logger.debug(message)
 
     def log_error(message):
+        """Logs an ERROR message to both console and file."""
         formatted_msg = (
             f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - ERROR - {message}"
         )
@@ -124,6 +155,6 @@ def setup_logger(log_folder_path="."):
 
 
 def restore_stdout():
-    """Helper function to restore original stdout if needed"""
+    """Restores the original `sys.stdout` object."""
     if hasattr(sys, "_original_stdout"):
         sys.stdout = sys._original_stdout

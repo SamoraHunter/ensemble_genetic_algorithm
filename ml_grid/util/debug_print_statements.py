@@ -2,19 +2,40 @@
 from numpy import absolute, mean, std
 from sklearn import metrics
 from sklearn.metrics import (classification_report, f1_score, make_scorer,
-                             matthews_corrcoef, roc_auc_score)
+                             matthews_corrcoef, roc_auc_score) # Removed unused imports
+from typing import Dict, Any
 
 
 class debug_print_statements_class():
-    
-    def __init__(self, scores):
-        
+    """A utility class for printing formatted debug information about model scores.
+
+    This class provides a static method to display mean and standard deviation
+    of various cross-validation scores, such as F1, ROC AUC, accuracy, fit time,
+    and score time.
+    """
+
+    scores: Dict[str, Any]
+    """A dictionary containing cross-validation scores, typically from `sklearn.model_selection.cross_validate`."""
+
+    def __init__(self, scores: Dict[str, Any]):
+        """Initializes the debug_print_statements_class.
+
+        Args:
+            scores: A dictionary containing cross-validation scores. Expected keys
+                include 'test_f1', 'test_roc_auc', 'test_accuracy', 'fit_time',
+                and 'score_time'.
+        """
         self.scores = scores
-        
-        
-    
-    def debug_print_scores(scores):
-        
+
+    @staticmethod
+    def debug_print_scores(scores: Dict[str, Any]) -> None:
+        """Prints formatted mean and standard deviation of various scores.
+
+        Args:
+            scores: A dictionary containing cross-validation scores. Expected keys
+                include 'test_f1', 'test_roc_auc', 'test_accuracy', 'fit_time',
+                and 'score_time'.
+        """
         print(
             "Mean MAE: %.3f (%.3f)"
             % (

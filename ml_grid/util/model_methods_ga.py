@@ -3,28 +3,48 @@ import pickle
 import random
 import time
 
+from typing import Any, Dict, List, Tuple
 import numpy as np
 import torch
 
 
 def store_model(
-    ml_grid_object,
-    local_param_dict,
-    mccscore,
-    model,
-    feature_list,
-    model_train_time,
-    auc_score,
-    y_pred,
-    model_type="sklearn",
-):  # **kwargs ):
+    ml_grid_object: Any,
+    local_param_dict: Dict,
+    mccscore: float,
+    model: Any,
+    feature_list: List[str],
+    model_train_time: int,
+    auc_score: float,
+    y_pred: np.ndarray,
+    model_type: str = "sklearn",
+) -> None:
+    """Stores a trained model's metadata and object to disk.
 
+    This function serializes a model and its performance metrics into a central
+    JSON file (`model_store.json`). It handles different model types:
+    - `sklearn`: The model object is converted to its string representation.
+    - `torch`: The model is saved to a separate file using `torch.save`, and a
+      timestamp is stored in the JSON.
+    - `xgb`: The model is pickled to a separate file, and a timestamp is stored.
+
+    Args:
+        ml_grid_object: An object containing project configurations, including
+            logging paths.
+        local_param_dict: A dictionary of local parameters for the run.
+        mccscore: The Matthews Correlation Coefficient score of the model.
+        model: The trained model object to be stored.
+        feature_list: A list of feature names used by the model.
+        model_train_time: The time taken to train the model, in seconds.
+        auc_score: The ROC AUC score of the model.
+        y_pred: The model's predictions on the test set.
+        model_type: The type of the model ('sklearn', 'torch', 'xgb').
+            Defaults to "sklearn".
+    """
     if ml_grid_object.verbose >= 11:
         print("store_model")
 
     model_store_path = ml_grid_object.logging_paths_obj.model_store_path
-
-    base_project_dir = ml_grid_object.logging_paths_obj.base_project_dir
 
     global_param_str = ml_grid_object.logging_paths_obj.global_param_str
 
@@ -97,8 +117,31 @@ def store_model(
         print("Failed to torch empty cache", e)
 
 
-def get_stored_model(ml_grid_object):
+def get_stored_model(ml_grid_object: Any) -> Tuple:
+    """Retrieves a randomly selected, previously stored model.
 
+    This function reads the `model_store.json` file, randomly picks one of
+    the stored models, and deserializes it. It handles different model types:
+    - `sklearn`: Re-creates the model object using `eval()`.
+    - `torch`: Loads the model from its file using `torch.load()`.
+    - `xgb`: Unpickles the model from its file.
+
+    If retrieving a stored model fails for any reason, it falls back to
+    generating a new random model using the `modelFuncList`.
+
+    Args:
+        ml_grid_object: An object containing project configurations, including
+            logging paths and the `modelFuncList`.
+
+    Returns:
+        A tuple containing the model's performance and objects, in the format:
+        (mccscore, model, feature_list, model_train_time, auc_score, y_pred).
+
+    Warning:
+        This function uses `eval()` to reconstruct scikit-learn models from
+        their string representation. This can be a security risk if the
+        `model_store.json` file is from an untrusted source.
+    """
     model_store_path = ml_grid_object.logging_paths_obj.model_store_path
 
     global_param_str = ml_grid_object.logging_paths_obj.global_param_str

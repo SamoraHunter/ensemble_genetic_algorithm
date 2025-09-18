@@ -1,10 +1,11 @@
 # A module for evaluating ensembles by calling the prediction resolver function.
 
 import pandas as pd
-from ml_grid.pipeline.evaluate_methods_y_pred_resolver import get_y_pred_resolver_eval
 import numpy as np
 import pickle
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from typing import Any, Dict, List, Optional
+
 
 from sklearn.linear_model import Perceptron, LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
@@ -55,22 +56,56 @@ except ImportError as e:
 
 
 # --- Helper Class to Mimic MLGridObject ---
-class MLGridObject:
-    """A container class to hold data and parameters for the resolver function."""
+class _MLGridObject:
+    """A minimal container class to mimic the main MLGridObject for evaluation.
+
+    This class holds the necessary data splits and configuration parameters
+    required by the `get_y_pred_resolver_eval` function.
+    """
+
+    verbose: int
+    """The verbosity level for logging."""
+    local_param_dict: Dict
+    """A dictionary of local parameters, including the weighting method."""
+    X_train: pd.DataFrame
+    """The training features DataFrame."""
+    y_train: pd.Series
+    """The training target Series."""
+    X_test: pd.DataFrame
+    """The testing features DataFrame."""
+    y_test: pd.Series
+    """The testing target Series."""
+    X_test_orig: pd.DataFrame
+    """The original (validation) testing features DataFrame."""
+    y_test_orig: pd.Series
+    """The original (validation) testing target Series."""
 
     def __init__(self):
-        self.verbose = 1
-        self.local_param_dict = {}
-        self.X_train, self.y_train = None, None
-        self.X_test, self.y_test = None, None
-        self.X_test_orig, self.y_test_orig = None, None  # This is the validation set
+        """Initializes the _MLGridObject."""
+        self.verbose = 0
+        self.local_param_dict: Dict[str, Any] = {}
+        self.X_train, self.y_train = pd.DataFrame(), pd.Series()
+        self.X_test, self.y_test = pd.DataFrame(), pd.Series()
+        self.X_test_orig, self.y_test_orig = pd.DataFrame(), pd.Series()
 
 
 class EnsembleEvaluator:
+    """Evaluates stored ensembles from a results CSV file.
+
+    This class loads a results DataFrame, reconstructs the ensembles, and
+    re-evaluates them on specified data splits (test or validation) using
+    different weighting methods. It is a powerful tool for post-hoc analysis
+    of genetic algorithm runs.
     """
-    Evaluates ensembles by calling an external prediction resolver function.
-    Now uses a DataFrame with results and the 'best_ensemble' column, defaults to top by auc_score.
-    """
+
+    debug: bool
+    """Flag to enable detailed debug printing."""
+
+    ml_grid_object: _MLGridObject
+    """A container holding the data splits and configuration for evaluation."""
+
+    original_feature_names: Optional[List[str]]
+    """The complete list of original feature names from the dataset."""
 
     def __init__(
         self,
@@ -79,16 +114,28 @@ class EnsembleEvaluator:
         initial_param_dict: dict,
         debug: bool = False,
     ):
+        """Initializes the EnsembleEvaluator.
+
+        Args:
+            input_csv_path: The path to the input CSV file containing the raw data.
+            outcome_variable: The name of the target variable column in the CSV.
+            initial_param_dict: A dictionary of parameters required for data
+                splitting (e.g., `{'resample': None}`).
+            debug: If True, enables verbose debug printing. Defaults to False.
+        """
         self.debug = debug
         if self.debug:
             print("--- Initializing EnsembleEvaluator ---")
-        self.ml_grid_object = MLGridObject()
+        self.ml_grid_object = _MLGridObject()
         self.ml_grid_object.local_param_dict = initial_param_dict
         self.ml_grid_object.verbose = 0
         self.original_feature_names = None
         self._load_and_split_data(input_csv_path, outcome_variable)
 
-    def _load_and_split_data(self, input_csv_path, outcome_variable):
+    def _load_and_split_data(
+        self, input_csv_path: str, outcome_variable: str
+    ) -> None:
+        """Loads data from a CSV and splits it into train, test, and validation sets."""
         if self.debug:
             print(f"Loading data from: {input_csv_path}")
         df = pd.read_csv(input_csv_path)
@@ -106,8 +153,26 @@ class EnsembleEvaluator:
         if self.debug:
             print("Data splits assigned successfully.")
 
-    def _parse_ensemble(self, ensemble_record, debug=False):
-        """Parse a best_ensemble record into a list of processed ensembles."""
+    def _parse_ensemble(
+        self, ensemble_record: Any, debug: bool = False
+    ) -> List[List[Tuple]]:
+        """Parses a 'best_ensemble' record into a list of processed ensembles.
+
+        This method takes a string or list representation of an ensemble from the
+        results DataFrame and reconstructs the model objects using `eval()`.
+
+        Args:
+            ensemble_record: The raw 'best_ensemble' entry from a DataFrame row.
+            debug: If True, enables verbose debug printing for the parsing process.
+
+        Returns:
+            A list of ensembles, where each ensemble is a list of model tuples.
+
+        Warning:
+            This function uses `eval()` to reconstruct model objects from
+            their string representation. This can be a security risk if the
+            input data is from an untrusted source.
+        """
         import pandas as pd
         from numpy import array
 
@@ -176,14 +241,23 @@ class EnsembleEvaluator:
     def _run_evaluation_from_df(
         self,
         results_df: pd.DataFrame,
-        weighting_methods: list,
+        weighting_methods: List[str],
         use_validation_set: bool = False,
-        ensemble_indices: list = None,
+        ensemble_indices: Optional[List[int]] = None,
     ) -> pd.DataFrame:
-        """
-        Core evaluation loop for a given set of weighting methods using a results DataFrame.
-        By default, processes the top ensemble by auc_score.
-        ensemble_indices: list of row indices (or single int) to evaluate, or 'all' for all rows.
+        """Core evaluation loop for a given set of weighting methods.
+
+        Args:
+            results_df: The DataFrame containing the GA run results.
+            weighting_methods: A list of weighting methods to evaluate
+                (e.g., ['unweighted', 'de', 'ann']).
+            use_validation_set: If True, evaluates on the validation set;
+                otherwise, evaluates on the test set.
+            ensemble_indices: A list of row indices from `results_df` to evaluate.
+                If None, evaluates the single best run by 'auc_score'.
+        Returns:
+            A DataFrame containing the performance metrics for each evaluated
+            ensemble and weighting method.
         """
         import pandas as pd
 
@@ -324,14 +398,21 @@ class EnsembleEvaluator:
     def evaluate_on_test_set_from_df(
         self,
         results_df: pd.DataFrame,
-        weighting_methods: list,
-        ensemble_indices: list = None,
+        weighting_methods: List[str],
+        ensemble_indices: Optional[List[int]] = None,
     ) -> pd.DataFrame:
+        """Evaluates specified ensembles on the TEST set.
+
+        This is a convenience wrapper around `_run_evaluation_from_df` that
+        configures the evaluation for the test set.
+
+        Args:
+            results_df: The DataFrame containing the GA run results.
+            weighting_methods: A list of weighting methods to evaluate.
+            ensemble_indices: A list of row indices to evaluate. If None,
+                evaluates the single best run by 'auc_score'.
         """
-        Evaluates ensembles on the TEST set for each weighting method using a results DataFrame.
-        ensemble_indices: which row(s) to evaluate (default: top by auc_score).
-        """
-        dataset_name = "TEST SET"
+        dataset_name = "TEST SET"  # For logging purposes
         print(
             f"\n--- Evaluating on {dataset_name} for methods: {weighting_methods} ---"
         )
@@ -345,14 +426,21 @@ class EnsembleEvaluator:
     def validate_on_holdout_set_from_df(
         self,
         results_df: pd.DataFrame,
-        weighting_methods: list,
-        ensemble_indices: list = None,
+        weighting_methods: List[str],
+        ensemble_indices: Optional[List[int]] = None,
     ) -> pd.DataFrame:
+        """Evaluates specified ensembles on the hold-out VALIDATION set.
+
+        This is a convenience wrapper around `_run_evaluation_from_df` that
+        configures the evaluation for the validation set.
+
+        Args:
+            results_df: The DataFrame containing the GA run results.
+            weighting_methods: A list of weighting methods to evaluate.
+            ensemble_indices: A list of row indices to evaluate. If None,
+                evaluates the single best run by 'auc_score'.
         """
-        Evaluates ensembles on the VALIDATION set for each weighting method using a results DataFrame.
-        ensemble_indices: which row(s) to evaluate (default: top by auc_score).
-        """
-        dataset_name = "VALIDATION (HOLD-OUT) SET"
+        dataset_name = "VALIDATION (HOLD-OUT) SET"  # For logging purposes
         print(
             f"\n--- Validating on {dataset_name} for methods: {weighting_methods} ---"
         )
@@ -364,19 +452,14 @@ class EnsembleEvaluator:
         )
 
 
-def load_pickled_ensembles(ensemble_path):
-    """
-    Loads a pickled ensemble from a file.
+def load_pickled_ensembles(ensemble_path: str) -> Any:
+    """Loads a pickled ensemble from a file.
 
-    Parameters
-    ----------
-    ensemble_path : str
-        The path to the pickled ensemble file.
+    Args:
+        ensemble_path: The path to the pickled ensemble file.
 
-    Returns
-    -------
-    data : object
-        The pickled ensemble object.
+    Returns:
+        The unpickled ensemble object.
     """
     with open(ensemble_path, "rb") as f:
         data = pickle.load(f)

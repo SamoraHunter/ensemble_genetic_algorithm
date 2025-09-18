@@ -1,35 +1,57 @@
 import itertools as it
 import random
+from typing import Dict, List, Iterator, Any
 
 from ml_grid.util.global_params import global_parameters
 
 
 class Grid:
-    """
-    Class Grid:
+    """Generates and manages a grid of hyperparameter configurations for experiments.
 
-    A class for generating a grid of hyperparameters for the Ensemble Genetic Algorithm
-
-    Attributes:
-        sample_n (int): The number of hyperparameter settings to generate for the grid. Defaults to 1000.
-        test_grid (bool): A bool for testing the grid generation. Defaults to False.
-        global_params (GlobalParameters): An object of GlobalParameters class.
-        verbose (int): An int for the verbosity level of the class.
-        settings_list (list): A list of dictionaries containing the hyperparameter settings.
-        nb_params (list): A list of ints for the number of base learners in the ensemble.
-        pop_params (list): A list of ints for the population size in the genetic algorithm.
-        g_params (list): A list of ints for the number of generations in the genetic algorithm.
-
+    This class creates a Cartesian product of all specified hyperparameters,
+    shuffles them, and provides an iterator to access a random sample of
+    the configurations. It also defines the parameter ranges for the genetic
+    algorithm itself (e.g., population size, number of generations).
     """
 
-    def __init__(self, sample_n=1000, test_grid=False):
-        """
-        Constructor for the Grid class
+    test_grid: bool
+    """A flag to enable a smaller, faster grid for testing purposes."""
+
+    global_params: global_parameters
+    """An instance of the global_parameters class."""
+
+    verbose: int
+    """The verbosity level, inherited from global_params."""
+
+    sample_n: int
+    """The number of hyperparameter settings to sample from the full grid."""
+
+    grid: Dict[str, List[Any]]
+    """A dictionary defining the hyperparameter search space."""
+
+    settings_list: List[Dict[str, Any]]
+    """A list of dictionaries, where each dictionary is a unique hyperparameter configuration."""
+
+    settings_list_iterator: Iterator
+    """An iterator for the `settings_list`."""
+
+    nb_params: List[int]
+    """A list of possible values for the number of base learners in an ensemble."""
+
+    pop_params: List[int]
+    """A list of possible values for the population size in the genetic algorithm."""
+
+    g_params: List[int]
+    """A list of possible values for the number of generations in the genetic algorithm."""
+
+    def __init__(self, sample_n: int = 1000, test_grid: bool = False):
+        """Initializes the Grid class.
 
         Args:
-            sample_n (int): The number of hyperparameter settings to generate for the grid. Defaults to 1000.
-            test_grid (bool): A bool for testing the grid generation. Defaults to False.
-
+            sample_n: The number of hyperparameter settings to generate.
+                Defaults to 1000.
+            test_grid: If True, uses a smaller grid for quick testing.
+                Defaults to False.
         """
 
         self.test_grid = test_grid
@@ -38,10 +60,7 @@ class Grid:
 
         self.verbose = self.global_params.verbose
 
-        if sample_n == None:
-            self.sample_n = 1000
-        else:
-            self.sample_n = sample_n
+        self.sample_n = sample_n if sample_n is not None else 1000
 
         if self.verbose >= 1:
             print(f"Feature space slice sample_n {self.sample_n}")
@@ -115,17 +134,15 @@ class Grid:
             ],
         }
 
-        def c_prod(d):
-            """
-            A recursive function to generate all the possible combinations of the hyperparameter settings.
-            Takes a dictionary as input and returns a list of dictionaries containing all the combinations
+        def c_prod(d: Dict) -> Iterator[Dict]:
+            """Recursively generates all combinations of hyperparameter settings.
 
             Args:
-                d (dict): A dictionary of lists of hyperparameter settings.
+                d: A dictionary where values are lists of settings.
 
             Returns:
-                list: A list of dictionaries containing all the combinations of the hyperparameter settings.
-
+                An iterator that yields dictionaries, each representing a unique
+                combination of settings.
             """
 
             if isinstance(d, list):

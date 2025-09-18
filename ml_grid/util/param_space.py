@@ -1,18 +1,35 @@
 """Import parameter space constants"""
 
 import numpy as np
+from typing import Dict, List, Union
 
 #print("imported param_space")
 
 class ParamSpace:
-    
-    
+    """
+    Defines and provides access to predefined hyperparameter search spaces.
+
+    This class holds different sized parameter dictionaries ('medium', 'xsmall', 'xwide')
+    that can be used by model generators for hyperparameter tuning. Each dictionary
+    contains various numpy arrays representing different scales and ranges of
+    hyperparameters.
+    """
+
+    param_dict: Dict[str, Union[np.ndarray, List[bool]]]
+    """A dictionary containing numpy arrays and lists for hyperparameter ranges."""
+
     #print("param space called")
-    
-    def __init__(self, size):
-        
+
+    def __init__(self, size: str):
+        """
+        Initializes the ParamSpace with a specific size.
+
+        Args:
+            size: The size of the parameter space to generate.
+                Valid options are 'medium', 'xsmall', 'xwide'.
+        """
         #print("param space init called")
-        
+
         self.param_dict = None
         
         if(size == 'medium'):

@@ -1,6 +1,7 @@
 import os
 import time
 import traceback
+from typing import Any, Dict, List
 import warnings
 
 import numpy as np
@@ -14,6 +15,22 @@ from sklearn.metrics import *
 
 
 class project_score_save_class:
+    """Manages the logging of experiment results to a master CSV file.
+
+    This class is responsible for initializing a CSV log file with a predefined
+    set of headers and provides a method to append new results from each
+    experimental run. It handles the calculation of various performance metrics
+    and the extraction of configuration parameters.
+    """
+
+    global_params: global_parameters
+    """An instance of the global_parameters class."""
+
+    metric_list: Dict
+    """A dictionary of scoring metrics, inherited from global_params."""
+
+    error_raise: bool
+    """Flag to determine if errors should be raised, from global_params."""
 
     def __init__(self, base_project_dir):
 
@@ -104,18 +121,41 @@ class project_score_save_class:
 
     def update_score_log(
         self,
-        ml_grid_object,
-        scores,
-        best_pred_orig,
-        current_algorithm,
-        method_name,
-        pg,
-        start,
-        n_iter_v,
-        valid=False,
-        generation_progress_list=[],
-        best_ensemble="",
+        ml_grid_object: Any,
+        scores: Dict,
+        best_pred_orig: np.ndarray,
+        current_algorithm: Any,
+        method_name: str,
+        pg: int,
+        start: float,
+        n_iter_v: int,
+        valid: bool = False,
+        generation_progress_list: List = [],
+        best_ensemble: str = "",
     ):
+        """Calculates metrics and appends a new result row to the log file.
+
+        This method takes the results of a single experimental run, calculates
+        a comprehensive set of performance metrics (AUC, MCC, F1, etc.),
+        extracts all relevant configuration parameters from the `ml_grid_object`,
+        and writes this information as a new row in the project's master
+        `final_grid_score_log.csv` file.
+
+        Args:
+            ml_grid_object: The main experiment object, containing data splits
+                and configuration parameters.
+            scores: A dictionary of cross-validation scores.
+            best_pred_orig: The predictions from the best-performing model/ensemble.
+            current_algorithm: The best model or ensemble object.
+            method_name: A string identifier for the method used.
+            pg: The size of the parameter grid searched.
+            start: The `time.time()` timestamp from the beginning of the run.
+            n_iter_v: The number of iterations performed in the search.
+            valid: If True, evaluation is performed on the validation set
+                (`y_test_orig`). Otherwise, it's on the test set (`y_test`).
+            generation_progress_list: A list of fitness scores per generation (for GA).
+            best_ensemble: A string representation of the final best ensemble.
+        """
 
         if ml_grid_object.verbose >= 1:
             print("update_score_log")

@@ -1,6 +1,7 @@
 import datetime
 import gc
 import itertools
+from typing import Any, Dict, List
 import os
 import pickle
 import random
@@ -33,12 +34,75 @@ from ml_grid.pipeline.plot_methods.plot_auc_ga import plot_auc
 from ml_grid.util import grid_param_space
 from ml_grid.util.global_params import global_parameters
 from ml_grid.util.grid_param_space_ga import Grid
+from ml_grid.util.project_score_save import project_score_save_class
 from sklearn import metrics
 from sklearn.model_selection import ParameterGrid
 
 
 class run:
-    def __init__(self, ml_grid_object, local_param_dict):  # kwargs**
+    """Orchestrates the main Genetic Algorithm (GA) evolution process.
+
+    This class is the primary engine for running the ensemble evolution. It takes
+    a configuration, sets up the GA environment using the DEAP library, and
+    executes the evolutionary loop for a specified number of generations.
+
+    The process for each run includes:
+    1.  Initializing the GA parameters (population size, generations, etc.).
+    2.  Registering the necessary genetic operators (evaluation, crossover,
+        mutation, selection) with the DEAP toolbox.
+    3.  Creating an initial population of candidate ensembles.
+    4.  Running the evolutionary loop, which involves selection, mating, and
+        mutation to produce new generations.
+    5.  Tracking the best-performing ensemble and implementing early stopping
+        if performance stagnates.
+    6.  Evaluating the final best ensemble on a hold-out validation set.
+    7.  Logging all results, progress, and artifacts to disk.
+    """
+
+    global_params: global_parameters
+    """An instance of the `global_parameters` class."""
+
+    ml_grid_object: Any
+    """The main experiment object, containing data splits and configurations."""
+
+    verbose: int
+    """The verbosity level, inherited from `global_params`."""
+
+    error_raise: bool
+    """A flag to determine if errors should be raised, from `global_params`."""
+
+    nb_params: List[int]
+    """A list of possible values for the number of base learners in an ensemble."""
+
+    pop_params: List[int]
+    """A list of possible values for the population size."""
+
+    g_params: List[int]
+    """A list of possible values for the number of generations."""
+
+    log_folder_path: str
+    """The path to the directory for storing logs and artifacts."""
+
+    creator: Any
+    """The DEAP creator object for defining fitness and individuals."""
+
+    toolbox: base.Toolbox
+    """The DEAP toolbox containing the genetic operators."""
+
+    project_score_save_object: project_score_save_class
+    """An object for saving final scores to the master log file."""
+
+    local_param_dict: Dict
+    """A dictionary of local parameters for the current run."""
+
+    def __init__(self, ml_grid_object: Any, local_param_dict: Dict):
+        """Initializes the Genetic Algorithm runner.
+
+        Args:
+            ml_grid_object: The main experiment object, containing data splits
+                and configurations.
+            local_param_dict: A dictionary of local parameters for the current run.
+        """
         self.global_params = global_parameters()
 
         self.ml_grid_object = ml_grid_object
@@ -125,8 +189,23 @@ class run:
         if self.verbose >= 2:
             print(f"Passed main GA init")
 
-    def execute(self):
-        print("Executing")
+    def execute(self) -> List[List]:
+        """Executes the full genetic algorithm process for all GA parameter combinations.
+
+        This method iterates through a grid of GA-specific hyperparameters
+        (number of base learners, population size, number of generations). For
+        each combination, it runs a complete evolutionary process.
+
+        The evolutionary loop within each run consists of selection, crossover,
+        and mutation over multiple generations. It tracks the best individual
+        and stops early if performance does not improve. Finally, it logs the
+        results of the best ensemble found.
+
+        Returns:
+            A list of errors encountered during the execution. Each item in the
+            list contains the model implementation, the exception, and a traceback.
+        """
+        print("Executing GA runs...")
         self.model_error_list = []
 
         global_param_str = self.ml_grid_object.logging_paths_obj.global_param_str
@@ -410,6 +489,7 @@ class run:
                     )
                     if self.verbose >= 1:
                         plot_auc(
+                        self.y_test_orig,
                             best_pred_orig,
                             "best_pop="
                             + str(pop_val)

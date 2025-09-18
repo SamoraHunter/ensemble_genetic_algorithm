@@ -1,31 +1,66 @@
 from sklearn.metrics import make_scorer, roc_auc_score
+from typing import Dict
 
 
 class global_parameters:
-    """Class that stores global parameters for the ml_grid library.
+    """A centralized configuration class for global project parameters.
 
-    Attributes:
-        debug_level (int): Debug level, 0 is off, 1 is low, 2 is medium, 3 is high.
-        knn_n_jobs (int): Number of jobs to use for knn, if -1 then use all cores.
-        verbose (int): Verbosity level, 0 is silent, 1 is warnings, 2 is info, 3 more, range 0-9.
-        rename_cols (bool): Whether to rename the columns of the dataframe before using it. Necessary for XGB and light GBM.
-        error_raise (bool): Whether to raise an error if an issue occurs during the grid search with gridsearch and randomsearch CV.
-        random_grid_search (bool): Whether to use a random search instead of exhaustive grid.
-        sub_sample_param_space_pct (float): What percentage of the parameter space to sub sample for the random grid search.
-        grid_n_jobs (int): Number of jobs to use for the grid search.
-        metric_list (dict): Dictionary of metrics to use for the grid search, with the key being the name of the metric and the value being the metric function.
-        model_train_time_warning_threshold (int): Threshold for warning if a model takes longer than this time to train (in seconds).
-        store_base_learners (bool): Whether to store the base learners after training them.
-        gen_eval_score_threshold_early_stopping (int): Threshold for early stopping, if the evaluation score is below the previous for this many epochs then the genetic algorithm will stop.
-        log_store_dataframe_path (str): Path to store the log dataframe.
+    This class holds all the global settings that control the behavior of the
+    data processing pipeline and the genetic algorithm.
+
     """
 
-    def __init__(self, debug_level=0, knn_n_jobs=-1):
-        """Constructor for the global_parameters class.
+    # --- Execution & Logging ---
+    verbose: int
+    """Verbosity level for console output (0-9)."""
+
+    debug_level: int
+    """Debug level for detailed logging."""
+
+    error_raise: bool
+    """If True, raises exceptions during grid search; otherwise, logs them."""
+
+    log_store_dataframe_path: str
+    """The base name for the log file that stores experiment results."""
+
+    # --- Model & Training ---
+    knn_n_jobs: int
+    """Number of parallel jobs for KNN models. -1 means using all available processors."""
+
+    rename_cols: bool
+    """If True, sanitizes column names for compatibility with libraries like XGBoost."""
+
+    model_train_time_warning_threshold: int
+    """Time in seconds after which a warning is printed for long model training times."""
+
+    store_base_learners: bool
+    """If True, saves trained base learners to disk."""
+
+    # --- Grid Search ---
+    random_grid_search: bool
+    """If True, uses RandomizedSearchCV instead of GridSearchCV."""
+
+    sub_sample_param_space_pct: float
+    """The percentage of the parameter space to sample in a random grid search."""
+
+    grid_n_jobs: int
+    """Number of parallel jobs for grid search."""
+
+    metric_list: Dict
+    """A dictionary of scoring metrics for cross-validation."""
+
+    # --- Genetic Algorithm ---
+    gen_eval_score_threshold_early_stopping: int
+    """The number of generations without improvement before the genetic algorithm stops early."""
+
+    def __init__(self, debug_level: int = 0, knn_n_jobs: int = -1):
+        """Initializes the global_parameters class.
 
         Args:
-            debug_level (int): Debug level, 0 is off, 1 is low, 2 is medium, 3 is high.
-            knn_n_jobs (int): Number of jobs to use for knn, if -1 then use all cores.
+            debug_level (int): Debug level, 0 is off, 1 is low, 2 is medium,
+                3 is high. Defaults to 0.
+            knn_n_jobs (int): Number of jobs to use for KNN models. -1 means
+                using all available processors. Defaults to -1.
         """
 
         self.debug_level = debug_level
@@ -36,7 +71,7 @@ class global_parameters:
 
         self.rename_cols = True
 
-        self.error_raise = False
+        self.error_raise = True
 
         self.random_grid_search = True
 

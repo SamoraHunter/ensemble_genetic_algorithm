@@ -1,26 +1,53 @@
 import numpy as np
 import scipy.spatial.distance
-from typing import List, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 
 class EnsembleDiversityMeasurer:
-    """
-    Comprehensive ensemble diversity measurement with multiple methods
+    """Calculates the diversity of an ensemble of classifiers using various metrics.
+
+    This class provides several methods to quantify the diversity among the
+    predictions of base learners in an ensemble. A higher diversity score
+    generally indicates that the models are making different errors, which can
+    lead to a more robust final ensemble.
     """
 
-    def __init__(self, method="comprehensive", weights=None):
-        """
-        Initialize diversity measurer
+    method: str
+    """The diversity measurement method to use."""
+
+    weights: List[float]
+    """A list of weights for combining metrics in 'comprehensive' mode."""
+
+    def __init__(
+        self, method: str = "comprehensive", weights: Optional[List[float]] = None
+    ):
+        """Initializes the EnsembleDiversityMeasurer.
 
         Args:
-            method: str - "jaccard", "hamming", "disagreement", "q_statistic", "comprehensive"
-            weights: list - weights for comprehensive method [jaccard, hamming, disagreement, q_stat]
+            method: The diversity measurement method. Can be "jaccard",
+                "hamming", "disagreement", "q_statistic", "kappa", or
+                "comprehensive". Defaults to "comprehensive".
+            weights: A list of four weights for the 'comprehensive' method,
+                corresponding to [jaccard, hamming, disagreement, q_stat].
+                Defaults to equal weights [0.25, 0.25, 0.25, 0.25].
         """
         self.method = method
         self.weights = weights or [0.25, 0.25, 0.25, 0.25]  # Equal weights by default
 
-    def measure_jaccard_diversity(self, ensemble):
-        """Enhanced Jaccard-based diversity"""
+    def measure_jaccard_diversity(self, ensemble: List[Any]) -> float:
+        """Calculates diversity using the average Jaccard distance.
+
+        Jaccard distance measures the dissimilarity between sample sets. A higher
+        value indicates greater diversity.
+
+        Args:
+            ensemble: A list containing the ensemble configuration. The predictions
+                are expected at `ensemble[0][i][5]`.
+
+        Returns:
+            The average Jaccard distance between all pairs of prediction vectors,
+            or 0.0 if calculation is not possible.
+        """
         n_y_pred = len(ensemble[0])
 
         if n_y_pred < 2:
@@ -39,8 +66,20 @@ class EnsembleDiversityMeasurer:
         except:
             return 0.0
 
-    def measure_hamming_diversity(self, ensemble):
-        """Hamming distance-based diversity"""
+    def measure_hamming_diversity(self, ensemble: List[Any]) -> float:
+        """Calculates diversity using the average Hamming distance.
+
+        Hamming distance measures the proportion of positions at which two
+        prediction vectors differ.
+
+        Args:
+            ensemble: A list containing the ensemble configuration. The predictions
+                are expected at `ensemble[0][i][5]`.
+
+        Returns:
+            The average Hamming distance between all pairs of prediction vectors,
+            or 0.0 if calculation is not possible.
+        """
         n_y_pred = len(ensemble[0])
 
         if n_y_pred < 2:
@@ -59,8 +98,20 @@ class EnsembleDiversityMeasurer:
         except:
             return 0.0
 
-    def measure_disagreement_diversity(self, ensemble):
-        """Disagreement-based diversity"""
+    def measure_disagreement_diversity(self, ensemble: List[Any]) -> float:
+        """Calculates diversity based on the variance of predictions per instance.
+
+        This method measures the average disagreement among classifiers for each
+        data point. A higher value indicates more disagreement and thus more
+        diversity.
+
+        Args:
+            ensemble: A list containing the ensemble configuration. The predictions
+                are expected at `ensemble[0][i][5]`.
+
+        Returns:
+            The mean disagreement, normalized by the maximum possible disagreement.
+        """
         n_y_pred = len(ensemble[0])
 
         if n_y_pred < 2:
@@ -81,8 +132,21 @@ class EnsembleDiversityMeasurer:
         except:
             return 0.0
 
-    def measure_q_statistic_diversity(self, ensemble):
-        """Q-statistic based diversity"""
+    def measure_q_statistic_diversity(self, ensemble: List[Any]) -> float:
+        """Calculates diversity using Yule's Q statistic.
+
+        The Q statistic measures the pairwise association between classifiers.
+        A value near 0 indicates independence (high diversity), while a value
+        near 1 indicates strong positive correlation (low diversity). This
+        method returns `1 - mean(abs(Q))`.
+
+        Args:
+            ensemble: A list containing the ensemble configuration. The predictions
+                are expected at `ensemble[0][i][5]`.
+
+        Returns:
+            The diversity score based on the Q statistic.
+        """
         n_y_pred = len(ensemble[0])
 
         if n_y_pred < 2:
@@ -114,8 +178,21 @@ class EnsembleDiversityMeasurer:
         except:
             return 0.0
 
-    def measure_kappa_diversity(self, ensemble):
-        """Kappa statistic-based diversity"""
+    def measure_kappa_diversity(self, ensemble: List[Any]) -> float:
+        """Calculates diversity using Cohen's Kappa statistic.
+
+        Kappa measures the agreement between two classifiers, corrected for
+        chance agreement. A value near 0 indicates agreement is at chance level
+        (high diversity), while a value near 1 indicates perfect agreement
+        (low diversity). This method returns `1 - mean(abs(kappa))`.
+
+        Args:
+            ensemble: A list containing the ensemble configuration. The predictions
+                are expected at `ensemble[0][i][5]`.
+
+        Returns:
+            The diversity score based on the Kappa statistic.
+        """
         n_y_pred = len(ensemble[0])
 
         if n_y_pred < 2:
@@ -153,10 +230,18 @@ class EnsembleDiversityMeasurer:
         except:
             return 0.0
 
-    def measure_binary_vector_diversity(self, ensemble):
-        """
-        Main diversity measurement function - comprehensive implementation
-        Returns diversity score where 0 = identical, 1 = maximally diverse
+    def measure_binary_vector_diversity(self, ensemble: List[Any]) -> float:
+        """Measures ensemble diversity based on the configured method.
+
+        This is the main entry point for measuring diversity. It calls the
+        appropriate measurement function based on `self.method`.
+
+        Args:
+            ensemble: A list containing the ensemble configuration.
+
+        Returns:
+            The calculated diversity score, where 0 is identical and 1 is
+            maximally diverse.
         """
         if self.method == "jaccard":
             return self.measure_jaccard_diversity(ensemble)
@@ -188,33 +273,39 @@ class EnsembleDiversityMeasurer:
             raise ValueError(f"Unknown method: {self.method}")
 
 
-def measure_diversity_wrapper(individual, method="comprehensive"):
-    """
-    Supports multiple diversity measurement methods
+def measure_diversity_wrapper(
+    individual: List[Any], method: str = "comprehensive"
+) -> float:
+    """A wrapper function to measure ensemble diversity.
+
+    This function instantiates `EnsembleDiversityMeasurer` and calls its main
+    measurement method.
 
     Args:
-        individual: your ensemble data structure
-        method: "jaccard", "hamming", "disagreement", "q_statistic", "comprehensive"
+        individual: The ensemble data structure.
+        method: The diversity measurement method to use. Defaults to "comprehensive".
 
     Returns:
-        diversity score (0 = identical, higher = more diverse)
+        The calculated diversity score.
     """
     measurer = EnsembleDiversityMeasurer(method=method)
     return measurer.measure_binary_vector_diversity(individual)
 
 
-def apply_diversity_penalty(auc, mcc, diversity_metric, diversity_params):
-    """
-    Apply diversity penalty to performance metrics
+def apply_diversity_penalty(
+    auc: float, mcc: float, diversity_metric: float, diversity_params: Dict
+) -> Tuple[float, float]:
+    """Applies a penalty to performance metrics based on ensemble diversity.
 
     Args:
-        auc: AUC score
-        mcc: MCC score
-        diversity_metric: diversity score (0=identical, higher=diverse)
-        diversity_params: dict with penalty parameters
+        auc: The original AUC score.
+        mcc: The original MCC score.
+        diversity_metric: The diversity score (0=identical, 1=diverse).
+        diversity_params: A dictionary with penalty parameters, including
+            'penalty_method' and 'penalty_strength'.
 
     Returns:
-        tuple: (penalized_auc, penalized_mcc)
+        A tuple containing the penalized AUC and MCC scores.
     """
     penalty_method = diversity_params.get("penalty_method", "linear")
     penalty_strength = diversity_params.get("penalty_strength", 0.3)

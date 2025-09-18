@@ -1,4 +1,5 @@
 import traceback
+from typing import Any, Dict, List
 
 import ml_grid
 import numpy as np
@@ -29,9 +30,71 @@ from sklearn.model_selection import ParameterGrid
 
 
 class run:
+    """Orchestrates a grid search cross-validation for a list of predefined models.
 
-    def __init__(self, ml_grid_object, local_param_dict):  # kwargs**
+    This class initializes a suite of model classes, each with its own
+    hyperparameter space. It then prepares arguments for each model to be
+    passed to a grid search function. The `execute` method iterates through
+    these models and runs the grid search, handling errors and logging
+    the outcomes. This class is designed for a more traditional grid search
+    approach, as opposed to the genetic algorithm pipeline.
+    """
 
+    global_params: global_parameters
+    """An instance of the `global_parameters` class."""
+
+    verbose: int
+    """The verbosity level, inherited from global_params."""
+
+    error_raise: bool
+    """A flag to determine if errors should be raised, from `global_params`."""
+
+    ml_grid_object: Any
+    """The main experiment object, containing data splits and configurations."""
+
+    sub_sample_param_space_pct: float
+    """The percentage of the parameter space to sample for a random grid search."""
+
+    parameter_space_size: str
+    """The size of the parameter space to use (e.g., 'medium', 'xsmall')."""
+
+    model_class_list: List[Any]
+    """A list of the instantiated model classes to be evaluated."""
+
+    pg_list: List[int]
+    """A list containing the size of the parameter grid for each model."""
+
+    mean_parameter_space_val: float
+    """The mean size of the parameter grids across all evaluated models."""
+
+    sub_sample_parameter_val: int
+    """The number of parameter combinations to sample for random search."""
+
+    arg_list: List[tuple]
+    """A list of argument tuples for the `grid_search_crossvalidate` function."""
+
+    multiprocess: bool
+    """A flag to enable or disable multiprocessing (currently disabled)."""
+
+    local_param_dict: Dict
+    """A dictionary of local parameters for the current run."""
+
+    model_error_list: List[List]
+    """A list to store any errors encountered during model evaluation."""
+
+    def __init__(self, ml_grid_object: Any, local_param_dict: Dict):
+        """Initializes the grid search runner.
+
+        This constructor sets up the environment, loads global parameters, and a
+        initializes a list of all model classes that will be subjected to
+        grid search. It calculates the size of each model's parameter space
+        and prepares the arguments for the `grid_search_crossvalidate` function.
+
+        Args:
+            ml_grid_object: The main experiment object, containing data splits
+                and configurations.
+            local_param_dict: A dictionary of local parameters for the current run.
+        """
         self.global_params = global_parameters()
 
         self.verbose = self.global_params.verbose
@@ -165,8 +228,20 @@ class run:
         if self.verbose >= 2:
             print(f"Passed main init, len(arg_list): {len(self.arg_list)}")
 
-    def execute(self):
+    def execute(self) -> List[List]:
+        """Executes the grid search for all configured models.
 
+        This method iterates through the `arg_list` and calls the
+        `grid_search_crossvalidate` function for each model. It logs any
+        exceptions that occur during the process.
+
+        Note:
+            The multiprocessing functionality is currently disabled.
+
+        Returns:
+            A list of errors encountered during the execution. Each item in the
+            list contains the model implementation, the exception, and a traceback.
+        """
         # needs implementing*
 
         self.model_error_list = []

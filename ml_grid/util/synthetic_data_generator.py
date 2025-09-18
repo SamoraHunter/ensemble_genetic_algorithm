@@ -3,6 +3,7 @@ import string
 
 import numpy as np
 import pandas as pd
+from typing import Dict, List
 from sklearn.datasets import make_classification
 
 
@@ -19,40 +20,51 @@ class SyntheticDataGenerator:
     - Categorical (string) columns
 
     The feature names are generated with prefixes to mimic real-world data structures.
-
-    Args:
-        n_samples (int): The number of samples (rows) to generate.
-        n_features (int): The number of base features to generate before adding imperfect ones.
-        n_informative_ratio (float): The ratio of features that should be informative.
-                                     Defaults to 0.5 for a strong signal.
-        n_redundant_ratio (float): The ratio of informative features that should be redundant.
-        class_sep (float): The separation between classes. Higher values make the
-                           classification task easier. Defaults to 1.5 for a strong signal.
-        feature_prefixes (list): A list of strings to use as prefixes for feature names.
-        missing_pct (float): The percentage of cells to replace with NaN.
-        n_constant_cols (int): The number of constant-value columns to add.
-        n_duplicate_cols (int): The number of columns to duplicate.
-        n_correlated_pairs (int): The number of highly correlated feature pairs to add.
-        n_categorical_cols (int): The number of non-numeric (string) columns to add.
-        outcome_name (str): The name for the target variable column.
-        random_state (int): The random seed for reproducibility.
     """
+
+    n_samples: int
+    """The number of samples (rows) to generate."""
+    n_features: int
+    """The number of base features to generate before adding imperfect ones."""
+    n_informative: int
+    """The number of informative features."""
+    n_redundant: int
+    """The number of redundant features."""
+    class_sep: float
+    """The separation between classes. Higher values make the task easier."""
+    missing_pct: float
+    """The percentage of cells to replace with NaN."""
+    n_constant_cols: int
+    """The number of constant-value columns to add."""
+    n_duplicate_cols: int
+    """The number of columns to duplicate."""
+    n_correlated_pairs: int
+    """The number of highly correlated feature pairs to add."""
+    n_categorical_cols: int
+    """The number of non-numeric (string) columns to add."""
+    outcome_name: str
+    """The name for the target variable column."""
+    random_state: int
+    """The random seed for reproducibility."""
+    feature_name_templates: Dict
+    """A dictionary holding templates for generating realistic feature names."""
 
     def __init__(
         self,
-        n_samples=2000,
-        n_features=100,
-        n_informative_ratio=0.5,
-        n_redundant_ratio=0.1,
-        class_sep=1.5,
-        missing_pct=0.05,
-        n_constant_cols=3,
-        n_duplicate_cols=3,
-        n_correlated_pairs=3,
-        n_categorical_cols=2,
-        outcome_name="outcome_var_1",
-        random_state=42,
+        n_samples: int = 2000,
+        n_features: int = 100,
+        n_informative_ratio: float = 0.5,
+        n_redundant_ratio: float = 0.1,
+        class_sep: float = 1.5,
+        missing_pct: float = 0.05,
+        n_constant_cols: int = 3,
+        n_duplicate_cols: int = 3,
+        n_correlated_pairs: int = 3,
+        n_categorical_cols: int = 2,
+        outcome_name: str = "outcome_var_1",
+        random_state: int = 42,
     ):
+        """Initializes the SyntheticDataGenerator with specified parameters."""
         self.n_samples = n_samples
         self.n_features = n_features
         self.n_informative = int(n_features * n_informative_ratio)
@@ -70,7 +82,7 @@ class SyntheticDataGenerator:
 
         self._setup_feature_templates()
 
-    def _setup_feature_templates(self):
+    def _setup_feature_templates(self) -> None:
         """Initializes templates for generating realistic feature names based on column_names.py."""
         self.feature_name_templates = {
             "age": {"prefix": ["age"], "suffix": [""]},
@@ -158,8 +170,15 @@ class SyntheticDataGenerator:
             },
         }
 
-    def _generate_feature_names(self, n):
+    def _generate_feature_names(self, n: int) -> List[str]:
         """Generates n feature names distributed among all defined categories."""
+
+        Args:
+            n: The total number of feature names to generate.
+
+        Returns:
+            A list of unique, realistically named features.
+        """
         names = set()
         if n >= 2:
             names.add("age")
@@ -181,8 +200,15 @@ class SyntheticDataGenerator:
             names.add(name)
         return list(names)[:n]
 
-    def _introduce_missing_values(self, df):
-        """Randomly introduces NaN values into the DataFrame."""
+    def _introduce_missing_values(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Randomly introduces NaN values into the DataFrame.
+
+        Args:
+            df: The input DataFrame.
+
+        Returns:
+            The DataFrame with NaN values introduced.
+        """
         df_copy = df.copy()
         mask = np.random.choice(
             [True, False],
@@ -192,14 +218,28 @@ class SyntheticDataGenerator:
         df_copy[mask] = np.nan
         return df_copy
 
-    def _add_constant_columns(self, df):
-        """Adds columns with a single constant value."""
+    def _add_constant_columns(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Adds columns with a single constant value.
+
+        Args:
+            df: The input DataFrame.
+
+        Returns:
+            The DataFrame with constant columns added.
+        """
         for i in range(self.n_constant_cols):
             df[f"constant_col_{i}"] = np.random.rand() * 10
         return df
 
-    def _add_duplicate_columns(self, df):
-        """Adds columns that are exact copies of other columns."""
+    def _add_duplicate_columns(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Adds columns that are exact copies of other columns.
+
+        Args:
+            df: The input DataFrame.
+
+        Returns:
+            The DataFrame with duplicate columns added.
+        """
         if self.n_duplicate_cols > len(df.columns):
             print("Warning: More duplicate columns requested than available features.")
             return df
@@ -208,8 +248,15 @@ class SyntheticDataGenerator:
             df[f"duplicate_of_{col}"] = df[col]
         return df
 
-    def _add_correlated_columns(self, df):
-        """Adds columns that are highly correlated with existing columns."""
+    def _add_correlated_columns(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Adds columns that are highly correlated with existing columns.
+
+        Args:
+            df: The input DataFrame.
+
+        Returns:
+            The DataFrame with correlated columns added.
+        """
         if self.n_correlated_pairs > len(df.columns):
             print("Warning: More correlated columns requested than available features.")
             return df
@@ -219,8 +266,15 @@ class SyntheticDataGenerator:
             df[f"correlated_to_{col}"] = df[col] * 0.9 + noise
         return df
 
-    def _add_categorical_columns(self, df):
-        """Adds non-numeric columns."""
+    def _add_categorical_columns(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Adds non-numeric columns.
+
+        Args:
+            df: The input DataFrame.
+
+        Returns:
+            The DataFrame with categorical columns added.
+        """
         for i in range(self.n_categorical_cols):
             # Create a high-cardinality string column
             choices = [
@@ -229,8 +283,15 @@ class SyntheticDataGenerator:
             df[f"categorical_col_{i}"] = random.choices(choices, k=self.n_samples)
         return df
 
-    def _impute_missing_values(self, df):
-        """Imputes missing values in numeric columns using the mean."""
+    def _impute_missing_values(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Imputes missing values in numeric columns using the mean.
+
+        Args:
+            df: The input DataFrame, potentially with NaNs.
+
+        Returns:
+            The DataFrame with NaNs in numeric columns imputed.
+        """
         df_copy = df.copy()
         # Select only numeric columns for imputation
         numeric_cols = df_copy.select_dtypes(include=np.number).columns
@@ -242,7 +303,7 @@ class SyntheticDataGenerator:
         print(f"    > Imputed NaNs in {len(numeric_cols)} numeric columns.")
         return df_copy
 
-    def generate_data(self):
+    def generate_data(self) -> pd.DataFrame:
         """
         Orchestrates the data generation process and returns the final DataFrame.
 

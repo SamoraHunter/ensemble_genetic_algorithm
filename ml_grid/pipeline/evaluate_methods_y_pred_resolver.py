@@ -1,3 +1,5 @@
+from typing import Any, List, Union
+import numpy as np
 from ml_grid.ga_functions.ga_eval_ann_weight_method import (
     get_y_pred_ann_torch_weighting_eval,
 )
@@ -11,7 +13,30 @@ from ml_grid.ga_functions.ga_eval_unweighted import get_best_y_pred_unweighted_e
 from numpy.linalg import norm
 
 
-def get_y_pred_resolver_eval(ensemble, ml_grid_object, valid=False):
+def get_y_pred_resolver_eval(
+    ensemble: List, ml_grid_object: Any, valid: bool = False
+) -> Union[List, np.ndarray]:
+    """Resolves and generates predictions for an ensemble during final evaluation.
+
+    This function acts as a dispatcher, calling the appropriate evaluation-specific
+    prediction generation function (`unweighted`, `de` for Differential Evolution,
+    or `ann` for an Artificial Neural Network) based on the 'weighted' parameter in
+    the `local_param_dict`.
+
+    Unlike its training-time counterpart (`get_y_pred_resolver`), this function
+    calls evaluation-specific methods that always refit the models on the full
+    training data before making predictions on the test or validation set.
+
+    Args:
+        ensemble: A list containing the ensemble configuration.
+        ml_grid_object: The main experiment object, containing data splits and
+            configuration parameters.
+        valid: If True, predictions are generated for the validation set.
+            If False, predictions are for the test set. Defaults to False.
+
+    Returns:
+        The final ensemble predictions, as either a list or a NumPy array.
+    """
     if ml_grid_object.verbose >= 1:
         print("get_y_pred_resolver")
         print(ensemble)

@@ -7,25 +7,40 @@ import polars as pl
 
 
 class read:
-    def __init__(self, input_filename, use_polars=False):
-        filename = input_filename
-        print(f"Init main >read on {filename}")
+    """Reads a CSV file into a pandas DataFrame, with an option to use Polars.
+
+    Attributes:
+        raw_input_data (pd.DataFrame): The loaded data as a pandas DataFrame.
+    """
+
+    def __init__(self, input_filename: str, use_polars: bool = False):
+        """Initializes the read class and loads data from a CSV file.
+
+        This class attempts to read a CSV file using the fast Polars library
+        first (if `use_polars` is True), and falls back to pandas if an error
+        occurs. If Polars is not used, it reads directly with pandas.
+
+        Args:
+            input_filename: The path to the CSV file to be read.
+            use_polars: If True, attempts to use Polars for faster reading.
+                Defaults to False.
+        """
+        print(f"Init main >read on {input_filename}")
         if use_polars:
             try:
-                self.raw_input_data = pl.read_csv(filename, ignore_errors=True)
+                self.raw_input_data = pl.read_csv(input_filename, ignore_errors=True)
                 self.raw_input_data = self.raw_input_data.to_pandas()
             except Exception as e:
                 print(f"Error reading with Polars: {e}")
-                print(f"Error reading with Polars: {e}")
                 print("Trying to read with Pandas...")
                 try:
-                    self.raw_input_data = pd.read_csv(filename)
+                    self.raw_input_data = pd.read_csv(input_filename)
                 except Exception as e:
                     print(f"Error reading with Pandas: {e}")
                     self.raw_input_data = pd.DataFrame()
         else:
             try:
-                self.raw_input_data = pd.read_csv(filename)
+                self.raw_input_data = pd.read_csv(input_filename)
             except Exception as e:
                 print(f"Error reading with Pandas: {e}")
                 self.raw_input_data = pd.DataFrame()
@@ -35,91 +50,72 @@ class read_sample:
     def __init__(
         self, input_filename: str, test_sample_n: int, column_sample_n: int
     ) -> None:
-        """
-        Initialize the class with the input filename, test sample number, and column sample number.
+        """Reads a sampled subset of a CSV file into a pandas DataFrame.
 
-        This class is designed to read in a sample from the input data,
-        where the number of rows and columns to read in can be specified.
+        This class is designed to efficiently read a sample of rows and/or
+        columns from a large CSV file. It ensures that certain 'necessary'
+        columns are always included if they exist.
 
-        The rows are read in randomly,
-        and the columns are read in randomly IF the number of columns to read in is less than the total number of columns in the file.
+        The sampling logic is as follows:
+        - If `test_sample_n` > 0, it randomly samples that many rows.
+        - If `column_sample_n` > 0, it randomly samples that many columns,
+          always including a predefined set of necessary columns.
 
-        The class will raise an error if the outcome variable does not have both classes after sampling.
+        After sampling, it validates that the 'outcome_var_1' column, if
+        present, contains more than one unique class.
 
-        :param input_filename: str, the filename of the input data
-        :param test_sample_n: int, the number of rows to read from the input data
-        :param column_sample_n: int, the number of columns to read from the input data
-        :return: None
+        Args:
+            input_filename: The path to the input CSV file.
+            test_sample_n: The number of rows to randomly sample. If 0, all
+                rows are read.
+            column_sample_n: The number of columns to randomly sample. If 0,
+                all columns are read.
+
+        Raises:
+            ValueError: If, after sampling, the 'outcome_var_1' column
+                contains fewer than two unique classes.
         """
         self.filename = input_filename
-
-        # The columns that are necessary to be in the input data
-        necessary_columns = ["outcome_var_1", "age", "male"]
-
-        # Get the total number of rows in the CSV file
-        total_rows = sum(1 for line in open(self.filename))
-
-        # Calculate the number of rows to skip to achieve random sampling on read in
-        skip_rows = np.random.choice(
-            np.arange(1, total_rows), total_rows - test_sample_n, replace=False
-        )
-
-        # Read column names from the file
-        all_columns = pd.read_csv(self.filename, nrows=1).columns.tolist()
-
-        # Select the necessary columns from the file
-        necessary_columns = [col for col in necessary_columns if col in all_columns]
-
-        # Select the remaining columns from the file
-        remaining_columns = [col for col in all_columns if col not in necessary_columns]
-
-        # Calculate the maximum number of additional columns that can be selected
-        max_additional_columns = test_sample_n - len(necessary_columns)
-
-        # Sample the remaining columns
-        # If the number of columns to read in is less than the total number of columns in the file
-        selected_additional_columns = random.sample(
-            remaining_columns, min(len(remaining_columns), max_additional_columns)
-        )
-
-        # Combine the necessary and selected additional columns
-        selected_columns = necessary_columns + selected_additional_columns
-
         print(f"Init main > read_sample on {self.filename}")
 
-        # If both test_sample_n and column_sample_n are 0
-        # Read in all columns and all rows
-        if test_sample_n == 0 and column_sample_n == 0:
-            self.raw_input_data = pd.read_csv(
-                self.filename
-            )  # Read in all columns and all rows
+        necessary_columns = ["outcome_var_1", "age", "male"]
+        read_csv_args = {}
 
-        # If test_sample_n is 0 but column_sample_n is greater than 0
-        # Read in all rows but sample the columns
-        elif test_sample_n == 0 and column_sample_n > 0:
-            # Read in the file with the selected columns
-            self.raw_input_data = pd.read_csv(self.filename, usecols=selected_columns)
+        if test_sample_n > 0:
+            total_rows = sum(1 for line in open(self.filename))
+            if test_sample_n < total_rows:
+                read_csv_args["skiprows"] = np.random.choice(
+                    np.arange(1, total_rows), total_rows - test_sample_n, replace=False
+                )
 
-        # If column_sample_n is 0 but test_sample_n is greater than 0
-        # Read in a sample of the rows but all columns
-        elif column_sample_n == 0 and test_sample_n > 0:
-            # Read in the file with the selected rows
-            self.raw_input_data = pd.read_csv(
-                self.filename,
-                skiprows=skip_rows,
-            )
+        if column_sample_n > 0:
+            all_columns = pd.read_csv(self.filename, nrows=1).columns.tolist()
+            if column_sample_n < len(all_columns):
+                # Ensure necessary columns are included if they exist
+                selected_necessary = [
+                    col for col in necessary_columns if col in all_columns
+                ]
+                remaining_columns = [
+                    col for col in all_columns if col not in selected_necessary
+                ]
 
-        # If both test_sample_n and column_sample_n are greater than 0
-        # Read in a sample of the rows and columns
-        else:
-            # Read in the file with the selected rows and columns
-            self.raw_input_data = pd.read_csv(
-                self.filename,
-                skiprows=skip_rows,
-                usecols=selected_columns,
-            )
+                # Calculate how many more columns to sample
+                n_additional_cols = column_sample_n - len(selected_necessary)
+                n_additional_cols = max(0, n_additional_cols)
 
-        # Check if the outcome variable has both classes
+                # Sample additional columns
+                selected_additional = random.sample(
+                    remaining_columns, min(len(remaining_columns), n_additional_cols)
+                )
+
+                read_csv_args["usecols"] = selected_necessary + selected_additional
+
+        try:
+            self.raw_input_data = pd.read_csv(self.filename, **read_csv_args)
+        except Exception as e:
+            print(f"Error reading sampled CSV: {e}")
+            self.raw_input_data = pd.DataFrame()
+
         if (
             self.raw_input_data is not None
             and "outcome_var_1" in self.raw_input_data.columns

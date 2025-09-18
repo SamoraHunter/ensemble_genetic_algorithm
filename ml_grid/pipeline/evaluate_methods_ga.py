@@ -1,4 +1,5 @@
 import time
+from typing import Any, Dict, List, Tuple, Union
 from ml_grid.ga_functions.ga_ann_weight_methods import get_y_pred_ann_torch_weighting
 from ml_grid.ga_functions.ga_de_weight_method import (
     get_weighted_ensemble_prediction_de_y_pred_valid,
@@ -36,32 +37,38 @@ from ml_grid.util.global_params import global_parameters
 from sklearn import metrics
 
 
-# def get_y_pred_resolver(ensemble, ml_grid_object, valid=False):
-#     local_param_dict = ml_grid_object.local_param_dict
-#     X_test_orig = ml_grid_object.X_test_orig
-#     y_test_orig = ml_grid_object.y_test_orig
+def get_y_pred_resolver(
+    ensemble: List, ml_grid_object: Any, valid: bool = False
+) -> Union[List, np.ndarray]:
+    """Resolves and generates predictions for an ensemble during GA training.
 
-#     if (
-#         local_param_dict.get("weighted") == None
-#         or local_param_dict.get("weighted") == "unweighted"
-#     ):
-#         y_pred = get_best_y_pred_unweighted(ensemble, ml_grid_object, valid=valid)
-#     elif local_param_dict.get("weighted") == "de":
-#         y_pred = get_weighted_ensemble_prediction_de_y_pred_valid(
-#             ensemble,
-#             super_ensemble_weight_finder_differential_evolution(
-#                 ensemble, ml_grid_object, valid=valid
-#             ),
-#             valid=valid,
-#         )
-#         # print(y_pred.shape)
-#     elif local_param_dict.get("weighted") == "ann":
-#         y_pred = get_y_pred_ann_torch_weighting(ensemble, ml_grid_object, valid=valid)
+    This function acts as a dispatcher, calling the appropriate prediction
+    generation function (`unweighted`, `de` for Differential Evolution, or `ann`
+    for an Artificial Neural Network) based on the 'weighted' parameter in the
+    `local_param_dict`.
 
-#     return y_pred
+    These resolver functions are used during the genetic algorithm's evaluation
+    phase. They typically use pre-calculated predictions from the base learners
+    to quickly evaluate an ensemble's fitness without re-training models.
 
+    Args:
+        ensemble: A list containing the ensemble configuration. In DEAP, this
+            is often a list containing the actual list of base learners.
+        ml_grid_object: The main experiment object, which holds data splits
+            (X_test, y_test, X_test_orig, y_test_orig) and configuration
+            parameters (`local_param_dict`).
+        valid: A boolean flag indicating the dataset to use for prediction.
+            If True, predictions are generated for the validation set
+            (`X_test_orig`). If False, predictions are for the test set
+            (`X_test`). Defaults to False.
 
-def get_y_pred_resolver(ensemble, ml_grid_object, valid=False):
+    Returns:
+        The final ensemble predictions, as either a list or a NumPy array.
+
+    Raises:
+        Exception: Propagates exceptions from underlying prediction functions
+            if an error occurs during prediction generation.
+    """
     if ml_grid_object.verbose >= 1:
         print("get_y_pred_resolver")
         print(ensemble)
@@ -111,8 +118,33 @@ def get_y_pred_resolver(ensemble, ml_grid_object, valid=False):
     return y_pred
 
 
-def evaluate_weighted_ensemble_auc(individual, ml_grid_object):
+def evaluate_weighted_ensemble_auc(
+    individual: List, ml_grid_object: Any
+) -> Tuple[float, ...]:
+    """The main fitness evaluation function for the genetic algorithm.
 
+    This function is registered with DEAP as the 'evaluate' operator. It takes
+    an individual (an ensemble), calculates its performance, and returns a
+    fitness value.
+
+    The process includes:
+    1.  Generating predictions for the ensemble using `get_y_pred_resolver`.
+    2.  Calculating performance metrics (AUC, MCC, F1, etc.).
+    3.  Calculating the diversity of the ensemble.
+    4.  Applying a penalty to the performance metrics based on the diversity score
+        if specified in the configuration.
+    5.  Logging the detailed results of the evaluation to a CSV file.
+    6.  Returning the final fitness score (either AUC or diversity-penalized AUC)
+        as a tuple, as required by DEAP.
+
+    Args:
+        individual: The individual to be evaluated, which is a list representing an ensemble.
+        ml_grid_object: The main experiment object, containing data and configurations.
+
+    Returns:
+        A tuple containing a single float value representing the fitness of the
+        individual, as required by DEAP.
+    """
     if ml_grid_object.verbose >= 1:
         print("evaluate_weighted_ensemble_auc: individual")
         print(individual)
@@ -275,10 +307,6 @@ def evaluate_weighted_ensemble_auc(individual, ml_grid_object):
     # return (auc,)
 
 
-# redundant? weights only derived from xtrain, weight vec is size of ensemble not train set
-
-# Only get weights from xtrain/ytrain, never get weights from xtest y test. Use weights on x_validation yhat to compare to ytrue_valid
-
 
 # %%cython -a
 
@@ -289,53 +317,43 @@ from sklearn import metrics
 round_v = np.vectorize(round)
 
 
-def normalize(weights):
-    # calculate l1 vector norm
+def normalize(weights: np.ndarray) -> np.ndarray:
+    """Normalizes a vector of weights using the L1 norm.
+
+    If the input vector is all zeros, it is returned as is. Otherwise, each
+    element is divided by the L1 norm (sum of absolute values) so that the
+    sum of the absolute values of the new vector is 1.
+
+    Args:
+        weights: The NumPy array of weights to normalize.
+
+    Returns:
+        The L1-normalized weight vector.
+    """
     result = norm(weights, 1)
-    # check for a vector of all zeros
     if result == 0.0:
         return weights
     # return normalized vector (unit norm)
     return weights / result
 
 
-# def get_weighted_ensemble_prediction_de_cython(weights, prediction_matrix_raw, y_test):
-#     """Function used by DE algo to search for optimal weights with scoring"""
+def measure_binary_vector_diversity(ensemble: List, metric: str = "jaccard") -> float:
+    """Calculates the diversity of an ensemble based on their prediction vectors.
 
-#     clean_prediction_matrix = prediction_matrix_raw.copy()
-#     weights = normalize(weights)
+    This function uses `scipy.spatial.distance.pdist` to calculate the pairwise
+    distance between the prediction vectors of the base learners in an ensemble.
+    The mean of these distances is returned as the diversity score.
 
-#     weighted_prediction_matrix_array = (
-#         np.array(clean_prediction_matrix) * weights[:, None]
-#     )
-#     collapsed_weighted_prediction_matrix_array = weighted_prediction_matrix_array.sum(
-#         axis=0
-#     )
+    Args:
+        ensemble: The ensemble to evaluate, structured as a list of lists of
+            model tuples.
+        metric: The distance metric to use (e.g., 'jaccard', 'hamming').
+            Defaults to "jaccard".
 
-#     y_pred_best = round_v(collapsed_weighted_prediction_matrix_array)
-
-#     auc = metrics.roc_auc_score(y_test, y_pred_best)
-#     score = auc
-
-#     # mcc = metrics.matthews_corrcoef(y_test, y_pred_best)
-
-#     return 1 - score
-
-
-def measure_binary_vector_diversity(ensemble, metric="jaccard"):
-    # beta
-    # can select any from scipy spatial distance pdist
-    # if two datasets have a Jaccard Similarity of 80% then they would have a Jaccard distance of 1 – 0.8 = 0.2 or 20%
-    # closer to zero, the more similar the vectors
-    # if all are similar the less diverse they are
-    ##assume mcc is 0.5, n = 2
-    # then (0.5 * 0.1)*2  = 0.1
-    # and  (0.5 * 0.5)*2) = 0.5
-    # needs diversity_parameter to modify strength?
-    # print("Diversity ensemble..")
-    # print(ensemble)
-    # raise
-
+    Returns:
+        The mean distance between prediction vectors, representing the
+        ensemble's diversity.
+    """
     n_y_pred = len(ensemble[0])  # check level
 
     all_y_pred_arrays = []

@@ -1,9 +1,9 @@
 import multiprocessing
 import random
 import warnings
+from typing import Any, List, Tuple
 from multiprocessing import Manager, Process
 
-import eventlet
 import numpy as np
 from ml_grid.pipeline.mutate_methods import baseLearnerGenerator
 from ml_grid.util.global_params import global_parameters
@@ -14,18 +14,30 @@ from functools import partial
 
 
 # v3
-def do_work(n=0, ml_grid_object=None):
+def do_work(n: int = 0, ml_grid_object: Any = None) -> Tuple:
+    """Generates a single, trained base learner model.
 
+    This function acts as a worker for creating one member of an ensemble. It
+    randomly selects a model generator function from the `modelFuncList`.
+    Based on the configuration, it can either generate a completely new model
+    or retrieve a previously trained and stored model to speed up the process.
+
+    Args:
+        n: An integer argument, primarily for compatibility with multiprocessing
+            pools. It is not used in the function logic. Defaults to 0.
+        ml_grid_object: The main experiment object, containing configurations
+            like `use_stored_base_learners` and the list of `modelFuncList`.
+
+    Returns:
+        A tuple containing the results of a single model run, typically in the
+        format (mccscore, model_object, feature_list, ...).
+    """
     if ml_grid_object.verbose >= 11:
         print("do_work")
-
-    # global_params = global_parameters.global_parameters()
 
     use_stored_base_learners = ml_grid_object.config_dict.get(
         "use_stored_base_learners"
     )
-
-    # use_stored_base_learners = global_params.use_stored_base_learners
 
     modelFuncList = ml_grid_object.config_dict.get("modelFuncList")
 
@@ -36,16 +48,17 @@ def do_work(n=0, ml_grid_object=None):
             if ml_grid_object.verbose >= 2:
                 print("get_stored_model...")
 
-            return get_stored_model()
+            return get_stored_model(ml_grid_object)
 
         else:
             if ml_grid_object.verbose >= 11:
-                print("modelFuncList[index]()")
+                print(f"Generating new model with {modelFuncList[index].__name__}")
             return modelFuncList[index](ml_grid_object, ml_grid_object.local_param_dict)
     except Exception as e:
         print(e)
         print(f"Failed to return model at index {index}, returning perceptron")
         raise e
+        # Fallback to a known simple model
         return modelFuncList[1](ml_grid_object, ml_grid_object.local_param_dict)
 
     # return random.choice(modelFuncList)
@@ -56,11 +69,41 @@ def do_work(n=0, ml_grid_object=None):
 np.seterr(all="ignore")
 
 
-def multi_run_wrapper(args):
+def multi_run_wrapper(args: Tuple) -> Tuple:
+    """A wrapper to unpack arguments for multiprocessing `do_work`.
+
+    This function is necessary for some multiprocessing approaches that pass
+    arguments as a single tuple.
+
+    Args:
+        args: A tuple of arguments to be passed to `do_work`.
+
+    Returns:
+        The result of the `do_work` function call.
+    """
     return do_work(*args)
 
 
-def ensembleGenerator(nb_val=28, ml_grid_object=None):
+def ensembleGenerator(nb_val: int = 28, ml_grid_object: Any = None) -> List[Tuple]:
+    """Generates an ensemble of a specified size by creating multiple base learners.
+
+    This function orchestrates the creation of an entire ensemble. It first
+    determines the size of the ensemble, using a skewed random distribution
+    to introduce variability. It then calls the `do_work` function repeatedly
+    (either sequentially or in parallel) to generate the required number of
+    base learners.
+
+    Args:
+        nb_val: The maximum number of base learners for the ensemble. The actual
+            number will be randomly chosen from a distribution skewed towards
+            this value. Defaults to 28.
+        ml_grid_object: The main experiment object, passed down to the worker
+            functions.
+
+    Returns:
+        A list of tuples, where each tuple represents a trained base learner.
+        This list constitutes a single ensemble (an "individual" in GA terms).
+    """
     if ml_grid_object.verbose >= 11:
         print("Generating ensemble...ensembleGenerator", nb_val)
         print("ensembleGenerator>>ml_grid_object", ml_grid_object)
@@ -112,7 +155,7 @@ def ensembleGenerator(nb_val=28, ml_grid_object=None):
 
     elif nb_val > 1:
         # do multiprocessing
-        from eventlet import GreenPool
+        # from eventlet import GreenPool
 
         partial_do_work = partial(do_work, ml_grid_object=ml_grid_object)
         pool = multiprocessing.Pool(processes=2)

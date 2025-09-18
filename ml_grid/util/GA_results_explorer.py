@@ -9,7 +9,7 @@ import numpy as np
 import ast
 import re
 import os
-from typing import List
+from typing import List, Optional, Tuple
 
 # the plots should use the feature names which we extract in the init method. these are a nested list of lists of features. each corresponds to each base learner in order they appear in best_ensemble
 
@@ -18,23 +18,34 @@ from typing import List
 # '[[(0.6591241898175125, "LogisticRegression(C=100000.0, class_weight=\'balanced\', max_iter=12,\\n                   solver=\'sag\')", [0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0], 0, 0.8308, array([0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1,\n       0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1])), (0.3670372447278536, \'Perceptron(eta0=0.1, max_iter=5)\', [0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0], 0, 0.654, array([1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1,\n       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1]))]]'
 # binary feature map [0, 1, 0 ...1] maps to original feature names
 class GA_results_explorer:
-    def __init__(self, df, original_feature_names):
-        """
-        Initialize a GA_results_explorer object.
+    """A comprehensive toolkit for analyzing and visualizing GA results.
 
-        Parameters
-        ----------
-        df : pandas DataFrame
-            A DataFrame containing the results of a genetic algorithm search.
-        original_feature_names : list
-            The names of the original features in the dataset.
+    This class takes a DataFrame of GA results and provides numerous methods
+    to plot and analyze the data, helping to understand feature importance,
+    hyperparameter sensitivity, performance trade-offs, and ensemble composition.
 
-        Notes
-        -----
-        The GA_results_explorer class is used to analyze the results of a
-        genetic algorithm search. It extracts the feature names from the
-        'best_ensemble' column, which contains the feature columns nested
-        inside each ensemble in their encoded form.
+    Attributes:
+        df (pd.DataFrame): The input DataFrame containing the GA run results.
+        original_feature_names (List[str]): A list of the original feature names
+            from the dataset, used for decoding feature masks.
+        config_params (List[str]): A predefined list of hyperparameter names
+            to be used in importance analysis.
+        run_details (List[str]): A predefined list of run metadata column names
+            to be used in importance analysis.
+    """
+
+    def __init__(self, df: pd.DataFrame, original_feature_names: List[str]):
+        """Initializes the GA_results_explorer object.
+
+        This constructor processes the input DataFrame to decode the feature
+        sets used in each ensemble, making them available for analysis.
+
+        Args:
+            df: A DataFrame containing the results of a genetic algorithm search.
+                It must contain a 'best_ensemble' column.
+            original_feature_names: The complete list of original feature
+                names from the dataset, used to map binary feature masks back
+                to their string names.
         """
         self.df = df
         self.original_feature_names = original_feature_names
@@ -103,21 +114,19 @@ class GA_results_explorer:
             "run_time",
         ]
 
-    def get_column_names(self, raw_string_vector):
-        # df['BL_1'].iloc[0]
-        """
-        Given a raw string vector of features, convert it into a list of feature names.
+    def get_column_names(self, raw_string_vector: str) -> List[str]:
+        """Decodes a string representation of a binary feature mask.
 
-        The raw string vector is a string of comma-separated integers, where each integer
-        represents the index of a feature in the original feature list. Features that are not
-        present in the original feature list are ignored.
+        This method is a utility for manually inspecting feature masks from the
+        results DataFrame.
 
         Args:
-            raw_string_vector (str): A string of comma-separated integers representing
-                the indices of the features in the original feature list.
+            raw_string_vector: A string representing a list of binary integers,
+                e.g., '[0, 1, 0, 1]'.
 
         Returns:
-            list: A list of feature names that are present in the raw string vector.
+            A list of feature names corresponding to the '1's in the mask.
+            Returns an empty list if the input is not a valid string.
         """
         if isinstance(raw_string_vector, str):
             int_f_list = list(
@@ -132,27 +141,23 @@ class GA_results_explorer:
             return []
 
     def plot_config_anova_feature_importances(
-        self, outcome_variable="auc", plot_dir=None
-    ):
-        """
-        Performs an ANOVA F-test for each configuration parameter against a given
-        outcome variable and plots the resulting F-statistics as a measure of
-        feature importance.
+        self, outcome_variable: str = "auc", plot_dir: Optional[str] = None
+    ) -> None:
+        """Plots the importance of configuration parameters using ANOVA.
 
         This method iterates through the hyperparameters defined in self.config_params,
         treating each as a categorical independent variable and the specified
         outcome_variable as the dependent variable. It calculates the F-statistic
         and p-value for each parameter.
 
-        The results are then visualized as a sorted horizontal bar plot, showing the
-        relative importance of each configuration parameter. The results table is also
-        printed to the console.
+        The results are visualized as a sorted horizontal bar plot, showing the
+        relative importance of each configuration parameter.
 
         Args:
-            outcome_variable (str, optional): The column name of the outcome
+            outcome_variable: The column name of the outcome
                 variable in self.df to be used as the dependent variable in the
                 ANOVA test. Defaults to 'auc'.
-            plot_dir (str, optional): Directory to save the plot. If None,
+            plot_dir: Directory to save the plot. If None,
                 the plot is only displayed. Defaults to None.
         """
         # Check if the outcome variable exists in the dataframe
@@ -263,23 +268,19 @@ class GA_results_explorer:
         print(results_df.to_string())
 
     def plot_run_details_anova_feature_importances(
-        self, outcome_variable="auc", plot_dir=None
-    ):
-        """
-        Performs an ANOVA F-test for each run detail against a given outcome
-        variable and plots the resulting F-statistics as a measure of importance.
+        self, outcome_variable: str = "auc", plot_dir: Optional[str] = None
+    ) -> None:
+        """Plots the importance of run metadata using ANOVA.
 
         This method iterates through the dataset and run metadata defined in
         self.run_details, treating each as a categorical independent variable
         and the specified outcome_variable as the dependent variable. It calculates
         the F-statistic and p-value for each detail.
 
-        The results are visualized as a sorted horizontal bar plot, showing the
-        relative impact of each run detail. The results table is also
-        printed to the console.
+        The results are visualized as a sorted horizontal bar plot.
 
         Args:
-            outcome_variable (str, optional): The column name of the outcome
+            outcome_variable: The column name of the outcome
                 variable in self.df to be used as the dependent variable in the
                 ANOVA test. Defaults to 'auc'.
         """
@@ -389,11 +390,9 @@ class GA_results_explorer:
         print(results_df.to_string())
 
     def plot_combined_anova_feature_importances(
-        self, outcome_variable="auc", plot_dir=None
-    ):
-        """
-        Performs ANOVA F-tests for both configuration parameters and run details,
-        then visualizes their importance on a single, combined plot.
+        self, outcome_variable: str = "auc", plot_dir: Optional[str] = None
+    ) -> None:
+        """Plots the combined importance of all parameters using ANOVA.
 
         This method calculates the F-statistic for every item in both
         self.config_params and self.run_details against the outcome variable.
@@ -401,7 +400,7 @@ class GA_results_explorer:
         distinguishing between Hyperparameters and Run Details.
 
         Args:
-            outcome_variable (str, optional): The column name of the outcome
+            outcome_variable: The column name of the outcome
                 variable in self.df to use for the ANOVA test. Defaults to 'auc'.
         """
         if outcome_variable not in self.df.columns:
@@ -678,10 +677,9 @@ class GA_results_explorer:
         print(results_df.to_string())
 
     def plot_base_learner_feature_importance(
-        self, outcome_variable="auc", plot_dir=None
-    ):
-        """
-        Analyzes the importance of features used across all base learners.
+        self, outcome_variable: str = "auc", plot_dir: Optional[str] = None
+    ) -> None:
+        """Plots the importance of features used in base learners using ANOVA.
 
         This method first aggregates the feature sets from all 'BL_n' columns
         for each run. It then performs an ANOVA test for each unique feature,
@@ -690,7 +688,7 @@ class GA_results_explorer:
         is used as the importance score.
 
         Args:
-            outcome_variable (str, optional): The performance metric to use as the
+            outcome_variable: The performance metric to use as the
                 dependent variable. Defaults to 'auc'.
         """
         if outcome_variable not in self.df.columns:
@@ -1079,22 +1077,21 @@ class GA_results_explorer:
 
     def plot_performance_tradeoff(
         self,
-        performance_metric="auc",
-        cost_metric="run_time",
-        hue_parameter="pop_val",
-        plot_dir=None,
-    ):
-        """
-        Creates a scatter plot to visualize the trade-off between a performance
-        metric and a cost metric, color-coded by a specified hyperparameter.
+        performance_metric: str = "auc",
+        cost_metric: str = "run_time",
+        hue_parameter: str = "pop_val",
+        plot_dir: Optional[str] = None,
+    ) -> None:
+        """Plots the trade-off between performance and a cost metric.
 
         This helps identify configurations that offer the best performance for an
         acceptable cost.
 
         Args:
-            performance_metric (str): The column for the performance metric (y-axis).
-            cost_metric (str): The column for the cost metric (x-axis).
-            hue_parameter (str): The hyperparameter column to use for color-coding.
+            performance_metric: The column for the performance metric (y-axis).
+            cost_metric: The column for the cost metric (x-axis).
+            hue_parameter: The hyperparameter column to use for color-coding.
+            plot_dir: Directory to save the plot. Defaults to None.
         """
         # --- 1. Validate Inputs ---
         required_cols = [performance_metric, cost_metric, hue_parameter]
@@ -1161,23 +1158,22 @@ class GA_results_explorer:
 
     def plot_all_convergence(
         self,
-        history_column="generation_progress_list",
-        performance_metric="auc",
-        highlight_best=True,
-        plot_dir=None,
-    ):
-        """
-        Plots the convergence curves for all runs on a single graph.
+        history_column: str = "generation_progress_list",
+        performance_metric: str = "auc",
+        highlight_best: bool = True,
+        plot_dir: Optional[str] = None,
+    ) -> None:
+        """Plots the convergence curves for all GA runs on a single graph.
 
         Each line represents one run. All runs are plotted with transparency
         to show the density of solutions, and the single best run (based on the
         final performance_metric) can be highlighted for emphasis.
 
         Args:
-            history_column (str): The column containing the list (or string representation
-                                of a list) of fitness scores.
-            performance_metric (str): The column used to identify the best run.
-            highlight_best (bool): If True, highlights the best-performing run.
+            history_column: The column containing the list of fitness scores.
+            performance_metric: The column used to identify the best run.
+            highlight_best: If True, highlights the best-performing run.
+            plot_dir: Directory to save the plot. Defaults to None.
         """
         # --- 1. Validate Inputs & Prepare Data ---
         if history_column not in self.df.columns:
@@ -1266,16 +1262,19 @@ class GA_results_explorer:
         plt.close()
 
     def plot_interaction_heatmap(
-        self, param1, param2, performance_metric="auc", plot_dir=None
-    ):
-        """
-        Creates a heatmap to visualize the interaction between two hyperparameters
-        on a given performance metric.
+        self,
+        param1: str,
+        param2: str,
+        performance_metric: str = "auc",
+        plot_dir: Optional[str] = None,
+    ) -> None:
+        """Creates a heatmap to visualize hyperparameter interactions.
 
         Args:
-            param1 (str): The name of the first hyperparameter (y-axis).
-            param2 (str): The name of the second hyperparameter (x-axis).
-            performance_metric (str): The metric to display in the heatmap cells.
+            param1: The name of the first hyperparameter (y-axis).
+            param2: The name of the second hyperparameter (x-axis).
+            performance_metric: The metric to display in the heatmap cells.
+            plot_dir: Directory to save the plot. Defaults to None.
         """
         # --- 1. Validate Inputs ---
         required_cols = [param1, param2, performance_metric]
@@ -1441,24 +1440,25 @@ class GA_results_explorer:
         plt.close()
 
     def plot_performance_vs_size(
-        self, performance_metric="auc", feature_type="base_learner", plot_dir=None
-    ):
-        """
-        Creates a scatter plot to visualize the trade-off between model performance
-        and the number of features used in the final solution.
+        self,
+        performance_metric: str = "auc",
+        feature_type: str = "base_learner",
+        plot_dir: Optional[str] = None,
+    ) -> None:
+        """Plots performance vs. the number of features used.
 
         A 2nd order polynomial trend line is fitted to highlight the point of
         diminishing returns.
 
         Args:
-            performance_metric (str): The column name for the performance metric (y-axis).
-                                    Defaults to 'auc'.
-            feature_type (str): The feature set to use for calculating size.
+            performance_metric: The column name for the performance metric (y-axis).
+            feature_type: The feature set to use for calculating size.
                                 Either 'initial' (from f_list) or 'base_learner'
                                 (union of features in all BL_ columns).
                                 Defaults to 'base_learner'.
+            plot_dir: Directory to save the plot. Defaults to None.
         """
-        # --- 1. Validate Inputs ---
+        # 1. Validate Inputs
         if performance_metric not in self.df.columns:
             print(f"❌ Error: Performance metric '{performance_metric}' not found.")
             return
@@ -1470,7 +1470,7 @@ class GA_results_explorer:
             f"📊 Plotting {performance_metric} vs. number of {feature_type} features..."
         )
 
-        # --- 2. Calculate Solution Size for each run ---
+        # 2. Calculate Solution Size for each run
         temp_df = self.df[[performance_metric]].copy()
 
         if feature_type == "initial":
@@ -1502,7 +1502,7 @@ class GA_results_explorer:
 
         temp_df.dropna(inplace=True)
 
-        # --- 3. Create Plot ---
+        # 3. Create Plot
         plt.style.use("seaborn-v0_8-whitegrid")
         plt.figure(figsize=(12, 8))
 
@@ -1529,7 +1529,7 @@ class GA_results_explorer:
                 color="darkslateblue",
             )
 
-        # --- 4. Customize Labels and Title ---
+        # 4. Customize Labels and Title
         plt.title(
             f"Performance vs. Solution Size ({title_frag} Features)",
             fontsize=16,
@@ -1550,24 +1550,22 @@ class GA_results_explorer:
 
     def plot_feature_cooccurrence(
         self,
-        performance_metric="auc",
-        top_percent=10.0,
-        top_n_features=15,
-        feature_type="base_learner",
-        plot_dir=None,
-    ):
-        """
-        Creates a heatmap showing how often the top features are selected together
-        in the best-performing runs.
+        performance_metric: str = "auc",
+        top_percent: float = 10.0,
+        top_n_features: int = 15,
+        feature_type: str = "base_learner",
+        plot_dir: Optional[str] = None,
+    ) -> None:
+        """Creates a heatmap of feature co-occurrence in top runs.
 
         Args:
-            performance_metric (str): The column used to rank runs. Defaults to 'auc'.
-            top_percent (float): The percentage of top runs to analyze. Defaults to 10.0.
-            top_n_features (int): The number of top stable features to include. Defaults to 15.
-            feature_type (str): The feature set to analyze ('initial' or 'base_learner').
-                                    Defaults to 'base_learner'.
+            performance_metric: The column used to rank runs. Defaults to 'auc'.
+            top_percent: The percentage of top runs to analyze. Defaults to 10.0.
+            top_n_features: The number of top stable features to include.
+            feature_type: The feature set to analyze ('initial' or 'base_learner').
+            plot_dir: Directory to save the plot. Defaults to None.
         """
-        # --- 1. Validate Inputs ---
+        # 1. Validate Inputs
         if performance_metric not in self.df.columns:
             print(f"❌ Error: Performance metric '{performance_metric}' not found.")
             return
@@ -1581,7 +1579,7 @@ class GA_results_explorer:
             print(f"❌ Error: feature_type must be 'initial' or 'base_learner'.")
             return
 
-        # --- 2. Filter for Top Runs and Identify Top N Features ---
+        # 2. Filter for Top Runs and Identify Top N Features
         threshold = self.df[performance_metric].quantile(1 - (top_percent / 100.0))
         top_runs_df = self.df[self.df[performance_metric] >= threshold]
 
@@ -1594,7 +1592,7 @@ class GA_results_explorer:
             top_runs_df, top_n_features, feature_type
         )
 
-        # --- 3. Create Plot ---
+        # 3. Create Plot
         plt.style.use("seaborn-v0_8-whitegrid")
         plt.figure(figsize=(12, 10))
 
@@ -1683,10 +1681,10 @@ class GA_results_explorer:
 
         return cooccurrence_matrix
 
-    def plot_algorithm_distribution_in_ensembles(self, plot_dir=None):
-        """
-        Parses the 'best_ensemble' column to analyze and plot the distribution
-        of different algorithms used in the final ensembles.
+    def plot_algorithm_distribution_in_ensembles(
+        self, plot_dir: Optional[str] = None
+    ) -> None:
+        """Plots the distribution of algorithms in the final ensembles.
 
         This method visualizes how frequently each type of base learner
         (e.g., LogisticRegression, RandomForestClassifier) appears in the
@@ -1764,24 +1762,21 @@ class GA_results_explorer:
 
     def run_all_plots(
         self,
-        plot_dir=None,
-        outcome_variable="auc",
-        interaction_params=("pop_val", "g_val"),
-        tradeoff_params=("run_time", "pop_val"),
-    ):
-        """
-        Runs all available plotting methods with sensible defaults to provide a comprehensive overview.
+        plot_dir: Optional[str] = None,
+        outcome_variable: str = "auc",
+        interaction_params: Tuple[str, str] = ("pop_val", "g_val"),
+        tradeoff_params: Tuple[str, str] = ("run_time", "pop_val"),
+    ) -> None:
+        """Runs all available plotting methods for a comprehensive analysis.
 
         This is a convenience method to generate a full suite of analysis plots from the
         GA results.
 
         Args:
-            plot_dir (str, optional): Directory to save the plots. If None, plots are shown. Defaults to None.
-            outcome_variable (str, optional): The main performance metric for importance plots. Defaults to "auc".
-            interaction_params (tuple, optional): The two parameters for the interaction heatmap.
-                                                  Defaults to ("pop_val", "g_val").
-            tradeoff_params (tuple, optional): The cost and hue parameters for the tradeoff plot.
-                                               Defaults to ("run_time", "pop_val").
+            plot_dir: Directory to save the plots. Defaults to None.
+            outcome_variable: The main performance metric. Defaults to "auc".
+            interaction_params: The two parameters for the interaction heatmap.
+            tradeoff_params: The cost and hue parameters for the tradeoff plot.
         """
         print("--- Running All Plots ---")
 
@@ -1851,8 +1846,7 @@ class GA_results_explorer:
 
 
 def extract_feature_arrays_from_string(raw_ensemble_string: str) -> List[List[int]]:
-    """
-    Extracts binary feature arrays from a complex, nested string representation of an ensemble.
+    """Extracts binary feature arrays from a complex ensemble string.
 
     This function is designed to parse strings that may contain non-standard Python
     literals like `array(...)`, which `ast.literal_eval` cannot handle directly.
@@ -1863,9 +1857,8 @@ def extract_feature_arrays_from_string(raw_ensemble_string: str) -> List[List[in
         raw_ensemble_string: A string containing the nested ensemble data.
 
     Returns:
-        A list of lists, where each inner list is a binary feature array
-        extracted from the input string. Returns an empty list if no arrays
-        can be extracted or if an error occurs.
+        A list of lists, where each inner list is a binary feature array.
+        Returns an empty list if parsing fails.
     """
     try:
         # Use a regular expression to find all substrings that look like a list of numbers.

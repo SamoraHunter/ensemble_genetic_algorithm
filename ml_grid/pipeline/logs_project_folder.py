@@ -2,12 +2,56 @@ import json
 import logging
 import os
 import pathlib
+from typing import Dict, Optional
 
 
 class log_folder:
+    """Manages the creation of a structured logging directory for an experiment.
 
-    def __init__(self, local_param_dict, additional_naming, base_project_dir):
+    This class generates a unique folder name based on the hyperparameters of a
+    given run. It then creates a standard set of subdirectories within this
+    folder (e.g., for logs, figures, models) to keep all experiment artifacts
+    organized.
+    """
 
+    additional_naming: Optional[str]
+    """An optional string to append to the main log folder name."""
+
+    base_project_dir: str
+    """The root directory where the log folders will be created."""
+
+    global_param_str: str
+    """A condensed string representation of the run's hyperparameters, used for the folder name."""
+
+    log_folder_path: str
+    """The full path to the main logging directory for the current run."""
+
+    logging_path: str
+    """The full path to the primary text log file (`logging.txt`)."""
+
+    model_store_path: str
+    """The full path to the JSON file used for storing model metadata."""
+
+    def __init__(
+        self,
+        local_param_dict: Dict,
+        additional_naming: Optional[str],
+        base_project_dir: str,
+    ):
+        """Initializes the log_folder object and creates the directory structure.
+
+        This constructor takes the parameters for a specific run, converts them
+        into a unique, shortened string, and uses that string to create a
+        main folder for the run's logs and artifacts. It then populates this
+        folder with a standard set of subdirectories.
+
+        Args:
+            local_param_dict: A dictionary of parameters for the specific run.
+            additional_naming: An optional string to append to the folder name
+                for easier identification.
+            base_project_dir: The root directory for the project where all log
+                folders will be stored.
+        """
         self.additional_naming = additional_naming
         self.base_project_dir = base_project_dir
 

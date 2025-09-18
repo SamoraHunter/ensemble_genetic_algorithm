@@ -33,19 +33,11 @@ def mutateEnsemble(individual, ml_grid_object):
 
             print(e)
 
-        # print(n)
-        # individual[0].pop(n)
-        # print(individual)
         individual[0].append(baseLearnerGenerator(ml_grid_object))
-        # print(individual)
-        # print("Mutated individual:")
-        # print(individual)
+
         return individual
     except Exception as e:
         print(e)
         print("Failed to mutate Ensemble")
         print("Len individual", len(individual))
         raise
-        # print(individual[0])
-        # print(individual)
-        return individual

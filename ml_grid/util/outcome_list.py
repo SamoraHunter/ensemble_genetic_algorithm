@@ -1,10 +1,21 @@
+from typing import List
 
 
 class OutcomeList:
-    
+    """A container for a predefined list of all possible outcome-related columns.
+
+    This class serves as a centralized, hardcoded repository for column names
+    that represent outcomes or are closely related to them. Its primary use is
+    in the data cleaning pipeline to ensure that all potential target variables,
+    except for the one currently being predicted, are removed from the feature
+    set to prevent target leakage.
+    """
+
+    all_outcome_list: List[str]
+    """A comprehensive list of all potential outcome-related column names."""
+
     def __init__(self) -> None:
-       
- 
+        """Initializes the OutcomeList and populates the list of outcome columns."""
         self.all_outcome_list = ['Hemochromatosis (disorder)_count',
             'Hemochromatosis (disorder)_count_subject_present',
             'Hemochromatosis (disorder)_count_relative_present',

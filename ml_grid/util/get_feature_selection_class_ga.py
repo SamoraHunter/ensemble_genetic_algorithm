@@ -1,42 +1,66 @@
-
-
-
-
-
 import random
 from operator import itemgetter
+from typing import Any, List, Tuple
 
 import numpy as np
+import pandas as pd
 import sklearn
 from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
-from xgboost import XGBClassifier
 from sklearn.feature_selection import f_classif
+from xgboost import XGBClassifier
 
 
-class feature_selection_methods_class():
-    
-    
-    def __init__(self, ml_grid_object):
-        
-      
-      self.X_train = ml_grid_object.X_train
-      
-      self.y_train = ml_grid_object.y_train
-      
-      self.X_test = ml_grid_object.X_test
-      
-      
-      start_val = 2
-      
-      self.feature_parameter_vector = np.linspace(
+class feature_selection_methods_class:
+    """A class for applying various feature selection methods.
+
+    This class holds different feature selection algorithms (ANOVA F-test,
+    Random Forest, XGBoost, Extra Trees) and applies one of them to reduce
+    the dimensionality of the training and testing data.
+
+    Attributes:
+        X_train (pd.DataFrame): The training features DataFrame.
+        y_train (pd.Series): The training target Series.
+        X_test (pd.DataFrame): The testing features DataFrame.
+        feature_parameter_vector (np.ndarray): An array of possible numbers
+            of features to select, ranging from 2 to the total number of
+            initial features.
+    """
+
+    def __init__(self, ml_grid_object: Any):
+        """Initializes the feature_selection_methods_class.
+
+        Args:
+            ml_grid_object (Any): An object containing the data splits
+                (X_train, y_train, X_test).
+        """
+
+        self.X_train = ml_grid_object.X_train
+
+        self.y_train = ml_grid_object.y_train
+
+        self.X_test = ml_grid_object.X_test
+
+        start_val = 2
+
+        self.feature_parameter_vector = np.linspace(
             2, len(self.X_train.columns), int(len(self.X_train.columns) + 1 - start_val)
         ).astype(int)
-      
-      
-      
-    
 
-    def getNfeaturesANOVAF(self, n):
+    def getNfeaturesANOVAF(self, n: int) -> List[str]:
+        """Selects the top n features using the ANOVA F-test.
+
+        Note:
+            The current implementation calculates the F-value for each column
+            individually in a loop, which can be inefficient. A more performant
+            approach would be to call `f_classif(X_train, y_train)` once for
+            all features.
+
+        Args:
+            n: The number of top features to select.
+
+        Returns:
+            A list of the names of the top n features.
+        """
         res = []
         for colName in self.X_train.columns:
             if colName != "intercept":
@@ -60,9 +84,24 @@ class feature_selection_methods_class():
 
         return finalColNames
 
+    def getRandomForestFeatureColumns(
+        self, X: pd.DataFrame, y: pd.Series, n: int
+    ) -> List[str]:
+        """Selects the top n features using Random Forest feature importances.
 
+        Note:
+            This method has a side effect of re-assigning `self.X_train` and
+            `self.y_train`. This is not ideal and could lead to unexpected
+            behavior if the class is used in other contexts.
 
-    def getRandomForestFeatureColumns(self, X, y, n):
+        Args:
+            X: The training features DataFrame.
+            y: The training target Series.
+            n: The number of top features to select.
+
+        Returns:
+            A list of the names of the top n features.
+        """
         try:
             X = X.drop("index", axis=1)
         except:
@@ -84,8 +123,19 @@ class feature_selection_methods_class():
             finalColNames.append(elem[0])
         return finalColNames
 
+    def getXGBoostFeatureColumns(
+        self, X: pd.DataFrame, y: pd.Series, n: int
+    ) -> List[str]:
+        """Selects the top n features using XGBoost feature importances.
 
-    def getXGBoostFeatureColumns(self, X, y, n):
+        Args:
+            X: The training features DataFrame.
+            y: The training target Series.
+            n: The number of top features to select.
+
+        Returns:
+            A list of the names of the top n features.
+        """
         try:
             X = X.drop("index", axis=1)
         except:
@@ -110,8 +160,24 @@ class feature_selection_methods_class():
 
         return finalColNames
 
+    def getExtraTreesFeatureColumns(
+        self, X: pd.DataFrame, y: pd.Series, n: int
+    ) -> List[str]:
+        """Selects the top n features using ExtraTreesClassifier feature importances.
 
-    def getExtraTreesFeatureColumns(self, X, y, n):
+        Note:
+            This method has a side effect of re-assigning `self.X_train` and
+            `self.y_train`. This is not ideal and could lead to unexpected
+            behavior if the class is used in other contexts.
+
+        Args:
+            X: The training features DataFrame.
+            y: The training target Series.
+            n: The number of top features to select.
+
+        Returns:
+            A list of the names of the top n features.
+        """
         independentVariables = X
 
         self.X_train = X
@@ -176,4 +242,3 @@ class feature_selection_methods_class():
         X_test_fs = self.X_test[xFeatureColumnNames].copy()
         
         return X_train_fs, X_test_fs
-

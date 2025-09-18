@@ -1,5 +1,6 @@
 import time
 import traceback
+from typing import Any, Dict
 
 import keras
 import numpy as np
@@ -39,17 +40,76 @@ import tensorflow as tf
 
 
 class grid_search_crossvalidate:
+    """
+    Performs a grid search or randomized search with cross-validation for a given model.
+
+    This class orchestrates the hyperparameter tuning process for a single
+    algorithm. It can perform either an exhaustive `GridSearchCV` or a
+    `RandomizedSearchCV` based on the global project settings. After finding
+    the best hyperparameters, it performs a final cross-validation on the
+    best estimator to get robust performance metrics and logs the results.
+    """
+
+    global_params: global_parameters
+    """An instance of the global_parameters class."""
+
+    verbose: int
+    """The verbosity level, inherited from global_params."""
+
+    sub_sample_param_space_pct: float
+    """The percentage of the parameter space to sample in a random grid search."""
+
+    sub_sample_parameter_val: int
+    """The number of parameter combinations to sample for random search."""
+
+    metric_list: Dict
+    """A dictionary of scoring metrics for cross-validation."""
+
+    error_raise: bool
+    """Flag to determine if errors should be raised, from global_params."""
+
+    ml_grid_object_iter: Any
+    """The main experiment object, containing data splits and configurations."""
+
+    X_train: pd.DataFrame
+    """The training features DataFrame."""
+
+    y_train: pd.Series
+    """The training target Series."""
+
+    X_test: pd.DataFrame
+    """The testing features DataFrame."""
+
+    y_test: pd.Series
+    """The testing target Series."""
+
+    X_test_orig: pd.DataFrame
+    """The original (validation) testing features DataFrame."""
+
+    y_test_orig: pd.Series
+    """The original (validation) testing target Series."""
+
+    cv: RepeatedKFold
+    """The cross-validation strategy object."""
 
     def __init__(
         self,
-        algorithm_implementation,
-        parameter_space,
-        method_name,
-        ml_grid_object,
-        sub_sample_parameter_val=100,
-    ):  # kwargs**
-        #
+        algorithm_implementation: Any,
+        parameter_space: Dict,
+        method_name: str,
+        ml_grid_object: Any,
+        sub_sample_parameter_val: int = 100,
+    ):
+        """Initializes and runs the grid search cross-validation process.
 
+        Args:
+            algorithm_implementation: The scikit-learn compatible model instance.
+            parameter_space: A dictionary defining the hyperparameter search space.
+            method_name: A string name for the method being evaluated.
+            ml_grid_object: The main experiment object, containing data and configs.
+            sub_sample_parameter_val: The number of parameter combinations to sample
+                in a randomized search. Defaults to 100.
+        """
         warnings.filterwarnings("ignore")
 
         warnings.filterwarnings("ignore", category=FutureWarning)
