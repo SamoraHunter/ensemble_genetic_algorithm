@@ -76,6 +76,14 @@ Here is a simplified example of the core logic:
 
 .. toctree::
    :maxdepth: 2
+   :caption: Getting Started
+
+   Home
+   docs_wiki/Usage
+   docs_wiki/Project-Dataset-Requirements
+
+.. toctree::
+   :maxdepth: 2
    :caption: User Guide
 
    installation
@@ -88,6 +96,7 @@ Here is a simplified example of the core logic:
    interpreting_results
    best_practices
    evaluating_models
+   docs_wiki/Diagrams
    diagrams
    hyperparameter_reference
    troubleshooting
@@ -98,13 +107,17 @@ Here is a simplified example of the core logic:
    :caption: Developer Guide
 
    adding_new_learner
+   docs_wiki/Genetic_Algorithm_Deep_Dive
    ga_deep_dive
 
 .. toctree::
    :maxdepth: 2
    :caption: Project Information
 
+   docs_wiki/Contributing
    contributing
+   docs_wiki/FAQ
+   docs_wiki/License
    license
 
 .. toctree::
