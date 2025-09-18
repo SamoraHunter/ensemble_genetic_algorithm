@@ -7,7 +7,11 @@ Ensemble Genetic Algorithm
 
 Welcome to the documentation for ``ga-project``!
 
-*(Here you can add a paragraph or two describing your project. What problem does it solve? Who is it for?)*
+``ga-project`` is a Python library that leverages genetic algorithms to construct
+powerful machine learning model ensembles. It automates the challenging process of
+selecting the best combination of models and their weights to maximize predictive
+performance. This tool is for data scientists and machine learning engineers looking
+to improve their model accuracy with sophisticated ensembling techniques.
 
 .. note::
 
@@ -22,15 +26,53 @@ You can install ``ga-project`` from PyPI using pip:
 
    pip install ga-project
 
-Quick Start
-===========
+Example Workflow
+================
 
-Here is a simple example of how to get started with ``ga-project``:
+The primary way to use this library is by configuring and running an experiment pipeline, as demonstrated in `notebooks/example_usage.ipynb`. This automates grid searching, model training, and evaluation.
+
+Here is a simplified example of the core logic:
 
 .. code-block:: python
 
-   # Add a minimal, useful code example here.
-   # from ga_project import ...
+   import ml_grid
+   from ml_grid.pipeline import main_ga
+   from ml_grid.model_classes_ga import (
+       logisticRegressionModelGenerator,
+       randomForestModelGenerator,
+       XGBoostModelGenerator,
+   )
+
+   # 1. Define experiment parameters
+   input_csv_path = "synthetic_data_for_testing.csv"
+   base_project_dir = "HFE_GA_experiments/my_first_run/"
+
+   # 2. Define the pool of base models for the Genetic Algorithm
+   model_list = [
+       logisticRegressionModelGenerator,
+       randomForestModelGenerator,
+       XGBoostModelGenerator,
+   ]
+
+   # 3. Set hyperparameters for this specific run
+   # In a full run, this is typically iterated from a grid search
+   hyperparameters = {
+       'population_size': 50,
+       'n_generations': 20,
+       'mutation_rate': 0.2,
+       'crossover_rate': 0.8,
+   }
+
+   # 4. Configure and run the experiment pipeline
+   ml_grid_object = ml_grid.pipeline.data.pipe(
+       input_csv_path=input_csv_path,
+       base_project_dir=base_project_dir,
+       local_param_dict=hyperparameters,
+       config_dict={"modelFuncList": model_list},
+   )
+
+   # 5. Execute the Genetic Algorithm
+   main_ga.run(ml_grid_object, local_param_dict=hyperparameters).execute()
 
 .. toctree::
    :maxdepth: 2

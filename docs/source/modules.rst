@@ -1,7 +1,5 @@
-API Reference
-=============
-
-This is the auto-generated API reference for the ``ml_grid`` package.
+ml_grid
+=======
 
 .. toctree::
    :maxdepth: 4
