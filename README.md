@@ -166,17 +166,8 @@ g_params = 10    # Maximum generation number
 
 ## 📘 FAQ / User Guide
 
-For answers to common questions and more detailed user guidance, please see the [Project Wiki](https://github.com/SamoraHunter/ensemble_genetic_algorithm/wiki), which includes a comprehensive [FAQ / User Guide](https://github.com/SamoraHunter/ensemble_genetic_algorithm/wiki/FAQ).
-For a detailed walkthrough of the main example, see the [Example Usage Notebook Guide](docs_wiki/Example_Usage_Notebook.md). To understand the plots and results from an experiment, see the [Interpreting Results Guide](docs_wiki/Interpreting_Results.md). To extend the framework with your own models, see the guide on [Adding a New Base Learner](docs_wiki/Adding_a_New_Base_Learner.md). To validate your final models on unseen data, see the guide on [Evaluating Final Models](docs_wiki/Evaluating_Final_Models.md). To prepare your data correctly, refer to the [Data Preparation Guide](docs_wiki/Data_Preparation_Guide.md).
-
-For a deeper understanding of the project's structure, please review the following guides:
-- [Architectural Overview](docs_wiki/Architectural_Overview.md): A high-level look at how the components work together.
-- [Configuration Guide](docs_wiki/Configuration_Guide.md): A detailed reference for all configuration parameters.
-- [Genetic Algorithm Deep Dive](docs_wiki/Genetic_Algorithm_Deep_Dive.md): A code-oriented explanation of the evolutionary process.
-- [Hyperparameter Reference](docs_wiki/Hyperparameter_Reference.md): A detailed dictionary of all tunable hyperparameters.
-- [Best Practices and Tips](docs_wiki/Best_Practices.md): A guide to running experiments effectively and efficiently.
-- [Troubleshooting Guide](docs_wiki/Troubleshooting.md): Solutions to common errors and issues.
-
+For detailed user guides, tutorials, and the full API reference, please see the **[Official Documentation](https://ensemble-genetic-algorithm.readthedocs.io/en/latest/)**.
+The documentation provides comprehensive information on everything from data preparation to interpreting results and extending the framework.
 
 # Diagrams
 

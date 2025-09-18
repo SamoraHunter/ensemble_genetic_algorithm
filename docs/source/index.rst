@@ -78,12 +78,15 @@ Here is a simplified example of the core logic:
    :maxdepth: 2
    :caption: User Guide
 
+   installation
    data_preparation
    architecture
    project_structure
    usage
+   configuration_guide
    example_notebook
    interpreting_results
+   best_practices
    evaluating_models
    diagrams
    hyperparameter_reference
