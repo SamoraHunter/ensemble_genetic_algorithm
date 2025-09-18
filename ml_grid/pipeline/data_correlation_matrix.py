@@ -42,10 +42,12 @@ def handle_correlation_matrix(
         column names that are correlated above the threshold.
     """
 
-    if chunk_size >= len(df.columns):
-        chunk_size = len(df.columns) - 1 if len(df.columns) > 0 else 0
     # Define the correlation threshold
     threshold = local_param_dict.get("corr", 0.25)
+
+    # Ensure chunk_size is at least 1
+    if chunk_size <= 0:
+        chunk_size = 1
 
     # Remove non-numeric columns
     numeric_columns = df.select_dtypes(include=["number"]).columns
@@ -76,8 +78,11 @@ def handle_correlation_matrix(
             try:
                 # Exclude self-correlation (which is always 1)
                 correlated_cols = correlations[col][
-                    (correlations[col] > threshold) & (correlations[col] < 1.0)
+                    (correlations[col] > threshold) & (correlations[col] <= 1.0)
                 ].index.tolist()
+                # Explicitly remove self-correlation if present
+                if col in correlated_cols:
+                    correlated_cols.remove(col)
             except KeyError:
                 print(
                     "Encountered KeyError while calculating correlations for column",

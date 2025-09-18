@@ -489,7 +489,7 @@ class run:
                     )
                     if self.verbose >= 1:
                         plot_auc(
-                        self.y_test_orig,
+                            self.y_test_orig,
                             best_pred_orig,
                             "best_pop="
                             + str(pop_val)

@@ -4,8 +4,35 @@ import sklearn
 import sklearn.feature_selection
 from PyImpetus import PPIMBC
 from sklearn.svm import SVC
-from typing import List, Union
+from typing import List, Union, Any
+from sklearn.base import BaseEstimator, ClassifierMixin
 
+
+class ClippedSVC(BaseEstimator, ClassifierMixin):
+    """
+    A wrapper for scikit-learn's SVC that clips the output of `predict_proba`
+    to the [0, 1] range to prevent floating-point inaccuracies from causing
+    errors in downstream functions like `log_loss`.
+    """
+
+    def __init__(self, **kwargs):
+        # Ensure probability is True for predict_proba to be available
+        kwargs["probability"] = True
+        self.svc = SVC(**kwargs)
+
+    def fit(self, X: np.ndarray, y: np.ndarray, sample_weight: Any = None) -> "ClippedSVC":
+        self.svc.fit(X, y, sample_weight=sample_weight)
+        self.classes_ = self.svc.classes_
+        return self
+
+    def predict_proba(self, X: np.ndarray) -> np.ndarray:
+        return np.clip(self.svc.predict_proba(X), 0, 1)
+
+    def decision_function(self, X: np.ndarray) -> np.ndarray:
+        # PyImpetus incorrectly uses decision_function output for log_loss.
+        # We return the probability of the positive class to satisfy log_loss.
+        # This is a workaround for the PyImpetus library's behavior.
+        return self.predict_proba(X)[:, 1]
 
 class feature_methods:
     def __init__(self):
@@ -50,17 +77,17 @@ class feature_methods:
         else:
             raise ValueError("X_train must be a pandas DataFrame or numpy array")
 
-        res = []
-        for i, col in enumerate(X_train_np.T):
-            res.append(
-                (
-                    feature_names[i],
-                    sklearn.feature_selection.f_classif(col.reshape(-1, 1), y_train)[0],
-                )
-            )
+        # Calculate F-scores for all features at once for efficiency
+        f_scores, _ = sklearn.feature_selection.f_classif(X_train_np, y_train)
 
-        sortedList = sorted(res, key=lambda X: X[1], reverse=True)
-        print(sortedList)
+        # Pair feature names with their scores, ignoring NaNs
+        res = [
+            (name, score)
+            for name, score in zip(feature_names, f_scores)
+            if not np.isnan(score)
+        ]
+
+        sortedList = sorted(res, key=lambda x: x[1], reverse=True)
         nFeatures = sortedList[:n]
         finalColNames = [elem[0] for elem in nFeatures]
 
@@ -84,7 +111,7 @@ class feature_methods:
             Markov Blanket.
         """
         model = PPIMBC(
-            model=SVC(random_state=27, class_weight="balanced"),
+            model=ClippedSVC(random_state=27, class_weight="balanced"),
             p_val_thresh=0.05,
             num_simul=30,
             simul_size=0.2,

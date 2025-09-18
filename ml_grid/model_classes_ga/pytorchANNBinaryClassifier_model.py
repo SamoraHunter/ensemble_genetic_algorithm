@@ -28,11 +28,11 @@ from ml_grid.util.validate_param_methods import hidden_layer_size
 def predict_with_fallback(
     model: nn.Module, X_batch: torch.Tensor, y_batch: torch.Tensor
 ) -> torch.Tensor:
-    """Predicts using the model, with a fallback to random logits on error.
+    """Predicts using the model, with a fallback to zero logits on error.
 
     This function attempts to get a prediction from the model. If any exception
     occurs during the forward pass, it catches the error, prints a warning,
-    and returns a tensor of random logits with the correct shape, allowing
+    and returns a tensor of zero logits with the correct shape, allowing
     the training loop to continue without crashing.
 
     Args:
@@ -41,16 +41,16 @@ def predict_with_fallback(
         y_batch (torch.Tensor): The target data batch (used for shape inference).
 
     Returns:
-        torch.Tensor: The model's output tensor or a tensor of random logits
+        torch.Tensor: The model's output tensor or a tensor of zero logits
         if an exception occurred.
     """
     try:
         y_pred = model(X_batch)
     except Exception as e:
         print(f"Model prediction failed with error: {e}. Using fallback.")
-        # Fallback: return random logits with the correct output shape.
+        # Fallback: return zero logits with the correct output shape.
         # BCEWithLogitsLoss expects shape (batch_size, 1).
-        y_pred = torch.rand(
+        y_pred = torch.zeros(
             y_batch.unsqueeze(1).shape, device=X_batch.device, dtype=X_batch.dtype
         )
 

@@ -45,10 +45,10 @@ class TestHandleCorrelationMatrix(unittest.TestCase):
         )
 
         # fmt: off
-        expected_output = {('B', 'A'), ('A', 'B')}  # Convert the expected output to a set
-        result_set = set(result)  # Convert the result to a set
-
-        self.assertEqual(result_set, expected_output)
+        # Since the function uses frozenset for order-independent pairs, the output will contain
+        # either ('A', 'B') or ('B', 'A'), but not both. We check for the presence of one.
+        self.assertTrue(len(result) == 1)
+        self.assertEqual(frozenset(result[0]), frozenset(('A', 'B')))
         # fmt: on
 
 
