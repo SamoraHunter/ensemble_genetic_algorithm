@@ -47,43 +47,111 @@ This command runs all cells and saves the output to a new file named `executed_e
 Configuration Guide
 -------------------
 
-Configuration is split into three main areas:
+This guide provides a comprehensive overview of the key configuration parameters you can adjust to customize your experiments. Configuration is split into three main areas:
 
-1. **Experiment Script Settings**
-   These are high-level settings in your main script (e.g., `notebooks/example_usage.ipynb`).
+1.  **Experiment Script Settings**: High-level settings in your main script (e.g., `notebooks/example_usage.ipynb`).
+2.  **Data Pipeline Settings**: Parameters passed to the ``ml_grid.pipeline.data.pipe`` function.
+3.  **Genetic Algorithm Hyperparameters**: The grid search space for the GA, defined in ``ml_grid/util/grid_param_space_ga.py``.
 
-   - ``input_csv_path``: **(Required)** The file path to your input dataset.
-   - ``n_iter``: The number of grid search iterations to perform.
-   - ``modelFuncList``: A Python list of the model generator classes for the GA to use.
+Experiment Script Settings
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-2. **Data Pipeline Settings**
-   These parameters are passed to the ``ml_grid.pipeline.data.pipe`` function and control data processing for each run.
+These are the primary parameters you will change in `notebooks/example_usage.ipynb` for each experiment.
 
-   - ``test_sample_n``: The number of samples to hold out for the final test set.
-   - ``column_sample_n``: The number of feature columns to randomly sample.
-   - ``testing``: Set to ``True`` to use a smaller, faster hyperparameter grid for debugging.
+-   ``input_csv_path``: **(Required)** The file path to your input dataset.
+-   ``n_iter``: The number of grid search iterations to perform. Each iteration runs the genetic algorithm with a different combination of hyperparameters.
+-   ``modelFuncList``: A Python list of the model generator classes that the genetic algorithm can use as base learners.
+-   ``base_project_dir_global``: The root directory where all experiment results will be saved. A unique timestamped subdirectory is created here for each run.
 
-3. **Genetic Algorithm Hyperparameter Grid**
-   The search space for the GA is defined in ``ml_grid/util/grid_param_space_ga.py``. By modifying the ``Grid`` class in this file, you can control the settings the experiment will explore.
+Data Pipeline Settings
+~~~~~~~~~~~~~~~~~~~~~~
 
-   - ``population_size``: List of possible population sizes (e.g., ``[50, 100]``).
-   - ``n_generations``: List of possible values for the number of generations.
-   - ``mutation_rate``: List of mutation probabilities.
-   - ``crossover_rate``: List of crossover probabilities.
+These parameters are passed when creating the ``ml_grid_object`` inside the main experiment loop. They control data sampling and processing for each grid search iteration.
+
+-   ``test_sample_n``: The number of samples to hold out for the final test set. These samples are not used during the GA training/validation process.
+-   ``column_sample_n``: The number of feature columns to randomly sample from the dataset. If set to `0` or `None`, all columns are used.
+-   ``testing``: A boolean flag. When ``True``, it uses a smaller, predefined test grid of hyperparameters, which is useful for debugging.
+-   ``multiprocessing_ensemble``: A boolean flag to enable or disable multiprocessing for certain ensemble methods.
+
+Genetic Algorithm Hyperparameter Grid
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The search space for the genetic algorithm is defined in ``ml_grid/util/grid_param_space_ga.py``. By modifying the ``Grid`` class in this file, you can control the range of GA settings the experiment will explore.
+
+Key parameters in the grid (``grid_param_space_ga.Grid``) include:
+
+-   ``population_size``: A list of possible population sizes for the GA (e.g., ``[50, 100]``).
+-   ``n_generations``: A list of possible values for the maximum number of generations the GA will run.
+-   ``mutation_rate``: A list of probabilities for an individual (ensemble) to undergo mutation.
+-   ``crossover_rate``: A list of probabilities for two individuals to perform crossover.
+-   ``tournament_size``: The number of individuals to select for a tournament when choosing parents.
+-   ``ensemble_weighting_method``: A list of methods to weigh the predictions of base learners. Options typically include:
+    -   ``'unweighted'``: Simple averaging.
+    -   ``'de'``: Differential Evolution to find optimal weights.
+    -   ``'ann'``: An Artificial Neural Network to learn weights.
+-   ``store_base_learners``: A boolean. If ``True``, all trained base learners are saved to disk.
+
+How to Customize the GA Grid
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To change the search space, you can directly edit the lists within the ``grid_param_space_ga.py`` file. For example, to only test a population size of 200, you would change:
+
+.. code-block:: python
+
+   # Before
+   self.pop_params = [32, 64]
+
+   # After
+   self.pop_params = [200]
 
 
 Best Practices
 --------------
 
-*   **Start Small**: When beginning a new experiment, set ``testing=True`` and ``n_iter`` to a low value (e.g., 3) to quickly verify your pipeline.
+Starting a New Experiment: Start Small
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-*   **Check Convergence**: Examine the convergence plots. If fitness is still rising at the end, increase the number of generations (`n_generations`). If it flattens early, you may be able to reduce it.
+When starting with a new dataset or a new research question, avoid running a large-scale experiment immediately.
 
-*   **Use Model Caching**:
+-   **Use the Test Grid**: In your experiment script (e.g., `example_usage.ipynb`), set ``testing=True`` when calling ``ml_grid.pipeline.data.pipe``. This uses a much smaller, predefined hyperparameter grid that runs very quickly, allowing you to verify that your entire pipeline works without errors.
+-   **Limit Iterations**: Set ``n_iter`` to a low value (e.g., 3-5) for initial test runs. This is enough to ensure that the loop executes, data is processed, and results are saved correctly.
+-   **Sample Your Data**: If your dataset is very large, consider creating a smaller, representative sample for initial exploration. This will dramatically speed up iteration cycles.
 
-    -   **`store_base_learners=True`**: On an initial run, this will save all trained models to disk.
-    -   **`use_stored_base_learners=True`**: In subsequent runs, this will load cached models instead of retraining them, saving significant time.
+Tuning the Genetic Algorithm
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-*   **Iterate on Results**: Use the analysis plots (e.g., feature importance) to understand which hyperparameters and models are most effective. Refine your search grid and model list based on these insights for future experiments.
+After initial tests, use the results to guide the tuning of the GA itself.
 
-*   **Final Validation is Crucial**: Always rely on the final evaluation on the hold-out test set as the true measure of your model's performance. The scores reported during the GA run can be optimistically biased.
+-   **Check Convergence**: Examine the ``plot_all_convergence`` output. If the fitness curves are still trending upwards at the final generation, you should increase the number of generations (`g_params`). If they flatten out early, you might be able to reduce it to save computation time.
+-   **Balance Population vs. Runtime**: A larger population (`pop_params`) explores the search space more thoroughly but increases runtime. Start with the defaults and only increase if you suspect the GA is failing to find good solutions due to a lack of diversity.
+-   **Stick to Default Evolutionary Rates**: The crossover (`cxpb`) and mutation (`mutpb`) probabilities usually work well with default values. Only tune these if you observe specific issues like premature convergence (too little mutation) or chaotic search (too much mutation).
+
+Managing Runtimes and Resources
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Large-scale experiments can be computationally expensive. Here’s how to manage them:
+
+-   **Use Model Caching Wisely**:
+    -   ``store_base_learners=True``: Set this in the grid for an initial, comprehensive run. It will save every trained base learner to disk.
+    -   ``use_stored_base_learners=True``: In subsequent runs, this will load and reuse the cached models instead of retraining them, which can reduce runtime by over 90%.
+
+-   **Be Mindful of Weighting Methods**: The ``ensemble_weighting_method`` has a major impact on runtime. `'unweighted'` is extremely fast, while `'de'` (Differential Evolution) and `'ann'` (Artificial Neural Network) are significantly more expensive.
+
+-   **Explore Feature Subsets with ``column_sample_n``**: Use the ``column_sample_n`` parameter to randomly sample a subset of features for each experiment run. This is an efficient way to explore the feature space without creating many different data files.
+
+Iterating on Results for Better Models
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The goal of the first experiment is not to find the perfect model, but to learn about the problem space.
+
+-   **Identify Key Hyperparameters**: Use the ``plot_combined_anova_feature_importances`` and ``plot_parameter_distributions`` plots to see which hyperparameters have the biggest impact on performance.
+
+-   **Refine Your Search Grid**: Based on the insights above, go back to ``grid_param_space_ga.py`` and narrow the search space. For example, if a `resample` value of `None` consistently performs poorly, remove it from the list.
+
+-   **Prune Your Model List**: Check the ``plot_base_learner_feature_importance`` plot. If certain models rarely appear in top-performing ensembles, you can remove them from the `modelFuncList` to focus the search on more promising algorithms.
+
+Final Validation is Crucial
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-   Always perform the final evaluation step using the ``EnsembleEvaluator`` on a hold-out test set.
+-   The performance scores from this final step are the most realistic and unbiased measure of your model's ability to generalize to new data.

@@ -78,7 +78,24 @@ Here is a simplified example of the core logic:
    :maxdepth: 2
    :caption: User Guide
 
+   data_preparation
+   architecture
+   project_structure
    usage
+   example_notebook
+   interpreting_results
+   evaluating_models
+   diagrams
+   hyperparameter_reference
+   troubleshooting
+   conclusion
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Developer Guide
+
+   adding_new_learner
+   ga_deep_dive
 
 .. toctree::
    :maxdepth: 2
