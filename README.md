@@ -1,5 +1,10 @@
 # Ensemble Genetic Algorithm
 
+[![GA Project Test](https://github.com/SamoraHunter/ensemble_genetic_algorithm/actions/workflows/notebook-test.yml/badge.svg)](https://github.com/SamoraHunter/ensemble_genetic_algorithm/actions/workflows/notebook-test.yml)
+[![Documentation Status](https://readthedocs.org/projects/ensemble-genetic-algorithm/badge/?version=latest)](https://ensemble-genetic-algorithm.readthedocs.io/en/latest/?badge=latest)
+[![PyPI version](https://badge.fury.io/py/ensemble-genetic-algorithm.svg)](https://badge.fury.io/py/ensemble-genetic-algorithm)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 # Table of Contents
 
 - [Ensemble Genetic Algorithm](#ensemble-genetic-algorithm)
@@ -32,7 +37,7 @@ Applies a grid search over featurespace and genetic algorithm hyperparameters to
 
 ## Installation
 
-This project includes a comprehensive setup script to create a dedicated Python virtual environment and install all necessary dependencies.
+This project can be installed using the provided setup script or manually.
 
 ### Prerequisites
 
@@ -40,7 +45,36 @@ This project includes a comprehensive setup script to create a dedicated Python 
 -   **Git**: For cloning the repository.
 -   **(Optional) NVIDIA GPU with CUDA**: For GPU-accelerated computations.
 
-### Quick Start
+### Manual Installation
+
+If you prefer to set up the environment manually, you can follow these steps. This project uses `pyproject.toml` to manage dependencies.
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/SamoraHunter/ensemble_genetic_algorithm.git
+    cd ensemble_genetic_algorithm
+    ```
+
+2.  **Create and activate a virtual environment:**
+    It is highly recommended to use a virtual environment.
+    ```bash
+    python3 -m venv .venv
+    source .venv/bin/activate  # On Windows, use `.venv\Scripts\activate`
+    ```
+
+3.  **Install dependencies:**
+    Install the project and its dependencies using pip. The dependencies are defined in `pyproject.toml`.
+    ```bash
+    pip install .
+    ```
+    To install with optional dependencies for development (like testing tools), use:
+    ```bash
+    pip install .[dev]
+    ```
+
+### Using the Setup Script (Alternative)
+
+This project also includes a comprehensive setup script to automate the creation of a dedicated Python virtual environment and install all necessary dependencies.
 
 1.  **Clone the repository:**
     ```bash
@@ -54,7 +88,7 @@ This project includes a comprehensive setup script to create a dedicated Python 
     chmod +x setup.sh
     ./setup.sh
     ```
-    This will create a virtual environment named `ga_env`, install the default dependencies, and set up a Jupyter kernel. The environment will be activated for your current terminal session.
+    This will create a virtual environment named `ga_env`, install the default dependencies from `pyproject.toml`, and set up a Jupyter kernel. The environment will be activated for your current terminal session.
 
 ### Installation Options
 
@@ -132,28 +166,17 @@ g_params = 10    # Maximum generation number
 
 ## 📘 FAQ / User Guide
 
-### How do I run and convert the example usage notebook using the commandline only (for example on a HPC...)?
+For answers to common questions and more detailed user guidance, please see the [Project Wiki](https://github.com/SamoraHunter/ensemble_genetic_algorithm/wiki), which includes a comprehensive [FAQ / User Guide](https://github.com/SamoraHunter/ensemble_genetic_algorithm/wiki/FAQ).
+For a detailed walkthrough of the main example, see the [Example Usage Notebook Guide](docs_wiki/Example_Usage_Notebook.md). To understand the plots and results from an experiment, see the [Interpreting Results Guide](docs_wiki/Interpreting_Results.md). To extend the framework with your own models, see the guide on [Adding a New Base Learner](docs_wiki/Adding_a_New_Base_Learner.md). To validate your final models on unseen data, see the guide on [Evaluating Final Models](docs_wiki/Evaluating_Final_Models.md). To prepare your data correctly, refer to the [Data Preparation Guide](docs_wiki/Data_Preparation_Guide.md).
 
-To execute and convert the example Jupyter notebook, use the following command from the **root** of the repository:
+For a deeper understanding of the project's structure, please review the following guides:
+- [Architectural Overview](docs_wiki/Architectural_Overview.md): A high-level look at how the components work together.
+- [Configuration Guide](docs_wiki/Configuration_Guide.md): A detailed reference for all configuration parameters.
+- [Genetic Algorithm Deep Dive](docs_wiki/Genetic_Algorithm_Deep_Dive.md): A code-oriented explanation of the evolutionary process.
+- [Hyperparameter Reference](docs_wiki/Hyperparameter_Reference.md): A detailed dictionary of all tunable hyperparameters.
+- [Best Practices and Tips](docs_wiki/Best_Practices.md): A guide to running experiments effectively and efficiently.
+- [Troubleshooting Guide](docs_wiki/Troubleshooting.md): Solutions to common errors and issues.
 
-```bash
-jupyter nbconvert --to notebook --execute notebooks/example_usage.ipynb --output notebooks/executed_example_usage.ipynb
-```
-This command will:
-
-Run the notebook example_usage.ipynb using the current Python environment.
-
-Save the executed version as executed_example_usage.ipynb in the same notebooks/ directory.
-
-Preserve the interactive IPython functionality (e.g. display, widgets, etc.) during execution.
-
-📌 Note: Make sure the ga_env environment is activated before running this command:
-
-```bash
-
-conda activate ga_env  # or source activate ga_env
-```
-This ensures all required dependencies are available for successful execution
 
 # Diagrams
 

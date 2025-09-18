@@ -99,6 +99,13 @@ Here is a simplified example of the core logic:
 
 .. toctree::
    :maxdepth: 2
+   :caption: Project Information
+
+   contributing
+   license
+
+.. toctree::
+   :maxdepth: 2
    :caption: API Reference
 
    modules
