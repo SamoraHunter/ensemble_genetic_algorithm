@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Ensure the script runs from its own directory
+# This allows the script to be called from any location and still find relative files.
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+cd -- "$SCRIPT_DIR" || { echo "ERROR: Failed to change to script directory."; exit 1; }
+
+
 # Function to print error message and exit
 print_error_and_exit() {
     echo "ERROR: $1"
@@ -125,6 +131,13 @@ if [ ! -f "pyproject.toml" ]; then
     print_error_and_exit "pyproject.toml not found. Please make sure it exists in the current directory."
 fi
 
+# Check if the package is already installed in editable mode
+PROJECT_NAME=$(python -c "import tomli; f = open('pyproject.toml', 'rb'); config = tomli.load(f); print(config['project']['name'])")
+if [ "$FORCE_RECREATE" = false ] && python -c "import sys, pkg_resources; sys.exit(0) if '$PROJECT_NAME' in {dist.project_name for dist in pkg_resources.working_set if dist.location == '$PWD'} else sys.exit(1)" &> /dev/null; then
+    print_info "Project '$PROJECT_NAME' is already installed in editable mode. Skipping installation."
+    print_info "Use the --force flag to reinstall."
+else
+
 # Install the package based on the selected type
 print_info "Installing package dependencies..."
 case $INSTALL_TYPE in
@@ -152,6 +165,8 @@ case $INSTALL_TYPE in
         pip install -e .
         ;;
 esac
+
+fi
 
 # Set up git hooks if the script exists and this is a git repository
 if [ -d ".git" ] && [ -f "setup-hooks.sh" ]; then

@@ -66,37 +66,13 @@ jobs:
           echo "REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt" >> $GITHUB_ENV
 
       - name: Setup GA project
+        id: setup
         run: |
-          cd $GITHUB_WORKSPACE
-          python3 -m venv ga_env
-          source ga_env/bin/activate
-
-          echo "---- Installing CPU-only PyTorch ----"
-          # First, install the specific CPU version of PyTorch we need.
-          # This ensures we don't pull in GPU-enabled builds.
-          pip install torch==2.0.1 --index-url https://download.pytorch.org/whl/cpu
-
-          echo "---- Installing project dependencies from pyproject.toml ----"
-          # Install the project in editable mode with the 'dev' dependencies.
-          # pip will see that torch is already installed and satisfy the dependency.
-          pip install -e .[dev]
-          
-          # This part is still useful for notebook compatibility
-          python -m ipykernel install --user --name=ga_env
-
-      - name: Debug virtual environment
-        run: |
-          VENV_PATH=$(find $GITHUB_WORKSPACE -type d -name "ga_env")
-          echo "VENV_PATH=$VENV_PATH" >> $GITHUB_ENV
-          source "$VENV_PATH/bin/activate"
-          which python
-          python --version
+          chmod +x ./setup.sh
+          # Use the --cpu flag for CI, which matches the intent of the original steps
+          ./setup.sh --cpu
 
       - name: Run tests
         env:
           CUDA_VISIBLE_DEVICES: ""
-        run: |
-          cd $GITHUB_WORKSPACE
-          source "$VENV_PATH/bin/activate"
-          # Add -s and -v flags for verbose output that shows print statements in real-time
-          pytest -v -s notebooks/test_notebook.py
+        run: ga_env/bin/python -m pytest -v -s notebooks/test_notebook.py
