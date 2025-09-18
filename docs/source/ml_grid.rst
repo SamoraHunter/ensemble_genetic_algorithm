@@ -1,21 +1,45 @@
 ml_grid package
 ===============
 
-Subpackages
------------
-
-.. toctree::
-   :maxdepth: 4
-
-   ml_grid.ga_functions
-   ml_grid.model_classes_ga
-   ml_grid.pipeline
-   ml_grid.util
-
 Module contents
 ---------------
 
 .. automodule:: ml_grid
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Subpackages
+-----------
+
+ml_grid.ga_functions
+~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: ml_grid.ga_functions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ml_grid.model_classes_ga
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: ml_grid.model_classes_ga
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ml_grid.pipeline
+~~~~~~~~~~~~~~~~
+
+.. automodule:: ml_grid.pipeline
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ml_grid.util
+~~~~~~~~~~~~
+
+.. automodule:: ml_grid.util
    :members:
    :undoc-members:
    :show-inheritance:
