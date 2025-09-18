@@ -1,21 +1,24 @@
 import matplotlib.pyplot as plt
+from typing import Dict, List, Union
+import pandas as pd
 
 # class plot_methods():
 
 # def __init__(self):
 
 
-def plot_pie_chart_with_counts(X_train, X_test, X_test_orig):
-    """
-    Plot a pie chart with value counts for X_train, X_test, and X_test_orig.
+def plot_pie_chart_with_counts(
+    X_train: pd.DataFrame, X_test: pd.DataFrame, X_test_orig: pd.DataFrame
+) -> None:
+    """Plots a pie chart showing the relative sizes of data splits.
 
-    Parameters:
-        X_train (list or array): The training dataset.
-        X_test (list or array): The test dataset.
-        X_test_orig (list or array): The original test dataset.
+    This function visualizes the distribution of samples across the training,
+    testing, and original testing (validation) sets.
 
-    Returns:
-        None
+    Args:
+        X_train: The training dataset DataFrame.
+        X_test: The test dataset DataFrame.
+        X_test_orig: The original test (validation) dataset DataFrame.
     """
     sizes = [len(X_train), len(X_test), len(X_test_orig)]
     labels = ["X_train", "X_test", "X_test_orig"]
@@ -53,7 +56,15 @@ def plot_pie_chart_with_counts(X_train, X_test, X_test_orig):
     plt.show()
 
 
-def plot_dict_values(data_dict):
+def plot_dict_values(data_dict: Dict[str, bool]) -> None:
+    """Creates a horizontal bar chart to visualize boolean values in a dictionary.
+
+    This function is useful for displaying configuration flags, where each key
+    is a setting and its value is either True (green) or False (red).
+
+    Args:
+        data_dict: A dictionary where keys are strings and values are booleans.
+    """
     # Extract the keys and values from the dictionary
     keys = list(data_dict.keys())
     values = list(data_dict.values())
@@ -102,7 +113,18 @@ def plot_dict_values(data_dict):
 #     plt.show()
 
 
-def create_bar_chart(data_dict, title="", x_label="", y_label=""):
+def create_bar_chart(
+    data_dict: Dict[str, int], title: str = "", x_label: str = "", y_label: str = ""
+) -> None:
+    """Creates a horizontal bar chart from a dictionary of counts.
+
+    Args:
+        data_dict: A dictionary where keys are categories (str) and values
+            are their counts (int).
+        title: The title for the chart.
+        x_label: The label for the x-axis.
+        y_label: The label for the y-axis.
+    """
     # Extracting keys and values from the dictionary
     categories = list(data_dict.keys())
     values = list(data_dict.values())
@@ -132,8 +154,13 @@ def create_bar_chart(data_dict, title="", x_label="", y_label=""):
     plt.show()
 
 
-def plot_candidate_feature_category_lists(data):
+def plot_candidate_feature_category_lists(data: Dict[str, int]) -> None:
+    """A wrapper function to plot feature category counts using a bar chart.
 
+    Args:
+        data: A dictionary where keys are feature category names and values
+            are the number of features in that category.
+    """
     create_bar_chart(
         data, title="Feature category counts", x_label="features", y_label="counts"
     )

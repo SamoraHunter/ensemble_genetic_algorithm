@@ -3,18 +3,22 @@ from ml_grid.util import outcome_list
 
 
 def handle_outcome_list(drop_list: List[str], outcome_variable: str) -> List[str]:
-    """
-    This function extends the drop_list with all possible outcome
-    variables, then removes the specified outcome_variable from the list
+    """Ensures all potential outcome variables are dropped except the target one.
+
+    This function takes a list of columns to be dropped, extends it with a
+    predefined list of all possible outcome variables from `outcome_list`,
+    and then specifically removes the currently targeted `outcome_variable`
+    from the drop list. This is a safety measure to prevent any potential
+    target leakage from other outcome columns.
 
     Args:
-        drop_list (List[str]): list of columns to drop
-        outcome_variable (str): name of outcome variable
+        drop_list: The list of columns already marked for dropping.
+        outcome_variable: The name of the target outcome variable, which
+            should NOT be dropped.
 
     Returns:
-        List[str]: updated drop_list
+        The updated list of columns to drop.
     """
-
     print("Extending all outcome list on drop list")
 
     outcome_object = outcome_list.OutcomeList()
@@ -25,8 +29,10 @@ def handle_outcome_list(drop_list: List[str], outcome_variable: str) -> List[str
 
     try:
         drop_list.remove(outcome_variable)
-    except Exception as e:
-        print(outcome_variable + " not in drop list")
+    except ValueError:
+        print(
+            f"Warning: Target outcome '{outcome_variable}' was not in the master outcome list to begin with."
+        )
         pass
 
     return drop_list

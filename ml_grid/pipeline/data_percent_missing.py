@@ -1,21 +1,28 @@
 import pickle
 import os
-from typing import List
+from typing import Dict, List
 
 
 def handle_percent_missing(
-    local_param_dict: dict, all_df_columns: List[str], drop_list: List[str]
+    local_param_dict: Dict, all_df_columns: List[str], drop_list: List[str]
 ) -> List[str]:
-    """
-    Handles the removal of columns with a high percentage of missing data.
+    """Removes columns with a high percentage of missing data.
+
+    This function identifies columns to be dropped based on a pre-calculated
+    dictionary of missing data percentages. It expects a file named
+    'percent_missing_dict.pickle' in the root directory. It compares the
+    missing percentage of each column from this file against a threshold
+    specified in `local_param_dict`.
 
     Args:
-        local_param_dict (dict): Dictionary of parameters for the current pipeline.
-        all_df_columns (List[str]): All the column names in the dataframe to be processed.
-        drop_list (List[str]): List of columns to be dropped from the dataframe.
+        local_param_dict: A dictionary of parameters for the current pipeline,
+            expected to contain the 'percent_missing' threshold.
+        all_df_columns: A list of all column names in the dataframe to be processed.
+        drop_list: The list of columns already marked for dropping. This list
+            will be extended with columns that exceed the missing data threshold.
 
     Returns:
-        List[str]: Updated list of columns to be dropped from the dataframe.
+        The updated list of columns to be dropped from the dataframe.
     """
     # Check for null pointer references
     assert local_param_dict is not None
@@ -29,15 +36,15 @@ def handle_percent_missing(
         with open("percent_missing_dict.pickle", "rb") as handle:
             try:
                 percent_missing_dict = pickle.load(handle)
-            except Exception as e:
-                print(f"Error loading pickle file: {e}")
+            except (pickle.UnpicklingError, EOFError) as e:
+                print(f"Error loading pickle file: {e}. Treating as empty.")
                 percent_missing_dict = {}
     else:
-        print("File 'percent_missing_dict.pickle' not found. Returning empty dict.")
+        print("File 'percent_missing_dict.pickle' not found. Skipping missing data check.")
         percent_missing_dict = {}
 
     percent_missing_threshold = local_param_dict.get("percent_missing")
-    if percent_missing_threshold is not None and percent_missing_dict is not {}:
+    if percent_missing_threshold is not None and percent_missing_dict:
         # print(
         #     f"Identifying columns with > {percent_missing_threshold} percent missing data..."
         # )
@@ -51,8 +58,9 @@ def handle_percent_missing(
                     and percent_missing_dict.get(col) > percent_missing_threshold
                 ):
                     percent_missing_drop_list.append(col)
-            except Exception as e:
-                print(f"Error processing column {col}: {e}")
+            except TypeError:
+                # This can happen if a value in percent_missing_dict is not a number
+                print(f"Warning: Could not compare missing percentage for column '{col}'. Value was not a number.")
                 pass
 
         print(

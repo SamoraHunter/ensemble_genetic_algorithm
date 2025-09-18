@@ -7,71 +7,66 @@ from ml_grid.pipeline.data_plot_split import (
 from ml_grid.util.global_params import global_parameters
 
 
-def filter_substring_list(string, substr):
+from typing import Dict, List, Tuple
+
+
+def filter_substring_list(string_list: List[str], substr_list: List[str]) -> List[str]:
+    """Filters a list of strings based on a list of substrings.
+
+    Args:
+        string_list: The list of strings to filter.
+        substr_list: The list of substrings to search for.
+
+    Returns:
+        A new list containing strings from `string_list` that contain any of
+        the substrings from `substr_list`, excluding any strings that contain "bmi".
+    """
     return [
-        str for str in string if any(sub in str for sub in substr) and "bmi" not in str
+        s
+        for s in string_list
+        if any(sub in s for sub in substr_list) and "bmi" not in s
     ]
 
 
-def get_pertubation_columns(all_df_columns, local_param_dict, drop_term_list):
-    """
-    Categorize and filter DataFrame columns for perturbation analysis in clinical/medical data.
+def get_pertubation_columns(
+    all_df_columns: List[str], local_param_dict: Dict, drop_term_list: List[str]
+) -> Tuple[List[str], List[str]]:
+    """Categorizes and filters DataFrame columns for analysis.
 
-    This function processes clinical dataset columns, categorizing them by data type
-    (e.g., blood tests, medications, demographics) and returns relevant columns for
-    perturbation analysis based on configuration parameters, while identifying
-    columns to be dropped.
+    This function processes a list of column names from a clinical dataset,
+    categorizing them by data type (e.g., blood tests, medications,
+    demographics) based on substrings in their names. It returns two lists:
+    one with columns selected for analysis (`pertubation_columns`) based on
+    flags in `local_param_dict`, and another with columns to be dropped.
 
-    Parameters
-    ----------
-    all_df_columns : list
-        List of all column names from the DataFrame to be processed.
-    local_param_dict : dict
-        Configuration dictionary containing:
-        - 'data': dict with boolean flags for each data category
-          (age, sex, bmi, ethnicity, bloods, diagnostic_order, drug_order,
-          annotation_n, meta_sp_annotation_n, annotation_mrc_n,
-          meta_sp_annotation_mrc_n, core_02, bed, vte_status, hosp_site,
-          core_resus, news, date_time_stamp, appointments)
-        - 'outcome_var_n': identifier for the outcome variable
-    drop_term_list : list
-        List of terms/substrings to identify columns that should be dropped
-        from analysis.
+    The categorization logic is as follows:
+    1.  Initial columns are dropped if they contain "__index_level", "Unnamed:",
+        or "client_idcode:", or if they match terms in `drop_term_list`.
+    2.  Columns are then grouped into categories like 'bloods', 'diagnostic_order',
+        'drug_order', 'annotations', 'demographics', etc., based on predefined
+        substrings.
+    3.  A special post-processing step ensures that columns categorized as 'bloods'
+        do not overlap with other categories to prevent ambiguity.
+    4.  Based on boolean flags in `local_param_dict['data']`, columns from the
+        enabled categories are collected into the final `pertubation_columns` list.
+    5.  Logging and plotting of category counts can be enabled via the global
+    flags in `local_param_dict`, and another with columns to be dropped.
 
-    Returns
-    -------
-    tuple
+    Args:
+        all_df_columns: A list of all column names from the DataFrame.
+        local_param_dict: A configuration dictionary containing:
+            - 'data' (Dict): Boolean flags for each data category (e.g.,
+              'age', 'sex', 'bloods').
+            - 'outcome_var_n' (int): An identifier for the outcome variable.
+        drop_term_list: A list of terms/substrings to identify columns that
+            should be dropped from the analysis.
+
+    Returns:
         A tuple containing:
-        - pertubation_columns (list): Column names selected for perturbation
-          analysis based on enabled categories in local_param_dict
-        - drop_list (list): Column names to be dropped, including index levels,
-          unnamed columns, client ID codes, and columns matching drop_term_list
-
-    Notes
-    -----
-    The function categorizes columns into the following clinical data types:
-    - Demographics: age, sex, BMI, ethnicity
-    - Laboratory: blood test results with various statistical measures
-    - Clinical orders: diagnostic tests and drug orders
-    - Annotations: various count-based clinical annotations
-    - Hospital data: bed assignments, site information, resuscitation status
-    - Temporal: date/time stamps and appointments
-
-    Blood test columns are filtered to avoid overlap with other categories,
-    particularly VTE status and other clinical indicators.
-
-    Verbosity levels (controlled by global_parameters().verbose):
-    - >= 1: Print category counts
-    - >= 2: Generate plots of category distributions
-
-    Examples
-    --------
-    >>> columns = ['age', 'male', 'hemoglobin_mean', 'vte_status_active']
-    >>> params = {'data': {'age': True, 'sex': True, 'bloods': False},
-    ...           'outcome_var_n': 1}
-    >>> drop_terms = ['temp_col']
-    >>> pert_cols, drop_cols = get_pertubation_columns(columns, params, drop_terms)
-    >>> print(pert_cols)  # ['age', 'male']
+            - pertubation_columns (List[str]): Column names selected for
+              analysis based on the enabled categories in `local_param_dict`.
+            - drop_list (List[str]): Column names to be dropped, including
+              index levels, unnamed columns, and columns matching `drop_term_list`.
     """
 
     global_params = global_parameters()
@@ -370,9 +365,8 @@ def get_pertubation_columns(all_df_columns, local_param_dict, drop_term_list):
     if verbose >= 2:
         plot_dict_values(local_param_dict.get("data"))
 
-    def deduplicate_list(input_list):
-        """
-        De-duplicates a list while preserving the original order of elements.
+    def deduplicate_list(input_list: List[str]) -> List[str]:
+        """De-duplicates a list while preserving the original order of elements.
 
         Args:
             input_list: The list to be de-duplicated.

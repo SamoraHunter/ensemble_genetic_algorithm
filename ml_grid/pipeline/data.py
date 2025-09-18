@@ -1,3 +1,4 @@
+from typing import List, Optional
 import sklearn.feature_selection
 from ml_grid.model_classes_ga.logistic_regression_model import (
     logisticRegressionModelGenerator,
@@ -36,58 +37,145 @@ with warnings.catch_warnings():
 
 
 class pipe:
-    """
-    function should take settings iteration...
-    _Function takes input csv of type KCH cogstack, outputs _
+    """The main data processing pipeline for an ml_grid experiment.
 
-    Function returns ml_grid_[data]_object, this is a permutation from the feature space
+    This class orchestrates the entire data preparation process, from reading the
+    raw data to splitting it into final training, testing, and validation sets.
+    It takes a configuration dictionary and applies a series of cleaning and
+    feature selection steps.
 
-    This object can be used to pass to classifier methods
+    The pipeline steps include:
+    1.  Reading the input data, with options for sampling rows and columns.
+    2.  Categorizing features and selecting a subset for the experiment based on
+        the configuration.
+    3.  Building a `drop_list` of columns to be removed based on:
+        - Predefined terms (`drop_term_list`).
+        - High correlation between features.
+        - High percentage of missing values.
+        - Constant values (zero variance).
+        - Ensuring only the target outcome variable is kept.
+    4.  Applying the `drop_list` to create the final feature set.
+    5.  Cleaning the resulting DataFrame (e.g., handling duplicated columns,
+        sanitizing column names).
+    6.  Optionally scaling the data.
+    7.  Splitting the cleaned data into train, test, and validation sets.
+    8.  Optionally performing a final feature selection step on the split data.
+
+    The resulting `pipe` object holds all the data splits and configurations,
+    ready to be passed to a model training/evaluation class like `main.run` or
+    `main_ga.run`.
     """
+
+    testing: bool
+    """Flag to indicate if the pipeline is running in a testing/debug mode."""
+
+    multiprocessing_ensemble: bool
+    """Flag to enable multiprocessing for ensemble generation."""
+
+    base_project_dir: str
+    """The root directory for the project, used for saving logs and artifacts."""
+
+    additional_naming: Optional[str]
+    """An optional string to append to log folder names for easier identification."""
+
+    local_param_dict: Dict
+    """A dictionary of parameters for this specific pipeline run."""
+
+    global_params: global_parameters
+    """An instance of the global_parameters class holding project-wide settings."""
+
+    verbose: int
+    """The verbosity level for console output."""
+
+    param_space_index: int
+    """The index of the current parameter configuration being run."""
+
+    project_score_save_object: project_score_save_class
+    """An object for saving final scores to the master log file."""
+
+    config_dict: Dict
+    """A dictionary of configuration options for the GA, like `use_stored_base_learners`."""
+
+    logging_paths_obj: log_folder
+    """An object that manages the creation and paths of logging directories."""
+
+    df: pd.DataFrame
+    """The main DataFrame holding the data throughout the processing steps."""
+
+    all_df_columns: List[str]
+    """A list of all column names from the initial raw DataFrame."""
+
+    orignal_feature_names: List[str]
+    """A copy of the initial column names, preserved for reference."""
+
+    pertubation_columns: List[str]
+    """A list of columns selected for the experiment based on `local_param_dict`."""
+
+    drop_list: List[str]
+    """A list of columns to be removed during the cleaning process."""
+
+    outcome_variable: str
+    """The name of the target variable column."""
+
+    final_column_list: List[str]
+    """The final list of feature columns after all cleaning and selection steps."""
+
+    X: pd.DataFrame
+    """The final features DataFrame before splitting."""
+
+    y: pd.Series
+    """The final target variable Series before splitting."""
+
+    X_train: pd.DataFrame
+    """The training features DataFrame."""
+
+    X_test: pd.DataFrame
+    """The testing features DataFrame (for GA evaluation)."""
+
+    y_train: pd.Series
+    """The training target Series."""
+
+    y_test: pd.Series
+    """The testing target Series (for GA evaluation)."""
+
+    X_test_orig: pd.DataFrame
+    """The hold-out validation features DataFrame."""
+
+    y_test_orig: pd.Series
+    """The hold-out validation target Series."""
+
+    model_class_list: List
+    """A list of model generator functions to be used (for GA)."""
 
     def __init__(
         self,
-        file_name,
-        drop_term_list,
-        local_param_dict,
-        base_project_dir,
-        param_space_index,
-        additional_naming=None,
-        test_sample_n=0,
-        column_sample_n=0,
-        config_dict=None,
-        testing=False,
-        multiprocessing_ensemble=False,
-    ):  # kwargs**
-        """
-        This class is the main entry point for the ml_grid pipeline. It takes in a number of parameters which specify the
-        data, the desired outcome, and the global parameters for the project. It then does the following:
+        file_name: str,
+        drop_term_list: List[str],
+        local_param_dict: Dict,
+        base_project_dir: str,
+        param_space_index: int,
+        additional_naming: Optional[str] = None,
+        test_sample_n: int = 0,
+        column_sample_n: int = 0,
+        config_dict: Optional[Dict] = None,
+        testing: bool = False,
+        multiprocessing_ensemble: bool = False,
+    ):
+        """Initializes and executes the data processing pipeline.
 
-            1. Read in the input data
-            2. Remove any columns specified in the drop_term_list
-            3. Remove any columns which have a percentage of missing values greater than the threshold specified in
-               local_param_dict['missing_data_threshold']
-            4. Remove any duplicate columns
-            5. Handle any correlation between columns by removing any columns which have a correlation greater than the
-               threshold specified in local_param_dict['correlation_threshold']
-            6. Split the data into training and testing sets
-            7. Optionally performs data scaling (e.g. standardization)
-            8. Optionally performs feature selection to target a specific number of features
-            9. Saves the results of each of the above steps
-
-        The resulting object is then used to pass to the classifier methods.
-
-        :param file_name: The path to the input data
-        :param drop_term_list: A list of terms to be removed from the data
-        :param local_param_dict: A dictionary containing the local parameters for the project
-        :param base_project_dir: The base directory of the project
-        :param param_space_index: The index of the parameter space iteration
-        :param additional_naming: Any additional strings to be added to the naming of the output files
-        :param test_sample_n: The number of rows to sample from the data for testing purposes
-        :param column_sample_n: The number of columns to sample from the data for testing purposes
-        :param config_dict: A dictionary of configuration options
-        :param testing: Whether to run in testing mode or not
-        :param multiprocessing_ensemble: Whether to use multiprocessing for ensemble methods
+        Args:
+            file_name: The path to the input data CSV file.
+            drop_term_list: A list of substrings to identify columns for removal.
+            local_param_dict: A dictionary of parameters for this specific run.
+            base_project_dir: The root directory for the project.
+            param_space_index: The index of the current parameter configuration.
+            additional_naming: An optional string to append to log folder names.
+            test_sample_n: The number of rows to sample for testing. 0 means all.
+            column_sample_n: The number of columns to sample. 0 means all.
+            config_dict: A dictionary of configuration options for the GA.
+            testing: If True, runs in a testing mode (e.g., smaller grids).
+            multiprocessing_ensemble: If True, enables multiprocessing for
+                ensemble generation.
         """
 
         self.testing = testing

@@ -4,36 +4,40 @@ from sklearn.model_selection import train_test_split
 import numpy as np
 import pandas as pd
 import random
+from typing import Dict, Tuple, Union
 
 
-def get_data_split(X, y, local_param_dict):
-    """
-    Split data into train, test, and validation sets
-    based on user inputs in local_param_dict
+def get_data_split(
+    X: Union[pd.DataFrame, np.ndarray],
+    y: Union[pd.Series, np.ndarray],
+    local_param_dict: Dict,
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series, pd.DataFrame, pd.Series]:
+    """Splits data into training, testing, and validation sets.
 
-    Parameters
-    ----------
-    X : array-like of shape (n_samples, n_features)
-        Features.
-    y : array-like of shape (n_samples,)
-        Target variable.
-    local_param_dict: dict
-        Dictionary of user-defined parameters for data splitting
+    This function splits the input data (`X`, `y`) into three sets:
+    1.  `X_train`, `y_train`: For training the model.
+    2.  `X_test`, `y_test`: For evaluating the model during the genetic algorithm.
+    3.  `X_test_orig`, `y_test_orig`: A hold-out validation set for final evaluation.
 
-    Returns
-    -------
-    X_train : array-like of shape (n_samples_train, n_features)
-        Features for training.
-    X_test : array-like of shape (n_samples_test, n_features)
-        Features for testing.
-    y_train : array-like of shape (n_samples_train,)
-        Target variable for training.
-    y_test : array-like of shape (n_samples_test,)
-        Target variable for testing.
-    X_test_orig : array-like of shape (n_samples_test, n_features)
-        Original features for validation.
-    y_test_orig : array-like of shape (n_samples_test,)
-        Original target variable for validation.
+    It supports three modes based on `local_param_dict['resample']`:
+    - `None`: Performs a standard stratified split.
+    - `undersample`: Applies random undersampling to the entire dataset before splitting.
+    - `oversample`: Splits the data first, then applies random oversampling only
+      to the initial training portion to prevent data leakage.
+
+    The split proportions are fixed: an initial 75/25 split creates the
+    validation set (`_orig`), and the 75% portion is then split again 75/25
+    to create the final training and testing sets.
+
+    Args:
+        X: The input features, either a pandas DataFrame or a NumPy array.
+        y: The target variable, either a pandas Series or a NumPy array.
+        local_param_dict: A dictionary of parameters, which must contain
+            the 'resample' key to determine the sampling strategy.
+
+    Returns:
+        A tuple containing six elements in the following order:
+        `X_train`, `X_test`, `y_train`, `y_test`, `X_test_orig`, `y_test_orig`.
     """
     # X = X
     # y = y
@@ -103,20 +107,24 @@ def get_data_split(X, y, local_param_dict):
 
 
 
-def is_valid_shape(input_data):
-    # Check if input_data is a numpy array
+def is_valid_shape(input_data: Union[pd.DataFrame, np.ndarray]) -> bool:
+    """Checks if the input data is a 2D array-like structure.
+
+    Args:
+        input_data: The data to check, expected to be a pandas DataFrame
+            or a NumPy array.
+
+    Returns:
+        True if the input data has 2 dimensions, False otherwise.
+    """
     if isinstance(input_data, np.ndarray):
-        # If it's a numpy array, directly check its number of dimensions
         return input_data.ndim == 2
 
-    # Check if input_data is a pandas DataFrame
     elif isinstance(input_data, pd.DataFrame):
-        # If it's a DataFrame, convert it to a numpy array and then check its shape
         input_array = input_data.values
         return input_array.ndim == 2
 
     else:
-        # Input data is neither a numpy array nor a pandas DataFrame
         return False
 
 

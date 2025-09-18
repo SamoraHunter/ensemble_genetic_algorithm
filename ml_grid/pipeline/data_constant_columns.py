@@ -1,27 +1,26 @@
 import numpy as np
 import pandas as pd
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 
 def remove_constant_columns(
     X: pd.DataFrame, drop_list: Optional[List[str]] = None, verbose: int = 1
 ) -> List[str]:
-    """
-    Identifies columns in X where all values are the same (constant) and returns their names.
+    """Identifies constant columns and adds them to a drop list.
 
-    Parameters
-    ----------
-    X : pd.DataFrame
-        DataFrame to check for constant columns.
-    drop_list : List[str], optional
-        List of columns already marked for dropping. Default is None.
-    verbose : int, optional
-        Controls the verbosity of logging. Default is 1.
+    This function inspects a DataFrame to find columns where all values are
+    the same. The names of these constant columns are then appended to the
+    provided `drop_list`.
 
-    Returns
-    -------
-    List[str]
-        Updated list of columns to drop, including constant columns.
+    Args:
+        X: The DataFrame to check for constant columns.
+        drop_list: A list of column names already marked for dropping. If
+            None, a new list is created. Defaults to None.
+        verbose: The verbosity level for logging. Defaults to 1.
+
+    Returns:
+        The updated list of columns to drop, now including any constant
+        columns found in `X`.
     """
     try:
         if verbose > 1:
@@ -54,7 +53,28 @@ def remove_constant_columns(
     return drop_list
 
 
-def remove_constant_columns_with_debug(X_train, X_test, X_test_orig, verbosity=2):
+def remove_constant_columns_with_debug(
+    X_train: pd.DataFrame,
+    X_test: pd.DataFrame,
+    X_test_orig: pd.DataFrame,
+    verbosity: int = 2,
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Identifies and removes constant columns across multiple data splits.
+
+    This function finds columns that have zero variance (are constant) in any
+    of the provided data splits (train, test, and original test). It then
+    removes these columns from all three DataFrames to ensure they maintain
+    a consistent feature set.
+
+    Args:
+        X_train: The training features DataFrame.
+        X_test: The testing features DataFrame.
+        X_test_orig: The original (validation) testing features DataFrame.
+        verbosity: The verbosity level for logging debug information.
+
+    Returns:
+        A tuple containing the three input DataFrames with constant columns removed.
+    """
     if verbosity > 0:
         print(f"Initial X_train shape: {X_train.shape}")
         print(f"Initial X_test shape: {X_test.shape}")

@@ -1,48 +1,43 @@
 import pandas as pd
 from sklearn.compose import ColumnTransformer
-from sklearn.discriminant_analysis import StandardScaler
+from sklearn.preprocessing import StandardScaler
 
 
 class data_scale_methods:
+    """A collection of methods for scaling numerical data."""
 
     def __init__(self):
-        """ "data scaling methods"""
+        """Initializes the data_scale_methods class."""
 
-    def standard_scale_method(self, X):
+    def standard_scale_method(self, X: pd.DataFrame) -> pd.DataFrame:
         """
-        Standardize data by subtracting the mean and dividing by the standard deviation.
-        This is done column-wise.
+        Standardizes features by removing the mean and scaling to unit variance.
 
-        Parameters
-        ----------
-        X : DataFrame
-            DataFrame to be standardized
+        This method applies scikit-learn's `StandardScaler` to all columns
+        of the input DataFrame while preserving the original index.
 
-        Returns
-        -------
-        X_scaled : DataFrame
-            Scaled DataFrame
+        Args:
+            X: The input DataFrame with numerical features to be scaled.
+
+        Returns:
+            A new DataFrame with the same columns and index as the input, but
+            with scaled values.
         """
-
-        # can add param dict method for split
-
         col_names = X.columns
+        original_index = X.index
+
         scaler = ColumnTransformer(
-            # name of transformer
-            # instance of transformer
-            # column names to be transformed
-            [
+            transformers=[
                 (
-                    "standard scaler",
+                    "standard_scaler",
                     StandardScaler(),
-                    list(X.columns),
+                    col_names,
                 )
             ],
-            # what to do with the rest of the columns
             remainder="passthrough",
         )
-        X = scaler.fit_transform(X)
+        X_scaled_np = scaler.fit_transform(X)
 
-        X = pd.DataFrame(X, columns=col_names)
+        X = pd.DataFrame(X_scaled_np, columns=col_names, index=original_index)
 
         return X
