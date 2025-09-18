@@ -75,4 +75,7 @@ jobs:
       - name: Run tests
         env:
           CUDA_VISIBLE_DEVICES: ""
-        run: ga_env/bin/python -m pytest -v -s notebooks/test_notebook.py
+        run: |
+          # Execute the example notebook with an increased timeout of 60 minutes (3600 seconds).
+          # The default is 30s, which is often too short for ML experiments.
+          ga_env/bin/jupyter nbconvert --to notebook --execute --ExecutePreprocessor.timeout=3600 notebooks/example_usage.ipynb --output notebooks/executed_example_usage.ipynb
