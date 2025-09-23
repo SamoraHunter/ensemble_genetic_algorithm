@@ -58,7 +58,11 @@ class GA_results_explorer:
         # Use the feature arrays as a map on the original feature names
         self.df["feature_names"] = self.df["feature_arrays"].apply(
             lambda x: [
-                [f for i, f in enumerate(self.original_feature_names) if arr[i] == 1]
+                [
+                    f
+                    for i, f in enumerate(self.original_feature_names)
+                    if i < len(arr) and arr[i] == 1
+                ]
                 for arr in x
             ]
         )
