@@ -47,6 +47,7 @@ dependencies = [
     "xgboost",
     "pyarrow",
     "tqdm",
+    "PyYAML",
 ]
 
 [project.optional-dependencies]
@@ -54,8 +55,8 @@ dependencies = [
 dev = [
     "pytest",
     "pre-commit",
-    "nbformat",
-    "nbconvert",
+    "nbformat", 
+    "nbconvert", 
     "sphinx",
     "sphinx-rtd-theme",
     "myst-parser",

@@ -1,0 +1,112 @@
+# --------------------------------------------------------------------------
+# Example Configuration for the Ensemble Genetic Algorithm Project
+#
+# To use this file, copy it to `config.yml` in your project's root
+# directory and uncomment/edit the parameters you wish to change.
+# Any parameter not specified here will use its hardcoded default value.
+# --------------------------------------------------------------------------
+
+# --- Global Parameters ---
+# These settings control the overall behavior of the experiment.
+# Corresponds to attributes in `ml_grid.util.global_params.global_parameters`.
+global_params:
+  # Verbosity level for console output (0-9).
+  # Default: 3
+  # verbose: 3
+
+  # If True, raises exceptions during grid search; otherwise, logs them.
+  # Default: True
+  # error_raise: True
+
+  # Number of parallel jobs for grid search. -1 uses all available cores.
+  # Default: 4
+  # grid_n_jobs: 8
+
+  # Time in seconds after which a warning is printed for long model training times.
+  # Default: 60
+  # model_train_time_warning_threshold: 120
+
+  # Number of generations without improvement before the GA stops early.
+  # Default: 5
+  # gen_eval_score_threshold_early_stopping: 10
+
+  # If True, saves trained base learners to disk. Can use a lot of space.
+  # This is also configurable per-run in `grid_params`.
+  # Default: True
+  # store_base_learners: True
+
+# --- Genetic Algorithm Parameters ---
+# These control the evolution process itself (population size, generations, etc.).
+# Corresponds to attributes in `ml_grid.util.grid_param_space_ga.Grid`.
+ga_params:
+  # List of possible values for the number of base learners in an ensemble.
+  # Default: [4, 8, 16, 32, 64]
+  # nb_params: [8, 16]
+
+  # List of possible values for the population size.
+  # Default: [32, 64]
+  # pop_params: [50]
+
+  # List of possible values for the number of generations.
+  # Default: [128]
+  # g_params: [100]
+
+# --- Grid Search Hyperparameters ---
+# This section defines the search space for each experiment iteration.
+# Corresponds to the `grid` dictionary in `ml_grid.util.grid_param_space_ga.Grid`.
+grid_params:
+  # --- Ensemble & Preprocessing Parameters ---
+  # Methods for weighting base learner predictions. Options: "ann", "de", "unweighted".
+  # Default: ["ann", "de", "unweighted"]
+  # weighted: ["unweighted"]
+
+  # Whether to reuse stored base learners from previous runs.
+  # Default: [False]
+  # use_stored_base_learners: [True]
+
+  # Whether to store newly trained base learners to disk for this run.
+  # Default: [False]
+  # store_base_learners: [True]
+
+  # Resampling methods for imbalanced data. Options: "undersample", "oversample", None.
+  # Default: ["undersample", "oversample", None]
+  # resample: ["undersample", None]
+
+  # Whether to scale features.
+  # Default: [True]
+  # scale: [True, False]
+
+  # --- Feature Selection Parameters ---
+  # Correlation threshold for removing columns.
+  # Default: [0.9, 0.99]
+  # corr: [0.95]
+
+  # Percentage of missing data allowed in a column before it's removed.
+  # Default: [99.9, 99.8, 99.7]
+  # percent_missing: [99.0]
+
+  # --- Genetic Algorithm Hyperparameters (per grid search run) ---
+  # Crossover probability.
+  # Default: [0.5, 0.75, 0.25]
+  # cxpb: [0.8]
+
+  # Mutation probability.
+  # Default: [0.2, 0.4, 0.8]
+  # mutpb: [0.15]
+
+  # Probability of individual gene mutation.
+  # Default: [0.025, 0.05, 0.075]
+  # indpb: [0.05]
+
+  # Tournament size for selection.
+  # Default: [3, 6, 9]
+  # t_size: [5]
+
+  # --- Data Feature Selection ---
+  # This nested dictionary controls which groups of features are included in the search space.
+  # You can override specific feature groups.
+  # data:
+  #   - bloods: [True] # Example: Force inclusion of bloods data
+  #     diagnostic_order: [False] # Example: Force exclusion of diagnostic orders
+  #     # Default for bloods is [True, False]
+  #     # Default for diagnostic_order is [True, False]

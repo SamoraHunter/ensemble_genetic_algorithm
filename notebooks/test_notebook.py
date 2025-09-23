@@ -17,6 +17,7 @@ def test_notebook():
     # This tells the executor to run the notebook from within its own directory.
     ep = ExecutePreprocessor(
         timeout=5400,
+        startup_timeout=300,  # Increase startup timeout to 5 minutes
         kernel_name="ga_env",
         cwd=notebook_dir  
     )

@@ -2,6 +2,7 @@ import itertools as it
 import random
 from typing import Dict, List, Iterator, Any
 
+from ml_grid.util.config import load_config, merge_configs
 from ml_grid.util.global_params import global_parameters
 
 
@@ -44,7 +45,7 @@ class Grid:
     g_params: List[int]
     """A list of possible values for the number of generations in the genetic algorithm."""
 
-    def __init__(self, sample_n: int = 1000, test_grid: bool = False):
+    def __init__(self, sample_n: int = 1000, test_grid: bool = False, config_path: str = "config.yml"):
         """Initializes the Grid class.
 
         Args:
@@ -52,6 +53,8 @@ class Grid:
                 Defaults to 1000.
             test_grid: If True, uses a smaller grid for quick testing.
                 Defaults to False.
+            config_path (str, optional): Path to a custom YAML config file.
+                Defaults to "config.yml".
         """
 
         self.test_grid = test_grid
@@ -65,15 +68,14 @@ class Grid:
         if self.verbose >= 1:
             print(f"Feature space slice sample_n {self.sample_n}")
 
-        # Default grid
-        # User can update grid dictionary on the object
-        self.grid = {
+        # 1. Define default grid
+        default_grid = {
             "weighted": ["ann", "de", "unweighted"],  # Weighted algorithms to consider
             # "weighted": ["unweighted"],  # An alternative option for weighted algorithms
             "use_stored_base_learners": [
                 False
             ],  # Whether to reuse stored base learners
-            "store_base_learners": [False],  # Whether to store base learners
+            "store_base_learners": [False],  # Per-run override for storing base learners
             "resample": ["undersample", "oversample", None],  # Resampling methods
             "scale": [True],  # Whether to scale features
             "n_features": ["all"],  # Number of features to use
@@ -134,6 +136,15 @@ class Grid:
             ],
         }
 
+        # 2. Load and merge from config file
+        user_config = load_config(config_path)
+        if user_config:
+            grid_config = user_config.get("grid_params", {})
+            self.grid = merge_configs(default_grid, grid_config)
+        else:
+            self.grid = default_grid
+
+
         def c_prod(d: Dict) -> Iterator[Dict]:
             """Recursively generates all combinations of hyperparameter settings.
 
@@ -174,13 +185,20 @@ class Grid:
 
         # Parameters for the number of parameters for each individual in the population
 
-        self.nb_params = [4, 8, 16, 32]
+        self.nb_params = [4, 8, 16, 32, 64]
 
         # Parameters for the population size
-        self.pop_params = [32, 64]
+        self.pop_params = [32, 64, 128]
 
         # Parameters for the number of generations
         self.g_params = [128]
+
+        # Override GA parameters from config file if present
+        if user_config:
+            ga_params_config = user_config.get("ga_params", {})
+            self.nb_params = ga_params_config.get("nb_params", self.nb_params)
+            self.pop_params = ga_params_config.get("pop_params", self.pop_params)
+            self.g_params = ga_params_config.get("g_params", self.g_params)
 
         # If test grid is enabled, override parameters for testing purposes
         if self.test_grid:

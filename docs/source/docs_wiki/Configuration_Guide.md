@@ -1,22 +1,50 @@
 # Configuration Guide
 
-This guide provides a comprehensive overview of the key configuration parameters you can adjust to customize your experiments with the **Ensemble Genetic Algorithm** project.
+This guide explains how to customize your experiments. The recommended way to configure the project is by creating a `config.yml` file in your project's root directory. This method is safe from being overwritten by package updates and keeps all your settings in one place.
 
 ---
 
-## Overview
+## The `config.yml` File
 
-Configuration is split into three main areas:
+The project uses a layered configuration system. By creating a `config.yml` file, you can override the default parameters.
 
-1.  **Experiment Script Settings**: High-level settings in your main script (e.g., `notebooks/example_usage.ipynb`).
-2.  **Data Pipeline Settings**: Parameters passed to the `ml_grid.pipeline.data.pipe` function.
-3.  **Genetic Algorithm Hyperparameters**: The grid search space for the GA, defined in `ml_grid/util/grid_param_space_ga.py`.
+1.  **Create the File**: Copy the `config.yml.example` from the repository root to a new file named `config.yml`.
+2.  **Edit**: Uncomment and change the parameters you wish to modify. Any parameter you don't specify will use its default value.
+
+The `config.yml` is split into three main sections:
+
+### 1. `global_params`
+These settings control the overall behavior of the experiment.
+```yaml
+global_params:
+  verbose: 2
+  grid_n_jobs: 8
+  store_base_learners: True
+```
+
+### 2. `ga_params`
+These control the core genetic algorithm process.
+```yaml
+ga_params:
+  nb_params: [8, 16]       # Num base learners per ensemble
+  pop_params: [50]         # Population size
+  g_params: [100]          # Num generations
+```
+
+### 3. `grid_params`
+This defines the hyperparameter search space for each grid search iteration. You can override entire lists or specific values.
+```yaml
+grid_params:
+  weighted: ["unweighted"] # Only use unweighted for a faster run
+  resample: ["undersample", None]
+  corr: [0.95]
+```
 
 ---
 
-## 1. Experiment Script Settings
+## Programmatic Configuration (In Scripts/Notebooks)
 
-These are the primary parameters you will change in `notebooks/example_usage.ipynb` for each experiment.
+For quick tests or dynamic settings, you can still configure the project directly in your Python scripts.
  
 -   `input_csv_path`: **(Required)** The file path to your input dataset. This must be a CSV file that meets the Project Dataset Requirements.
 -   `n_iter`: The number of grid search iterations to perform. Each iteration runs the genetic algorithm with a different combination of hyperparameters from the GA search space.
@@ -24,39 +52,9 @@ These are the primary parameters you will change in `notebooks/example_usage.ipy
 -   `base_project_dir_global`: The root directory where all experiment results will be saved. A unique timestamped subdirectory is created here for each run.
 
 ---
-
-## 2. Data Pipeline Settings
-
-These parameters are passed when creating the `ml_grid_object` inside the main experiment loop. They control data sampling and processing for each grid search iteration.
-
--   `test_sample_n`: The number of samples to hold out for the final test set. These samples are not used during the GA training/validation process.
--   `column_sample_n`: The number of feature columns to randomly sample from the dataset for this specific grid search iteration. If set to `0` or `None`, all columns are used. This is a powerful way to explore different feature subsets.
--   `testing`: A boolean flag. When `True`, it uses a smaller, predefined test grid of hyperparameters, which is useful for debugging and rapid testing. Set to `False` for full-scale experiments.
--   `multiprocessing_ensemble`: A boolean flag to enable or disable multiprocessing for certain ensemble methods. Can speed up evaluation but may consume more memory.
-
----
-
-## 3. Genetic Algorithm Hyperparameter Grid
-
-The search space for the genetic algorithm's own hyperparameters is defined in `ml_grid/util/grid_param_space_ga.py`. By modifying the `Grid` class in this file, you can control the range of GA settings that the experiment will explore.
-
-Key parameters in the grid (`grid_param_space_ga.Grid`) include:
-
--   `population_size`: A list of possible population sizes for the GA (e.g., `[50, 100]`). The population is the set of candidate ensembles in each generation.
--   `n_generations`: A list of possible values for the maximum number of generations the GA will run (e.g., `[50, 100]`).
--   `mutation_rate`: A list of probabilities for an individual (ensemble) to undergo mutation (e.g., `[0.1, 0.2]`).
--   `crossover_rate`: A list of probabilities for two individuals to perform crossover to create offspring (e.g., `[0.8, 0.9]`).
--   `tournament_size`: The number of individuals to select for a tournament when choosing parents for the next generation.
--   `ensemble_weighting_method`: A list of methods to weigh the predictions of base learners within an ensemble. Options typically include:
-    -   `'unweighted'`: Simple averaging.
-    -   `'de'`: Differential Evolution to find optimal weights.
-    -   `'ann'`: An Artificial Neural Network to learn weights.
--   `store_base_learners`: A boolean. If `True`, all trained base learners are saved to disk, which can consume significant space but allows for detailed post-hoc analysis or reuse.
-
-### How to Customize the GA Grid
-
-To change the search space, you can directly edit the lists within the `grid_param_space_ga.py` file. For example, to only test a population size of 200, you would change:
-
+## Advanced: Direct Source Code Modification (Not Recommended)
+While you can still edit the default parameters in `ml_grid/util/global_params.py` and `ml_grid/util/grid_param_space_ga.py`, this is **not recommended**. Your changes will be lost when you update the package. Always prefer using a `config.yml` file.
+For example, to change the default population size, you would previously have edited `grid_param_space_ga.py`:
 ```python
 # Before
 self.pop_params = [50, 100, 150]

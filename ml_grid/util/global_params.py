@@ -1,6 +1,7 @@
 from sklearn.metrics import make_scorer, roc_auc_score
-from typing import Dict
+from typing import Dict, Any
 
+from ml_grid.util.config import load_config
 
 class global_parameters:
     """A centralized configuration class for global project parameters.
@@ -53,19 +54,24 @@ class global_parameters:
     gen_eval_score_threshold_early_stopping: int
     """The number of generations without improvement before the genetic algorithm stops early."""
 
-    def __init__(self, debug_level: int = 0, knn_n_jobs: int = -1):
+    def __init__(self, config_path: str = "config.yml", **kwargs):
         """Initializes the global_parameters class.
 
+        It follows a layered configuration approach:
+        1. Hardcoded defaults.
+        2. Values from a YAML config file (if provided).
+        3. Runtime keyword argument overrides.
+
         Args:
-            debug_level (int): Debug level, 0 is off, 1 is low, 2 is medium,
-                3 is high. Defaults to 0.
-            knn_n_jobs (int): Number of jobs to use for KNN models. -1 means
-                using all available processors. Defaults to -1.
+            config_path (str, optional): Path to a custom YAML config file.
+                Defaults to "config.yml".
+            **kwargs: Keyword arguments to override any parameter at runtime.
         """
 
-        self.debug_level = debug_level
+        # 1. Set hardcoded defaults
+        self.debug_level = 0
 
-        self.knn_n_jobs = knn_n_jobs
+        self.knn_n_jobs = -1
 
         self.verbose = 3
 
@@ -93,3 +99,20 @@ class global_parameters:
         self.gen_eval_score_threshold_early_stopping = 5
 
         self.log_store_dataframe_path = "log_store_dataframe"
+
+        self.store_base_learners = True
+
+        # 2. Load and merge from config file
+        user_config = load_config(config_path)
+        if user_config:
+            global_params_config = user_config.get("global_params", {})
+            for key, value in global_params_config.items():
+                if hasattr(self, key):
+                    setattr(self, key, value)
+                else:
+                    print(f"WARNING: Unknown global parameter '{key}' in config file.")
+
+        # 3. Apply runtime keyword argument overrides
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
