@@ -13,11 +13,21 @@ authors = [
     { name = "Samora Hunter", email = "samorahunter@hotmail.co.uk" },
 ]
 classifiers = [
+    "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Operating System :: OS Independent",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
+
+[project.urls]
+Homepage = "https://github.com/SamoraHunter/ensemble_genetic_algorithm"
+Documentation = "https://ensemble-genetic-algorithm.readthedocs.io/en/latest/"
+Repository = "https://github.com/SamoraHunter/ensemble_genetic_algorithm"
 
 # Core dependencies required for the project to run
 dependencies = [
@@ -39,10 +49,8 @@ dependencies = [
     "scipy",
     "scoop",
     "seaborn",
-    "session-info",
     "statsmodels",
     "tabulate",
-    "torch==2.0.1",
     "torchmetrics",
     "xgboost",
     "pyarrow",
@@ -56,6 +64,7 @@ dev = [
     "pytest",
     "pre-commit",
     "nbformat", 
+    "session-info",
     "nbconvert", 
     "sphinx",
     "sphinx-rtd-theme",
@@ -64,7 +73,9 @@ dev = [
 ]
 
 # Dependencies for GPU support (e.g., CUDA-enabled libraries)
-gpu = []
+gpu = [
+    # Torch should be installed manually following instructions from pytorch.org
+]
 
 # 'all' combines dev and gpu dependencies
 all = [

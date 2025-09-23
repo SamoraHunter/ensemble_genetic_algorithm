@@ -10,7 +10,7 @@
 - [Description](#description)
 - [Key Features](#key-features)
 - [Installation](#installation)
-- [Usage](#usage)
+- [Quickstart](#quickstart)
 - [Documentation](#-documentation)
 - [Contributing](#contributing)
 - [Diagrams](#diagrams)
@@ -18,20 +18,36 @@
 - [Acknowledgments](#acknowledgments)
 
 ## Description
+
 This project provides a genetic algorithm designed to evolve an optimal ensemble of machine learning classifiers for binary classification tasks. It applies a grid search over the feature space and genetic algorithm hyperparameters to find the best-performing model ensemble.
+
+## Key Features
+
+-   **Evolve Ensembles**: Uses a genetic algorithm to automatically find the best combination of models.
+-   **Extensible Model Library**: Easily add any scikit-learn compatible classifier.
+-   **Comprehensive Search**: Performs a grid search over data preprocessing, feature selection, and GA hyperparameters.
+-   **Advanced Weighting**: Includes methods like Differential Evolution and ANNs to find optimal ensemble weights.
+-   **Model Caching**: Re-use trained base learners to dramatically speed up subsequent experiments.
 
 ## Installation
 
-This project can be installed using the provided setup script or manually.
+The recommended way to install the package is from PyPI:
+
+```bash
+pip install ensemble-genetic-algorithm
+```
+
+**Note on PyTorch**: This package requires PyTorch. For GPU support, it is highly recommended that you first install PyTorch manually by following the official instructions at [pytorch.org](https://pytorch.org/get-started/locally/) to ensure the correct version for your CUDA toolkit is installed.
+
+### Developer Installation
+
+If you wish to contribute to the project, you can install it from a cloned repository. This method gives you access to the `setup.sh` script and development dependencies.
 
 ### Prerequisites
 
 -   **Python**: Version 3.10 or higher.
 -   **Git**: For cloning the repository.
 -   **(Optional) NVIDIA GPU with CUDA**: For GPU-accelerated computations.
- 
-### Recommended Method: Setup Script
-The easiest way to get started is to use the provided setup script. It automates the creation of a virtual environment and installation of all dependencies.
 
 1.  **Clone the repository:**
     ```bash
@@ -39,8 +55,8 @@ The easiest way to get started is to use the provided setup script. It automates
     cd ensemble_genetic_algorithm
     ```
 
-2.  **Run the setup script:**
-    Make the script executable and then run it.
+2.  **(Optional) Run the setup script:**
+    The `setup.sh` script automates the creation of a virtual environment and dependency installation.
     ```bash
     chmod +x setup.sh
     ./setup.sh

@@ -46,7 +46,7 @@ This happens because some models (like scikit-learn's `LogisticRegression` or `S
 **Solutions:**
 1.  **Perform Imputation**: Preprocess your dataset to impute (fill in) missing values before running the experiment.
 2.  **Adjust `percent_missing`**: In `grid_param_space_ga.py`, lower the `percent_missing` threshold (e.g., from `99.8` to `90.0`) to be more aggressive about removing columns that have any missing data.
-3.  **Prune `modelFuncList`**: Remove the specific model generator that is causing the error from the `modelFuncList` in your experiment script.
+3.  **Prune `modelFuncList`**: Remove the specific model generator that is causing the error from the `model_class_list` in your experiment script.
 
 ---
 
@@ -54,15 +54,17 @@ This happens because some models (like scikit-learn's `LogisticRegression` or `S
 
 #### Problem: The experiment runs out of memory (`MemoryError`).
 
+**Note**: Most performance parameters are defined in `ml_grid/util/grid_param_space_ga.py` and can be overridden with a `config.yml` file.
+
 **Solutions:**
-1.  **Reduce Population Size**: The most effective solution is often to reduce the `pop_params` (population size) in `grid_param_space_ga.py`.
+1.  **Reduce Population Size**: The most effective solution is often to reduce the `pop_params` (population size) in your configuration.
 2.  **Reduce Data Size**: For testing, use a smaller `test_sample_n` or `column_sample_n` in the `ml_grid.pipeline.data.pipe` call.
 3.  **Disable Model Caching**: If `store_base_learners` is `True`, the run can consume a lot of disk space and memory. Set it to `False` if you are memory-constrained.
 
 #### Problem: The experiment is running very slowly.
 
 **Solutions:**
-1.  **Start Small**: For initial runs, set `n_iter` to a low number (1-3) and use `testing=True`.
+1.  **Start Small**: For initial runs, set `n_iter` to a low number (e.g., 1-3) and use `testing=True` in your experiment script.
 2.  **Use Model Caching**: For subsequent runs, use the model caching feature (`use_stored_base_learners=True`) to avoid retraining models. See Best Practices.
 3.  **Simplify Weighting**: The `ensemble_weighting_method` has a huge impact. Use `'unweighted'` for fast runs. `'de'` and `'ann'` are much slower.
 
@@ -71,4 +73,4 @@ This happens because some models (like scikit-learn's `LogisticRegression` or `S
 **Solutions:**
 1.  **Increase Mutation/Crossover**: The search might be stuck. Try increasing the `mutpb` (mutation rate) or `cxpb` (crossover rate) in `grid_param_space_ga.py` to encourage more exploration.
 2.  **Increase Population Size**: A larger population (`pop_params`) can introduce more diversity, helping the algorithm escape local optima.
-3.  **Check Model Suitability**: The base learners in your `modelFuncList` may not be a good fit for your data. Try adding or swapping in different types of models.
+3.  **Check Model Suitability**: The base learners in your `model_class_list` may not be a good fit for your data. Try adding or swapping in different types of models.
