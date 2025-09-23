@@ -105,7 +105,7 @@ class pipe:
     all_df_columns: List[str]
     """A list of all column names from the initial raw DataFrame."""
 
-    orignal_feature_names: List[str]
+    original_feature_names: List[str]
     """A copy of the initial column names, preserved for reference."""
 
     pertubation_columns: List[str]
@@ -257,7 +257,7 @@ class pipe:
 
         self.all_df_columns = list(self.df.columns)
 
-        self.orignal_feature_names = self.all_df_columns.copy()
+        self.original_feature_names = self.all_df_columns.copy()
 
         self.pertubation_columns, self.drop_list = get_pertubation_columns(
             all_df_columns=self.all_df_columns,
@@ -333,9 +333,9 @@ class pipe:
             # Add two random features if list still empty
             if not self.final_column_list:
                 print("Warning no feature columns retained, selecting two at random")
-                final_column_list = []
-                final_column_list.append(random.choice(self.orignal_feature_names))
-                final_column_list.append(random.choice(self.orignal_feature_names))
+                self.final_column_list = []
+                self.final_column_list.append(random.choice(self.original_feature_names))
+                self.final_column_list.append(random.choice(self.original_feature_names))
 
         # Ensure we still have at least 1 feature
         if not self.final_column_list:

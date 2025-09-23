@@ -161,7 +161,7 @@ def evaluate_weighted_ensemble_auc(
 
     file_path = ml_grid_object.logging_paths_obj.log_folder_path
 
-    orignal_feature_names = ml_grid_object.orignal_feature_names
+    original_feature_names = ml_grid_object.original_feature_names
 
     log_store_dataframe_path = global_params.log_store_dataframe_path
 
@@ -227,9 +227,9 @@ def evaluate_weighted_ensemble_auc(
         mcc_score_list.append(individual[0][i][0])
 
     # orignal_feature_names
-
+    
     feature_map_vector = []
-    for col in orignal_feature_names:
+    for col in original_feature_names:
         if col in feature_count_list:
             feature_map_vector.append(1)
         else:
