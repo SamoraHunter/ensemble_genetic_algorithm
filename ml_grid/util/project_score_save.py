@@ -294,7 +294,7 @@ class project_score_save_class:
             current_f = list(self.X_test.columns)
             current_f_vector = []
             f_list = []
-            for elem in ml_grid_object.orignal_feature_names:
+            for elem in ml_grid_object.original_feature_names:
                 if elem in current_f:
                     current_f_vector.append(1)
                 else:
@@ -343,7 +343,7 @@ class project_score_save_class:
             #     current_f = current_algorithm[0][iii][2]
 
             #     current_f_vector = []
-            #     for elem in ml_grid_object.orignal_feature_names:
+            #     for elem in ml_grid_object.original_feature_names:
             #         if elem in current_f:
             #             current_f_vector.append(1)
             #         else:
