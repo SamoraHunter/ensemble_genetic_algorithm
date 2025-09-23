@@ -72,6 +72,12 @@ jobs:
           # Use the --cpu flag for CI, which matches the intent of the original steps
           ./setup.sh --cpu
 
+      - name: Run unit tests with pytest
+        run: |
+          # Activate the environment created by the setup script
+          source ga_env/bin/activate
+          pytest
+
       - name: Run tests
         env:
           CUDA_VISIBLE_DEVICES: ""
