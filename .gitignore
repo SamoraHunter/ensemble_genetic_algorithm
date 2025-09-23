@@ -141,3 +141,5 @@ venv.bak/
 # Temporary files
 *.swp
 *~
+docs/_build/
+docs/source/*.rst
