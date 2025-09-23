@@ -131,6 +131,10 @@ if [ ! -f "pyproject.toml" ]; then
     print_error_and_exit "pyproject.toml not found. Please make sure it exists in the current directory."
 fi
 
+# Ensure tomli is installed to parse pyproject.toml
+print_info "Ensuring tomli is available..."
+python -m pip install tomli
+
 # Check if the package is already installed in editable mode
 PROJECT_NAME=$(python -c "import tomli; f = open('pyproject.toml', 'rb'); config = tomli.load(f); print(config['project']['name'])")
 if [ "$FORCE_RECREATE" = false ] && python -c "import sys, pkg_resources; sys.exit(0) if '$PROJECT_NAME' in {dist.project_name for dist in pkg_resources.working_set if dist.location == '$PWD'} else sys.exit(1)" &> /dev/null; then
