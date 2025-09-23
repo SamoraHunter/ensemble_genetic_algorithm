@@ -7,33 +7,18 @@
 
 # Table of Contents
 
-- [Ensemble Genetic Algorithm](#ensemble-genetic-algorithm)
-  - [Description](#description)
-  - [Installation](#installation)
-  - [Project Dataset requirements](#project-dataset-requirements)
-  - [Environment Information](#environment-information)
-  - [Usage](#usage)
-    - [Example Configuration](#example-configuration)
-  - [📘 FAQ / User Guide](#-faq--user-guide)
-  - [Diagrams](#diagrams)
-  - [License](#license)
+- [Description](#description)
+- [Key Features](#key-features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Documentation](#-documentation)
+- [Contributing](#contributing)
+- [Diagrams](#diagrams)
+- [License](#license)
+- [Acknowledgments](#acknowledgments)
 
-
-**Description**: Genetic algorithm to evolve a machine learning ensemble for binary classification.
-
-Prerequisites:
-Develop a data matrix d for a binary classification problem. See [pat2vec](https://github.com/SamoraHunter/pat2vec).
-
-Applies a grid search over featurespace and genetic algorithm hyperparameters to optimise for an ensemble of machine learning classifiers on a binary classification problem. 
-
--Extensible,  
-  -select base learners for inclusion
--Highly configurable
-  -Configure base learners 
--Flexible
-  -Framework can be extended for regression or multiclass classification
-
-**See appendix for in depth description**
+## Description
+This project provides a genetic algorithm designed to evolve an optimal ensemble of machine learning classifiers for binary classification tasks. It applies a grid search over the feature space and genetic algorithm hyperparameters to find the best-performing model ensemble.
 
 ## Installation
 
@@ -44,37 +29,9 @@ This project can be installed using the provided setup script or manually.
 -   **Python**: Version 3.10 or higher.
 -   **Git**: For cloning the repository.
 -   **(Optional) NVIDIA GPU with CUDA**: For GPU-accelerated computations.
-
-### Manual Installation
-
-If you prefer to set up the environment manually, you can follow these steps. This project uses `pyproject.toml` to manage dependencies.
-
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/SamoraHunter/ensemble_genetic_algorithm.git
-    cd ensemble_genetic_algorithm
-    ```
-
-2.  **Create and activate a virtual environment:**
-    It is highly recommended to use a virtual environment.
-    ```bash
-    python3 -m venv .venv
-    source .venv/bin/activate  # On Windows, use `.venv\Scripts\activate`
-    ```
-
-3.  **Install dependencies:**
-    Install the project and its dependencies using pip. The dependencies are defined in `pyproject.toml`.
-    ```bash
-    pip install .
-    ```
-    To install with optional dependencies for development (like testing tools), use:
-    ```bash
-    pip install .[dev]
-    ```
-
-### Using the Setup Script (Alternative)
-
-This project also includes a comprehensive setup script to automate the creation of a dedicated Python virtual environment and install all necessary dependencies.
+ 
+### Recommended Method: Setup Script
+The easiest way to get started is to use the provided setup script. It automates the creation of a virtual environment and installation of all dependencies.
 
 1.  **Clone the repository:**
     ```bash
@@ -88,9 +45,9 @@ This project also includes a comprehensive setup script to automate the creation
     chmod +x setup.sh
     ./setup.sh
     ```
-    This will create a virtual environment named `ga_env`, install the default dependencies from `pyproject.toml`, and set up a Jupyter kernel. The environment will be activated for your current terminal session.
+    This will create a virtual environment named `ga_env`, install the default dependencies, and set up a Jupyter kernel. The environment will be activated for your current terminal session.
 
-### Installation Options
+#### Installation Options
 
 The setup script supports different installation profiles. You can specify one using flags:
 
