@@ -551,7 +551,7 @@ class run:
 
                 best_str_converted = best.copy()
 
-                original_features = self.ml_grid_object.orignal_feature_names
+                original_features = self.ml_grid_object.original_feature_names
 
                 for i in range(0, len(best_str[0])):
                     best_str[0][i] = list(best_str[0][i])

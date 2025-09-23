@@ -370,7 +370,7 @@ class pipe:
 
         if self.verbose >= 1:
             print(
-                f"len final droplist: {len(self.drop_list)} \ {len(list(self.df.columns))}"
+                f"len final droplist: {len(self.drop_list)} / {len(list(self.df.columns))}"
             )
             # print('\n'.join(map(str, self.drop_list[0:5])))
 

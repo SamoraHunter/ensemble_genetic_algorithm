@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import pickle
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 
 from sklearn.linear_model import Perceptron, LogisticRegression
