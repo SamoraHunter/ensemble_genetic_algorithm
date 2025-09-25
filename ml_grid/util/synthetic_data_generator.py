@@ -1,10 +1,12 @@
 import random
 import string
+import logging
 
 import numpy as np
 import pandas as pd
 from typing import Dict, List
 from sklearn.datasets import make_classification
+logger = logging.getLogger("ensemble_ga")
 
 
 class SyntheticDataGenerator:
@@ -171,7 +173,7 @@ class SyntheticDataGenerator:
         }
 
     def _generate_feature_names(self, n: int) -> List[str]:
-        """Generates n feature names distributed among all defined categories."""
+        """Generates n feature names distributed among all defined categories.
 
         Args:
             n: The total number of feature names to generate.
@@ -240,12 +242,23 @@ class SyntheticDataGenerator:
         Returns:
             The DataFrame with duplicate columns added.
         """
-        if self.n_duplicate_cols > len(df.columns):
-            print("Warning: More duplicate columns requested than available features.")
+        if not df.columns.to_list():
+            logger.warning("Cannot add duplicate columns to a DataFrame with no columns.")
             return df
+
+        if self.n_duplicate_cols > len(df.columns):
+            logger.warning(
+                "More duplicate columns requested (%s) than available features (%s). Capping at available.",
+                self.n_duplicate_cols, len(df.columns)
+            )
+            self.n_duplicate_cols = len(df.columns)
+
+        if self.n_duplicate_cols == 0:
+            return df
+
         cols_to_dupe = random.sample(list(df.columns), self.n_duplicate_cols)
-        for col in cols_to_dupe:
-            df[f"duplicate_of_{col}"] = df[col]
+        for i, col in enumerate(cols_to_dupe):
+            df[f"duplicate_of_{col}_{i}"] = df[col]
         return df
 
     def _add_correlated_columns(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -257,13 +270,24 @@ class SyntheticDataGenerator:
         Returns:
             The DataFrame with correlated columns added.
         """
-        if self.n_correlated_pairs > len(df.columns):
-            print("Warning: More correlated columns requested than available features.")
+        if not df.columns.to_list():
+            logger.warning("Cannot add correlated columns to a DataFrame with no columns.")
             return df
+
+        if self.n_correlated_pairs > len(df.columns):
+            logger.warning(
+                "More correlated columns requested (%s) than available features (%s). Capping at available.",
+                self.n_correlated_pairs, len(df.columns)
+            )
+            self.n_correlated_pairs = len(df.columns)
+
+        if self.n_correlated_pairs == 0:
+            return df
+
         cols_to_corrupt = random.sample(list(df.columns), self.n_correlated_pairs)
-        for col in cols_to_corrupt:
+        for i, col in enumerate(cols_to_corrupt):
             noise = np.random.normal(0, 0.1, size=self.n_samples)
-            df[f"correlated_to_{col}"] = df[col] * 0.9 + noise
+            df[f"correlated_to_{col}_{i}"] = df[col] * 0.9 + noise
         return df
 
     def _add_categorical_columns(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -300,7 +324,7 @@ class SyntheticDataGenerator:
             mean_val = df_copy[col].mean()
             df_copy[col].fillna(mean_val, inplace=True)
 
-        print(f"    > Imputed NaNs in {len(numeric_cols)} numeric columns.")
+        logger.info("    > Imputed NaNs in %s numeric columns.", len(numeric_cols))
         return df_copy
 
     def generate_data(self) -> pd.DataFrame:
@@ -311,22 +335,22 @@ class SyntheticDataGenerator:
             pd.DataFrame: A DataFrame containing the synthetic data with all
                           the specified imperfections.
         """
-        print("--- Generating Synthetic Data with the following settings: ---")
-        print(f"  - n_samples: {self.n_samples}")
-        print(f"  - n_features: {self.n_features}")
-        print(f"  - n_informative: {self.n_informative}")
-        print(f"  - n_redundant: {self.n_redundant}")
-        print(f"  - class_sep: {self.class_sep}")
-        print(f"  - missing_pct: {self.missing_pct}")
-        print(f"  - n_constant_cols: {self.n_constant_cols}")
-        print(f"  - n_duplicate_cols: {self.n_duplicate_cols}")
-        print(f"  - n_correlated_pairs: {self.n_correlated_pairs}")
-        print(f"  - n_categorical_cols: {self.n_categorical_cols}")
-        print(f"  - random_state: {self.random_state}")
-        print("-------------------------------------------------------------")
+        logger.info("--- Generating Synthetic Data with the following settings: ---")
+        logger.info("  - n_samples: %s", self.n_samples)
+        logger.info("  - n_features: %s", self.n_features)
+        logger.info("  - n_informative: %s", self.n_informative)
+        logger.info("  - n_redundant: %s", self.n_redundant)
+        logger.info("  - class_sep: %s", self.class_sep)
+        logger.info("  - missing_pct: %s", self.missing_pct)
+        logger.info("  - n_constant_cols: %s", self.n_constant_cols)
+        logger.info("  - n_duplicate_cols: %s", self.n_duplicate_cols)
+        logger.info("  - n_correlated_pairs: %s", self.n_correlated_pairs)
+        logger.info("  - n_categorical_cols: %s", self.n_categorical_cols)
+        logger.info("  - random_state: %s", self.random_state)
+        logger.info("-------------------------------------------------------------")
 
         # 1. Generate base data with a clear signal
-        print(f"Step 1: Generating base data with {self.n_features} features...")
+        logger.info("Step 1: Generating base data with %s features...", self.n_features)
         X, y = make_classification(
             n_samples=self.n_samples,
             n_features=self.n_features,
@@ -346,31 +370,31 @@ class SyntheticDataGenerator:
         df = pd.DataFrame(X, columns=feature_names)
 
         # 3. Introduce imperfections
-        print("Step 2: Introducing data quality issues...")
+        logger.info("Step 2: Introducing data quality issues...")
         df = self._add_constant_columns(df)
         df = self._add_duplicate_columns(df)
         df = self._add_correlated_columns(df)
         df = self._add_categorical_columns(df)
 
         # 4. Introduce missing values across the entire dataset
-        print("Step 3: Introducing missing values...")
+        logger.info("Step 3: Introducing missing values...")
         df = self._introduce_missing_values(df)
 
         # 5. Mean impute numeric columns, leaving categorical NaNs for the pipeline to handle
-        print("Step 4: Mean-imputing numeric columns...")
+        logger.info("Step 4: Mean-imputing numeric columns...")
         df = self._impute_missing_values(df)
 
         # 6. Add outcome variable
         df[self.outcome_name] = y
 
         # 7. Shuffle columns to make it less obvious which are "good" or "bad"
-        print("Step 5: Finalizing and shuffling columns...")
+        logger.info("Step 5: Finalizing and shuffling columns...")
         final_cols = list(df.columns)
         final_cols.remove(self.outcome_name)
         random.shuffle(final_cols)
         df = df[[self.outcome_name] + final_cols]
 
-        print(f"--- Synthetic data generated successfully. Shape: {df.shape} ---")
+        logger.info("--- Synthetic data generated successfully. Shape: %s ---", df.shape)
         return df
 
 
@@ -394,13 +418,13 @@ class SyntheticDataGenerator:
 #     )
 #     synthetic_df = generator.generate_data()
 
-#     print("\nGenerated DataFrame head:")
-#     print(synthetic_df.head())
+#     logger.info("\nGenerated DataFrame head:")
+#     logger.info(synthetic_df.head())
 
-#     print("\nInfo:")
+#     logger.info("\nInfo:")
 #     synthetic_df.info()
 
 #     # Save to a CSV file for use in the pipeline
 #     output_path = "synthetic_data_for_testing.csv"
 #     synthetic_df.to_csv(output_path, index=False)
-#     print(f"\nData saved to '{output_path}'")
+#     logger.info("\nData saved to '%s'", output_path)

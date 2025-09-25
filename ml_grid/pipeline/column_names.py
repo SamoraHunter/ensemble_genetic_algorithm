@@ -5,9 +5,10 @@ from ml_grid.pipeline.data_plot_split import (
     plot_pie_chart_with_counts,
 )
 from ml_grid.util.global_params import global_parameters
-
+import logging
 
 from typing import Dict, List, Tuple
+logger = logging.getLogger("ensemble_ga")
 
 
 def filter_substring_list(string_list: List[str], substr_list: List[str]) -> List[str]:
@@ -299,7 +300,7 @@ def get_pertubation_columns(
     elif verbose >= 1:
         for i, lst in enumerate(candidate_feature_category_lists, start=1):
             var_name = [name for name, var in locals().items() if var is lst][0]
-            print(f"{var_name}: {len(lst)}")
+            logger.info("%s: %s", var_name, len(lst))
 
     pertubation_columns = []
 
@@ -360,7 +361,7 @@ def get_pertubation_columns(
     if local_param_dict.get("data").get("appointments") == True:
         pertubation_columns.extend(appointments_list)
 
-    print(f"local_param_dict data perturbation: \n {local_param_dict.get('data')}")
+    logger.info("local_param_dict data perturbation: \n %s", local_param_dict.get('data'))
 
     if verbose >= 2:
         plot_dict_values(local_param_dict.get("data"))

@@ -1,5 +1,7 @@
 from typing import List
 from ml_grid.util import outcome_list
+import logging
+logger = logging.getLogger("ensemble_ga")
 
 
 def handle_outcome_list(drop_list: List[str], outcome_variable: str) -> List[str]:
@@ -19,7 +21,7 @@ def handle_outcome_list(drop_list: List[str], outcome_variable: str) -> List[str
     Returns:
         The updated list of columns to drop.
     """
-    print("Extending all outcome list on drop list")
+    logger.info("Extending all outcome list on drop list")
 
     outcome_object = outcome_list.OutcomeList()
 
@@ -30,9 +32,7 @@ def handle_outcome_list(drop_list: List[str], outcome_variable: str) -> List[str
     try:
         drop_list.remove(outcome_variable)
     except ValueError:
-        print(
-            f"Warning: Target outcome '{outcome_variable}' was not in the master outcome list to begin with."
-        )
+        logger.warning("Warning: Target outcome '%s' was not in the master outcome list to begin with.", outcome_variable)
         pass
 
     return drop_list

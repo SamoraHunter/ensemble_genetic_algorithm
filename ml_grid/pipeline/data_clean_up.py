@@ -1,8 +1,10 @@
 import re
+import logging
 
 import pandas as pd
 
 from ml_grid.util.global_params import global_parameters
+logger = logging.getLogger("ensemble_ga")
 
 
 class clean_up_class:
@@ -39,7 +41,7 @@ class clean_up_class:
 
         try:
             if self.verbose > 1:
-                print("dropping duplicated columns")
+                logger.debug("dropping duplicated columns")
 
             assert X is not None, "Null pointer exception: X cannot be None."
 
@@ -48,11 +50,11 @@ class clean_up_class:
             assert X is not None, "Null pointer exception: X became None after dropping duplicated columns."
 
         except AssertionError as e:
-            print(str(e))
+            logger.error(str(e))
             raise
 
         except Exception as e:
-            print(f"Unhandled exception in handle_duplicated_columns: {e}")
+            logger.error("Unhandled exception in handle_duplicated_columns: %s", e)
             raise
 
         return X
@@ -67,10 +69,10 @@ class clean_up_class:
             X: The DataFrame to screen.
         """
         if self.verbose > 1:
-            print("Screening for non float data types:")
+            logger.debug("Screening for non float data types:")
             for col in X.columns:
                 if X[col].dtype != int and X[col].dtype != float:
-                    print(col)
+                    logger.debug(col)
 
     def handle_column_names(self, X: pd.DataFrame) -> pd.DataFrame:
         """Sanitizes DataFrame column names for XGBoost compatibility.

@@ -1,5 +1,6 @@
 from ml_grid.pipeline.data_feature_methods import feature_methods
 from typing import Any, Tuple
+import logging
 import pandas as pd
 
 # rename this class
@@ -12,6 +13,7 @@ class feature_importance_methods:
     defined in `feature_methods`. It selects features based on the method
     specified in the `ml_grid_object`'s configuration.
     """
+    logger = logging.getLogger("ensemble_ga")
 
     def __init__(self):
         """Initializes the feature_importance_methods class."""
@@ -50,7 +52,7 @@ class feature_importance_methods:
 
         if feature_method == "anova" or feature_method == None:
 
-            print("feature_method ANOVA")
+            self.logger.info("feature_method ANOVA")
 
             features = feature_methods.getNfeaturesANOVAF(
                 self, n=target_n_features, X_train=X_train, y_train=y_train
@@ -58,13 +60,13 @@ class feature_importance_methods:
 
         elif feature_method == "markov_blanket":
 
-            print("feature method Markov")
+            self.logger.info("feature method Markov")
 
             features = feature_methods.getNFeaturesMarkovBlanket(
                 self, n=target_n_features, X_train=X_train, y_train=y_train
             )
 
-        print(f"target_n_features: {target_n_features}")
+        self.logger.info("target_n_features: %s", target_n_features)
 
         X_train = X_train[features]
 

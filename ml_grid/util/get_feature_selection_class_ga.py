@@ -1,5 +1,6 @@
 import random
 from operator import itemgetter
+import logging
 from typing import Any, List, Tuple
 
 import numpy as np
@@ -8,6 +9,7 @@ import sklearn
 from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
 from sklearn.feature_selection import f_classif
 from xgboost import XGBClassifier
+logger = logging.getLogger("ensemble_ga")
 
 
 class feature_selection_methods_class:
@@ -154,8 +156,8 @@ class feature_selection_methods_class:
             for elem in nFeatures:
                 finalColNames.append(elem[0])
         except Exception as e:
-            print(e)
-            print("Failed to get xgboost feature columns")
+            logger.error(e)
+            logger.error("Failed to get xgboost feature columns")
             raise e
 
         return finalColNames

@@ -1,10 +1,12 @@
 import datetime
 import gc
+import pathlib
 import itertools
 from typing import Any, Dict, List
 import os
 import pickle
 import random
+import logging
 import time
 import traceback
 
@@ -37,6 +39,8 @@ from ml_grid.util.grid_param_space_ga import Grid
 from ml_grid.util.project_score_save import project_score_save_class
 from sklearn import metrics
 from sklearn.model_selection import ParameterGrid
+
+logger = logging.getLogger("ensemble_ga")
 
 
 class run:
@@ -128,6 +132,13 @@ class run:
 
         self.log_folder_path = ml_grid_object.logging_paths_obj.log_folder_path
 
+        # --- Explicitly create logging directories to prevent race conditions ---
+        pathlib.Path(self.log_folder_path).mkdir(parents=True, exist_ok=True)
+        pathlib.Path(f"{self.log_folder_path}/progress_logs_scores/").mkdir(
+            parents=True, exist_ok=True
+        )
+        # --------------------------------------------------------------------
+
         self.global_param_str = self.ml_grid_object.logging_paths_obj.global_param_str
 
         self.additional_naming = self.ml_grid_object.logging_paths_obj.additional_naming
@@ -157,13 +168,13 @@ class run:
         gen_eval_score_threshold_early_stopping = 5
 
         if __name__ == "__main__":
-            grid = [self.nb_params, self.pop_params, self.g_params]
+            grid = [self.nb_params, self.pop_params, self.g_params]  # type: ignore
             param_grid = list(itertools.product(*grid))
-            print(param_grid)
+            logger.debug(param_grid)
             for elem in param_grid:
-                print(elem, elem[0] * elem[1], "model generation space")
-                print(elem, elem[0] * elem[2], "individual evaluation space")
-            print(len(param_grid))
+                logger.debug("%s %s model generation space", elem, elem[0] * elem[1])
+                logger.debug("%s %s individual evaluation space", elem, elem[0] * elem[2])
+            logger.debug(len(param_grid))
 
             prediction_array = None
 
@@ -171,7 +182,7 @@ class run:
             log_folder_path = f"log_{date}.txt"
 
             if self.verbose >= 2:
-                print(f"{len(self.model_class_list)} models loaded")
+                logger.info(f"{len(self.model_class_list)} models loaded")
 
         self.multiprocess = False
 
@@ -187,7 +198,7 @@ class run:
         )
 
         if self.verbose >= 2:
-            print(f"Passed main GA init")
+            logger.info("Passed main GA init")
 
     def execute(self) -> List[List]:
         """Executes the full genetic algorithm process for all GA parameter combinations.
@@ -205,7 +216,7 @@ class run:
             A list of errors encountered during the execution. Each item in the
             list contains the model implementation, the exception, and a traceback.
         """
-        print("Executing GA runs...")
+        logger.info("Executing GA runs...")
         self.model_error_list = []
 
         global_param_str = self.ml_grid_object.logging_paths_obj.global_param_str
@@ -221,11 +232,8 @@ class run:
         grid = [self.nb_params, self.pop_params, self.g_params]
 
         param_grid = list(itertools.product(*grid))
-        print(param_grid)
-        for elem in param_grid:
-            print(elem, elem[0] * elem[1], "model generation space")
-            print(elem, elem[0] * elem[2], "individual evaluation space")
-        print(len(param_grid))
+        logger.debug(param_grid)
+        logger.debug(len(param_grid))
 
         prediction_array = None
 
@@ -245,24 +253,17 @@ class run:
                 try:
                     clear_output(wait=True)
                 except Exception as e:
-                    print("failed to clear output before run", e)
+                    logger.warning("failed to clear output before run: %s", e)
 
-                print(
-                    "Evolving ensemble: ",
-                    "nb_val:",
-                    nb_val,
-                    "pop_val:",
-                    pop_val,
-                    "g_val:",
-                    g_val,
-                    "...",
+                logger.info(
+                    "Evolving ensemble: nb_val: %s, pop_val: %s, g_val: %s, ...", nb_val, pop_val, g_val
                 )
 
                 generation_progress_list = []
 
                 start = time.time()
 
-                print("Registering toolbox elements")
+                logger.info("Registering toolbox elements")
                 self.toolbox.register(
                     "ensembleGenerator",
                     ensembleGenerator,
@@ -296,17 +297,17 @@ class run:
                 start = time.time()
 
                 if self.ml_grid_object.verbose >= 11:
-                    print("self.toolbox.population pre evaluate", pop_val)
-                    print(self.toolbox.population)
+                    logger.debug("self.toolbox.population pre evaluate: %s", pop_val)
+                    logger.debug(self.toolbox.population)
 
-                print(f"Generate intial population n=={pop_val}")
+                logger.info("Generate intial population n==%s", pop_val)
                 pop = self.toolbox.population(n=pop_val)
 
                 if self.ml_grid_object.verbose >= 11:
-                    print("toolbox pre evaluate")
-                    print(self.toolbox)
-                    print(self.toolbox.evaluate)
-                    print(pop)
+                    logger.debug("toolbox pre evaluate")
+                    logger.debug(self.toolbox)
+                    logger.debug(self.toolbox.evaluate)
+                    logger.debug(pop)
 
                 # Evaluate the entire population
                 fitnesses = list(self.toolbox.map(self.toolbox.evaluate, pop))
@@ -325,8 +326,8 @@ class run:
                 fits = [ind.fitness.values[0] for ind in pop]
 
                 if self.ml_grid_object.verbose >= 11:
-                    print("fits")
-                    print(fits)
+                    logger.debug("fits")
+                    logger.debug(fits)
 
                 # Variable keeping track of the number of generations
                 g = 0
@@ -361,14 +362,14 @@ class run:
                     # A new generation
                     g = g + 1
                     pbar.update(1)
-                    print("\n -- Generation %i --" % g)
+                    logger.info("\n -- Generation %i --", g)
                     # Select the next generation individuals
-                    print("Selecting next generation individuals, ", len(pop))
+                    logger.info("Selecting next generation individuals, %s", len(pop))
                     offspring = self.toolbox.select(pop, len(pop))
                     # Clone the selected individuals
-                    print("Clone the selected individuals")
+                    logger.info("Clone the selected individuals")
                     offspring = list(self.toolbox.map(self.toolbox.clone, offspring))
-                    print("Apply crossover and mutation on the offspring")
+                    logger.info("Apply crossover and mutation on the offspring")
                     # Apply crossover and mutation on the offspring
                     for child1, child2 in zip(offspring[::2], offspring[1::2]):
                         if random.random() < CXPB:
@@ -376,7 +377,7 @@ class run:
                             del child1.fitness.values
                             del child2.fitness.values
                     counter = 0
-                    print("mutate")
+                    logger.info("mutate")
                     for mutant in offspring:
                         if random.random() < MUTPB:
                             # print(mutant[0][0])
@@ -392,7 +393,7 @@ class run:
                             # toolbox.mutate(mutant[0][0])
                             del mutant.fitness.values
                         counter = counter + 1
-                    print("Evaluate the individuals with an invalid fitness")
+                    logger.info("Evaluate the individuals with an invalid fitness")
                     # Evaluate the individuals with an invalid fitness
                     invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
                     # fitnesses = map(toolbox.evaluate, invalid_ind)
@@ -400,14 +401,14 @@ class run:
                     for ind, fit in zip(invalid_ind, fitnesses):
                         ind.fitness.values = fit
                     pop[:] = offspring
-                    print("Gather all the fitnesses in one list and print the stats")
+                    logger.info("Gather all the fitnesses in one list and print the stats")
                     # Gather all the fitnesses in one list and print the stats
                     fits = [ind.fitness.values[0] for ind in pop]
                     length = len(pop)
                     mean = sum(fits) / length
                     sum2 = sum(x * x for x in fits)
                     std = abs(sum2 / length - mean**2) ** 0.5
-                    print(
+                    logger.info(
                         f"min: {min(fits)}, max: {max(fits)} , mean: {mean}, std: {std}"
                     )
                     # pool.close() # experimental
@@ -428,14 +429,14 @@ class run:
                         gen_eval_score = metrics.roc_auc_score(self.y_test, y_pred)
                     except ValueError:
                         gen_eval_score = 0.5  # Assign random chance score if AUC is not defined
-                    print(f"gen_eval_score == {gen_eval_score} Generation {g}")
+                    logger.info("gen_eval_score == %s Generation %s", gen_eval_score, g)
                     generation_progress_list.append(gen_eval_score)
 
                     if gen_eval_score < highest_scoring_ensemble[0]:
                         gen_eval_score_counter = gen_eval_score_counter + 1
                         if self.verbose >= 1:
-                            print(
-                                f"gen_eval_score_counter {gen_eval_score_counter}, highest so far: {highest_scoring_ensemble[0]}"
+                            logger.info(
+                                "gen_eval_score_counter %s, highest so far: %s", gen_eval_score_counter, highest_scoring_ensemble[0]
                             )
 
                         if (
@@ -445,8 +446,8 @@ class run:
                             stop_early = True
                     elif gen_eval_score > highest_scoring_ensemble[0]:
                         if self.verbose >= 1:
-                            print(
-                                f"gen_eval_score gain: {gen_eval_score-gen_eval_score_previous} rate: {(highest_scoring_ensemble[0]-0.5)/g} ETA: {round(((1-highest_scoring_ensemble[0])/(gen_eval_score_gain+1.00000000e-99)))}"
+                            logger.info(
+                                "gen_eval_score gain: %s rate: %s ETA: %s", gen_eval_score-gen_eval_score_previous, (highest_scoring_ensemble[0]-0.5)/g, round(((1-highest_scoring_ensemble[0])/(gen_eval_score_gain+1.00000000e-99)))
                             )
                         gen_eval_score_gain = gen_eval_score_gain + (
                             gen_eval_score - gen_eval_score_previous
@@ -465,23 +466,23 @@ class run:
                 # Get stored highest ensemble
                 best = highest_scoring_ensemble[1]
                 if self.verbose >= 1:
-                    print("\n")
-                    print("Best Ensemble Model: ")
+                    logger.info("\n")
+                    logger.info("Best Ensemble Model: ")
                     for i in range(0, len(best[0])):
-                        print(best[0][i][1], "n features: ", len(best[0][i][2]))
+                        logger.info("%s n features: %s", best[0][i][1], len(best[0][i][2]))
 
                 if self.verbose >= 1:
-                    print(
+                    logger.info(
                         f"Best Ensemble diversity score: {measure_binary_vector_diversity(best)}"
                     )
 
                 end = time.time()
                 if self.verbose >= 1:
-                    print(end - start)
+                    logger.info(end - start)
 
                 try:
                     if self.verbose >= 1:
-                        print(
+                        logger.info(
                             "Getting final final best pred for plot with validation set, get weights from xtrain ytrain"
                         )
                     best_pred_orig = get_y_pred_resolver(
@@ -498,25 +499,18 @@ class run:
                             + "_nb="
                             + str(nb_val),
                         )
-                        print(
-                            "nb_val:",
-                            nb_val,
-                            "pop_val:",
-                            pop_val,
-                            "g_val:",
-                            g_val, end=" ")
+                        logger.info("nb_val: %s, pop_val: %s, g_val: %s", nb_val, pop_val, g_val)
                         try:
                             final_auc = metrics.roc_auc_score(self.y_test_orig, best_pred_orig)
-                            print(
-                                "AUC: ", final_auc,
-                                "g:", g,
+                            logger.info(
+                                "AUC: %s, g: %s", final_auc, g
                             )
                         except ValueError:
-                            print("AUC: undefined (only one class in y_true), g:", g)
+                            logger.warning("AUC: undefined (only one class in y_true), g: %s", g)
                 except Exception as e:
-                    print("Failed to get best y pred and plot auc")
-                    print(e)
-                    print("best_pred_orig fail:")
+                    logger.error("Failed to get best y pred and plot auc")
+                    logger.error(e)
+                    logger.error("best_pred_orig fail:")
 
                     raise
                     pass
@@ -571,7 +565,7 @@ class run:
 
                 try:
                     if self.verbose >= 1:
-                        print("Writing grid perturbation to log")
+                        logger.info("Writing grid perturbation to log")
                     # Is for valid or no? Pass valid and set orig or ytest...
                     # write line to best grid scores---------------------
                     self.project_score_save_object.update_score_log(
@@ -590,18 +584,22 @@ class run:
                     )
 
                 except Exception as e:
-                    print(e)
-                    print("Failed to upgrade grid entry")
+                    logger.error(e)
+                    logger.error("Failed to upgrade grid entry")
                     raise
 
-                plot_path = f"{self.ml_grid_object.base_project_dir+self.global_param_str + additional_naming}/"
+                # Construct the base path for plots robustly
+                plot_base_path = os.path.join(
+                    self.ml_grid_object.base_project_dir,
+                    self.global_param_str + additional_naming,
+                )
 
                 plot_generation_progress_fitness(
                     generation_progress_list,
                     pop_val,
                     g_val,
                     nb_val,
-                    file_path=plot_path,
+                    file_path=plot_base_path,
                 )
 
                 with open(
@@ -645,10 +643,10 @@ class run:
                         "logging.txt",
                     )
 
-                    print(str_to_write)
+                    logger.info(str_to_write)
                 except Exception as e:
-                    print(e)
-                    print("failed to get base dir str?")
+                    logger.error(e)
+                    logger.error("failed to get base dir str?")
 
                 f = open(
                     str_to_write,
@@ -658,11 +656,7 @@ class run:
                 # writing in the file
                 f.write(str(Argument))
                 f.write(str(traceback.format_exc()))
-                # closing the file
                 f.close()
-                print(Argument)
-
-                print(traceback.format_exc())
                 raise
                 # continue
 

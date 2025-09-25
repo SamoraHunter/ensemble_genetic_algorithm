@@ -1,8 +1,10 @@
 import traceback
+import logging
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
 from typing import Dict, List, Tuple
+logger = logging.getLogger("ensemble_ga")
 
 
 def correlation_coefficient(col1: pd.Series, col2: pd.Series) -> float:
@@ -66,10 +68,10 @@ def handle_correlation_matrix(
             # Using abs() to consider both positive and negative correlations
             correlations = df_numeric[chunk].corr().abs()
         except Exception as e:
-            print(
+            logger.error(
                 "Encountered exception while calculating correlations for chunk", chunk
             )
-            print(e)
+            logger.error(e)
             continue
 
         # Iterate through each column in the chunk
@@ -84,11 +86,11 @@ def handle_correlation_matrix(
                 if col in correlated_cols:
                     correlated_cols.remove(col)
             except KeyError:
-                print(
+                logger.error(
                     "Encountered KeyError while calculating correlations for column",
                     col,
                 )
-                print("Continuing with an empty list of correlated columns")
+                logger.error("Continuing with an empty list of correlated columns")
                 correlated_cols = []
 
             # Add the correlated columns to the list

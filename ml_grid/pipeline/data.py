@@ -1,4 +1,5 @@
 from typing import List, Optional
+import logging
 import sklearn.feature_selection
 from ml_grid.model_classes_ga.logistic_regression_model import (
     logisticRegressionModelGenerator,
@@ -34,6 +35,8 @@ import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=ConvergenceWarning)
     warnings.filterwarnings("ignore", category=UserWarning)
+
+logger = logging.getLogger("ensemble_ga")
 
 
 class pipe:
@@ -204,10 +207,10 @@ class pipe:
                 "use_stored_base_learners": False,
             }
             if self.verbose >= 1:
-                print(f"Using default config_dict... {self.config_dict}")
+                logger.info("Using default config_dict... %s", self.config_dict)
 
         if self.verbose >= 1:
-            print(f"Starting... {self.local_param_dict}")
+            logger.info("Starting... %s", self.local_param_dict)
 
         self.logging_paths_obj = log_folder(
             local_param_dict=local_param_dict,
@@ -224,7 +227,7 @@ class pipe:
             self.df = read_in.read(file_name, use_polars=True).raw_input_data
 
         if test_sample_n > 0 and read_in_sample == False:
-            print("sampling 200 for debug/trial purposes...")
+            logger.info("sampling 200 for debug/trial purposes...")
             self.df = self.df.sample(test_sample_n)
 
         if column_sample_n > 0 and read_in_sample == False:
@@ -238,10 +241,9 @@ class pipe:
             else:
                 original_columns = []
 
-            print(
-                "Sampling",
+            logger.info(
+                "Sampling %s columns for additional debug/trial purposes...",
                 column_sample_n,
-                "columns for additional debug/trial purposes...",
             )
 
             # Sample the columns
@@ -253,7 +255,7 @@ class pipe:
             # Reassign DataFrame with sampled columns
             self.df = self.df[new_columns].copy()
 
-            print("Result df shape", self.df.shape)
+            logger.info("Result df shape %s", self.df.shape)
 
         self.all_df_columns = list(self.df.columns)
 
@@ -267,7 +269,7 @@ class pipe:
 
         self.outcome_variable = f'outcome_var_{local_param_dict.get("outcome_var_n")}'
 
-        print(
+        logger.info(
             f"Using {len(self.pertubation_columns)}/{len(self.all_df_columns)} columns for {self.outcome_variable} outcome"
         )
 
@@ -275,8 +277,8 @@ class pipe:
         list_1 = self.pertubation_columns.copy()
 
         difference_list = list(set(list_2) - set(list_1))
-        print(f"Omitting {len(difference_list)} :...")
-        print(f"{difference_list[0:5]}...")
+        logger.info("Omitting %s :...", len(difference_list))
+        logger.info("%s...", difference_list[0:5])
 
         self.drop_list = handle_correlation_matrix(
             local_param_dict=local_param_dict, drop_list=self.drop_list, df=self.df
@@ -307,7 +309,7 @@ class pipe:
         core_protected_columns = ["age", "male", "client_idcode"]  # Columns to protect
 
         if not self.final_column_list:
-            print("WARNING: All features pruned! Activating safety retention...")
+            logger.warning("All features pruned! Activating safety retention...")
 
             # Try to keep protected columns first
             safety_columns = [
@@ -328,11 +330,11 @@ class pipe:
                 col for col in self.drop_list if col not in self.final_column_list
             ]
 
-            print(f"Retaining minimum features: {self.final_column_list}")
+            logger.info("Retaining minimum features: %s", self.final_column_list)
 
             # Add two random features if list still empty
             if not self.final_column_list:
-                print("Warning no feature columns retained, selecting two at random")
+                logger.warning("No feature columns retained, selecting two at random")
                 self.final_column_list = []
                 self.final_column_list.append(random.choice(self.original_feature_names))
                 self.final_column_list.append(random.choice(self.original_feature_names))
@@ -369,7 +371,7 @@ class pipe:
             self.X = data_scale_methods().standard_scale_method(self.X)
 
         if self.verbose >= 1:
-            print(
+            logger.info(
                 f"len final droplist: {len(self.drop_list)} / {len(list(self.df.columns))}"
             )
             # print('\n'.join(map(str, self.drop_list[0:5])))
@@ -388,7 +390,7 @@ class pipe:
         if self.X.applymap(lambda x: isinstance(x, str)).any().any():
             raise ValueError("DataFrame contains string values within numeric columns.")
 
-        print("------------------------")
+        logger.info("------------------------")
 
         (
             self.X_train,
@@ -422,14 +424,14 @@ class pipe:
             )
 
         if self.verbose >= 2:
-            print(
+            logger.info(
                 f"Data Split Information:\n"
                 f"Number of rows in self.X_train: {len(self.X_train)}, Columns: {self.X_train.shape[1]}\n"
                 f"Number of rows in self.X_test: {len(self.X_test)}, Columns: {self.X_test.shape[1]}\n"
                 f"Number of rows in self.y_train: {len(self.y_train)}\n"
                 f"Number of rows in self.y_test: {len(self.y_test)}\n"
                 f"Number of rows in self.X_test_orig: {len(self.X_test_orig)}, Columns: {self.X_test_orig.shape[1]}\n"
-                f"Number of rows in self.y_test_orig: {len(self.y_test_orig)}"
+                f"Number of rows in self.y_test_orig: {len(self.y_test_orig)}",
             )
 
         if self.verbose >= 3:

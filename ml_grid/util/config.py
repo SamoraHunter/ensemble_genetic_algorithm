@@ -29,13 +29,13 @@ def load_config(config_path: str = "config.yml") -> Dict[str, Any]:
     global _config_message_printed
     if os.path.exists(config_path):
         if not _config_message_printed:
-            logger.info(f"Loading custom configuration from '{config_path}'")
+            logger.info("Loading custom configuration from '%s'", config_path)
             _config_message_printed = True
         with open(config_path, "r") as f:
             try:
                 return yaml.safe_load(f) or {}
             except yaml.YAMLError as e:
-                logger.error(f"Could not parse YAML file '{config_path}': {e}")
+                logger.error("Could not parse YAML file '%s': %s", config_path, e)
                 return {}
     else:
         if not _config_message_printed:

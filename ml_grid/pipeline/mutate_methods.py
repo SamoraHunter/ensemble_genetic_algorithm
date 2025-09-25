@@ -1,5 +1,6 @@
 import random
-
+import logging
+logger = logging.getLogger("ensemble_ga")
 
 def baseLearnerGenerator(ml_grid_object):
 
@@ -19,25 +20,23 @@ def mutateEnsemble(individual, ml_grid_object):
     # print(individual[0])
     # print(len(individual[0]))
     try:
-        print(f"original individual of size {len(individual[0])-1}:")
+        logger.debug("original individual of size %s:", len(individual[0])-1)
         n = random.randint(0, len(individual[0]) - 1)
-        print(f"Mutating individual at index {n}")
+        logger.debug("Mutating individual at index %s", n)
         try:
             individual[0].pop(n)
-            print(f"Successfully popped {n} from individual")
+            logger.debug("Successfully popped %s from individual", n)
         except Exception as e:
-            print(
-                f"Failed to pop {n} from individual of length {len(individual[0])} , popping zero"
-            )
+            logger.error("Failed to pop %s from individual of length %s, popping zero", n, len(individual[0]))
             individual[0].pop(0)
 
-            print(e)
+            logger.error(e)
 
         individual[0].append(baseLearnerGenerator(ml_grid_object))
 
         return individual
     except Exception as e:
-        print(e)
-        print("Failed to mutate Ensemble")
-        print("Len individual", len(individual))
+        logger.error(e)
+        logger.error("Failed to mutate Ensemble")
+        logger.error("Len individual %s", len(individual))
         raise

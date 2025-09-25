@@ -1,5 +1,6 @@
 import traceback
 from typing import Any, Dict, List
+import logging
 
 import ml_grid
 import numpy as np
@@ -27,6 +28,7 @@ from ml_grid.pipeline import grid_search_cross_validate
 from ml_grid.util import grid_param_space
 from ml_grid.util.global_params import global_parameters
 from sklearn.model_selection import ParameterGrid
+logger = logging.getLogger("ensemble_ga")
 
 
 class run:
@@ -167,7 +169,7 @@ class run:
         ]
 
         if self.verbose >= 2:
-            print(f"{len(self.model_class_list)} models loaded")
+            logger.info("%s models loaded", len(self.model_class_list))
 
         self.pg_list = []
 
@@ -178,7 +180,7 @@ class run:
             self.pg_list.append(len(ParameterGrid(elem.parameter_space)))
 
             if self.verbose >= 1:
-                print(f"{elem.method_name}:{len(pg)}")
+                logger.info("%s:%s", elem.method_name, len(pg))
 
             for param in elem.parameter_space:
                 try:
@@ -188,13 +190,11 @@ class run:
                             and isinstance(elem.parameter_space.get(param), np.ndarray)
                             is False
                         ):
-                            print("What is this?")
-                            print(
-                                f"{elem.method_name, param} {type(elem.parameter_space.get(param))}"
-                            )
+                            logger.warning("What is this?")
+                            logger.warning("%s, %s %s", elem.method_name, param, type(elem.parameter_space.get(param)))
 
                 except Exception as e:
-                    #                     print(e)
+                    # logger.debug(e)
                     pass
 
         # sample from mean of all param space n
@@ -226,7 +226,7 @@ class run:
         self.local_param_dict = local_param_dict
 
         if self.verbose >= 2:
-            print(f"Passed main init, len(arg_list): {len(self.arg_list)}")
+            logger.info("Passed main init, len(arg_list): %s", len(self.arg_list))
 
     def execute(self) -> List[List]:
         """Executes the grid search for all configured models.
@@ -249,7 +249,7 @@ class run:
         if self.multiprocess:
 
             def multi_run_wrapper(args):
-                print("not implemented ")
+                logger.warning("not implemented ")
                 # return grid_search_cross_validate(*args)
 
             if __name__ == "__main__":
@@ -263,15 +263,15 @@ class run:
         elif self.multiprocess == False:
             for k in range(0, len(self.arg_list)):
                 try:
-                    print("grid searching...")
+                    logger.info("grid searching...")
                     grid_search_cross_validate.grid_search_crossvalidate(
                         *self.arg_list[k]
                         # algorithm_implementation = LogisticRegression_class(parameter_space_size=self.parameter_space_size).algorithm_implementation, parameter_space = self.arg_list[k][1], method_name=self.arg_list[k][2], X = self.arg_list[k][3], y=self.arg_list[k][4]
                     )
                 except Exception as e:
 
-                    print(e)
-                    print("error on ", self.arg_list[k][2])
+                    logger.error(e)
+                    logger.error("error on %s", self.arg_list[k][2])
                     self.model_error_list.append(
                         [self.arg_list[k][0], e, traceback.print_exc()]
                     )
@@ -281,9 +281,7 @@ class run:
                             "error thrown in grid_search_crossvalidate on model class list"
                         )
 
-        print(
-            f"Model error list: nb. errors returned from func: {self.model_error_list}"
-        )
-        print(self.model_error_list)
+        logger.info("Model error list: nb. errors returned from func: %s", self.model_error_list)
+        logger.info(self.model_error_list)
 
         return self.model_error_list

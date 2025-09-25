@@ -57,16 +57,6 @@ class TestBinaryVectorDiversity(unittest.TestCase):
         calculated_distance = measure_binary_vector_diversity(
             ensemble, metric="jaccard"
         )
-        print("Expected Distance:", expected_distance)
-        print("Calculated Distance:", calculated_distance)
-        print(
-            "Decision Tree Predictions:",
-            self.mock_decision_tree.return_value.predict.return_value,
-        )
-        print(
-            "Logistic Regression Predictions:",
-            self.mock_logistic_regression.return_value.predict.return_value,
-        )
         self.assertAlmostEqual(
             calculated_distance, expected_distance, places=5
         )  # Check with a tolerance

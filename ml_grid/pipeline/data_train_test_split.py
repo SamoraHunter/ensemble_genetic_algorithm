@@ -4,7 +4,10 @@ from sklearn.model_selection import train_test_split
 import numpy as np
 import pandas as pd
 import random
+import logging
 from typing import Dict, Tuple, Union
+
+logger = logging.getLogger("ensemble_ga")
 
 
 def get_data_split(
@@ -50,7 +53,7 @@ def get_data_split(
     # Check if data is valid
     if not is_valid_shape(X):
         local_param_dict["resample"] = None
-        print("overriding resample with None")
+        logger.warning("overriding resample with None")
 
     # No resampling
     if local_param_dict.get("resample") is None:
@@ -66,8 +69,6 @@ def get_data_split(
 
     # Undersampling
     elif local_param_dict.get("resample") == "undersample":
-        # print("undersample..")
-
 
         # Undersample data
         rus = RandomUnderSampler(random_state=0)
@@ -96,7 +97,7 @@ def get_data_split(
         sampling_strategy = 1
         ros = RandomOverSampler(sampling_strategy=sampling_strategy, random_state=1)
         X_train_orig, y_train_orig = ros.fit_resample(X_train_orig, y_train_orig)
-        print(y_train_orig.value_counts())
+        logger.debug(y_train_orig.value_counts())
 
         # Split training set into final training and validation sets
         X_train, X_test, y_train, y_test = train_test_split(

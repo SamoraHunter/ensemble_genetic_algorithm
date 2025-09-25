@@ -1,8 +1,10 @@
 import itertools as it
 import random
+import logging
 
 from ml_grid.util.global_params import global_parameters
 
+logger = logging.getLogger("ensemble_ga")
 
 class Grid:
 
@@ -18,7 +20,7 @@ class Grid:
             self.sample_n = sample_n
 
         if self.verbose >= 1:
-            print(f"Feature space slice sample_n {self.sample_n}")
+            logger.info("Feature space slice sample_n %s", self.sample_n)
         # Default grid
         # User can update grid dictionary on the object
         self.grid = {
@@ -63,7 +65,7 @@ class Grid:
                     yield dict(zip(d.keys(), i))
 
         self.settings_list = list(c_prod(self.grid))
-        print(f"Full settings_list size: {len(self.settings_list)}")
+        logger.info("Full settings_list size: %s", len(self.settings_list))
 
         random.shuffle(self.settings_list)
 

@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 from typing import List, Optional, Tuple
+import logging
+logger = logging.getLogger("ensemble_ga")
 
 
 def remove_constant_columns(
@@ -24,7 +26,7 @@ def remove_constant_columns(
     """
     try:
         if verbose > 1:
-            print("Identifying constant columns")
+            logger.debug("Identifying constant columns")
 
         assert X is not None, "Null pointer exception: X cannot be None."
 
@@ -37,17 +39,17 @@ def remove_constant_columns(
 
         if constant_columns:
             if verbose > 1:
-                print(f"Constant columns identified: {constant_columns}")
+                logger.debug("Constant columns identified: %s", constant_columns)
 
             # Add constant columns to drop_list
             drop_list.extend(constant_columns)
 
     except AssertionError as e:
-        print(str(e))
+        logger.error(str(e))
         raise
 
     except Exception as e:
-        print("Unhandled exception:", str(e))
+        logger.error("Unhandled exception: %s", str(e))
         raise
 
     return drop_list
@@ -76,9 +78,9 @@ def remove_constant_columns_with_debug(
         A tuple containing the three input DataFrames with constant columns removed.
     """
     if verbosity > 0:
-        print(f"Initial X_train shape: {X_train.shape}")
-        print(f"Initial X_test shape: {X_test.shape}")
-        print(f"Initial X_test_orig shape: {X_test_orig.shape}")
+        logger.debug("Initial X_train shape: %s", X_train.shape)
+        logger.debug("Initial X_test shape: %s", X_test.shape)
+        logger.debug("Initial X_test_orig shape: %s", X_test_orig.shape)
 
     # Calculate variance for each dataset
     train_variances = X_train.var(axis=0)
@@ -86,9 +88,9 @@ def remove_constant_columns_with_debug(
     test_orig_variances = X_test_orig.var(axis=0)  # ADD THIS
 
     if verbosity > 1:
-        print(f"Variance of X_train columns:\n{train_variances}")
-        print(f"Variance of X_test columns:\n{test_variances}")
-        print(f"Variance of X_test_orig columns:\n{test_orig_variances}")  # ADD THIS
+        logger.debug("Variance of X_train columns:\n%s", train_variances)
+        logger.debug("Variance of X_test columns:\n%s", test_variances)
+        logger.debug("Variance of X_test_orig columns:\n%s", test_orig_variances)  # ADD THIS
 
     # Identify constant columns in each dataset
     constant_columns_train = train_variances[train_variances == 0].index
@@ -98,11 +100,9 @@ def remove_constant_columns_with_debug(
     ].index  # ADD THIS
 
     if verbosity > 0:
-        print(f"Constant columns in X_train: {list(constant_columns_train)}")
-        print(f"Constant columns in X_test: {list(constant_columns_test)}")
-        print(
-            f"Constant columns in X_test_orig: {list(constant_columns_test_orig)}"
-        )  # ADD THIS
+        logger.debug("Constant columns in X_train: %s", list(constant_columns_train))
+        logger.debug("Constant columns in X_test: %s", list(constant_columns_test))
+        logger.debug("Constant columns in X_test_orig: %s", list(constant_columns_test_orig))
 
     # Combine constant columns from ALL THREE datasets
     constant_columns = constant_columns_train.union(constant_columns_test).union(
@@ -110,7 +110,7 @@ def remove_constant_columns_with_debug(
     )  # MODIFY THIS
 
     if verbosity > 0:
-        print(f"Total constant columns to remove: {list(constant_columns)}")
+        logger.debug("Total constant columns to remove: %s", list(constant_columns))
 
     # Remove the constant columns from all datasets
     X_train = X_train.loc[:, ~X_train.columns.isin(constant_columns)]
@@ -118,9 +118,9 @@ def remove_constant_columns_with_debug(
     X_test_orig = X_test_orig.loc[:, ~X_test_orig.columns.isin(constant_columns)]
 
     if verbosity > 0:
-        print(f"Final X_train shape: {X_train.shape}")
-        print(f"Final X_test shape: {X_test.shape}")
-        print(f"Final X_test_orig shape: {X_test_orig.shape}")
+        logger.debug("Final X_train shape: %s", X_train.shape)
+        logger.debug("Final X_test shape: %s", X_test.shape)
+        logger.debug("Final X_test_orig shape: %s", X_test_orig.shape)
 
         # Verify all datasets have same columns
         assert (

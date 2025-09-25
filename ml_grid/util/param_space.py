@@ -3,8 +3,6 @@
 import numpy as np
 from typing import Dict, List, Union
 
-#print("imported param_space")
-
 class ParamSpace:
     """
     Defines and provides access to predefined hyperparameter search spaces.
@@ -18,8 +16,6 @@ class ParamSpace:
     param_dict: Dict[str, Union[np.ndarray, List[bool]]]
     """A dictionary containing numpy arrays and lists for hyperparameter ranges."""
 
-    #print("param space called")
-
     def __init__(self, size: str):
         """
         Initializes the ParamSpace with a specific size.
@@ -28,8 +24,6 @@ class ParamSpace:
             size: The size of the parameter space to generate.
                 Valid options are 'medium', 'xsmall', 'xwide'.
         """
-        #print("param space init called")
-
         self.param_dict = None
         
         if(size == 'medium'):

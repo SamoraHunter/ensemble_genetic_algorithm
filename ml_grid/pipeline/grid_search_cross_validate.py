@@ -1,6 +1,7 @@
 import time
 import traceback
 from typing import Any, Dict
+import logging
 
 import keras
 import numpy as np
@@ -30,6 +31,7 @@ from sklearn.model_selection import (
 
 
 from ml_grid.util.global_params import global_parameters
+logger = logging.getLogger("ensemble_ga")
 
 
 import warnings
@@ -144,7 +146,7 @@ class grid_search_crossvalidate:
         self.error_raise = self.global_params.error_raise
 
         if self.verbose >= 3:
-            print(f"crossvalidating {method_name}")
+            logger.info("crossvalidating %s", method_name)
 
         self.global_parameters = global_parameters()
 
@@ -203,22 +205,19 @@ class grid_search_crossvalidate:
 
         pg = ParameterGrid(parameter_space)
         pg = len(pg)
-        # print(pg)
 
         if (random_grid_search and n_iter_v > 100000) or (
             random_grid_search == False and pg > 100000
         ):
-            print("grid too large", str(pg), str(n_iter_v))
+            logger.error("grid too large %s %s", str(pg), str(n_iter_v))
             raise Exception("grid too large", str(pg))
 
         if self.global_parameters.verbose >= 1:
             if random_grid_search:
-                print(
-                    f"Randomized parameter grid size for {current_algorithm} \n : Full: {pg}, (mean * {self.sub_sample_param_space_pct}): {self.sub_sample_parameter_val}, current: {n_iter_v} "
-                )
+                logger.info("Randomized parameter grid size for %s \n : Full: %s, (mean * %s): %s, current: %s ", current_algorithm, pg, self.sub_sample_param_space_pct, self.sub_sample_parameter_val, n_iter_v)
 
             else:
-                print(f"parameter grid size: Full: {pg}")
+                logger.info("parameter grid size: Full: %s", pg)
         grid.fit(self.X_train, self.y_train)
 
         # Get cross validated scores for best hyperparameter model on x_train_/y_train
@@ -256,7 +255,7 @@ class grid_search_crossvalidate:
         plot_auc = False
         if plot_auc:
             # This was passing a classifier trained on the test dataset....
-            print(" ")
+            logger.info(" ")
 
             # plot_auc_results(current_algorithm, self.X_test_orig[self.X_train.columns], self.y_test_orig, self.cv)
             # plot_auc_results(grid.best_estimator_, X_test_orig, self.y_test_orig, cv)

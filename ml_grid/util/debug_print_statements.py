@@ -4,7 +4,7 @@ from sklearn import metrics
 from sklearn.metrics import (classification_report, f1_score, make_scorer,
                              matthews_corrcoef, roc_auc_score) # Removed unused imports
 from typing import Dict, Any
-
+import logging
 
 class debug_print_statements_class():
     """A utility class for printing formatted debug information about model scores.
@@ -13,6 +13,8 @@ class debug_print_statements_class():
     of various cross-validation scores, such as F1, ROC AUC, accuracy, fit time,
     and score time.
     """
+
+    logger = logging.getLogger("ensemble_ga")
 
     scores: Dict[str, Any]
     """A dictionary containing cross-validation scores, typically from `sklearn.model_selection.cross_validate`."""
@@ -36,32 +38,32 @@ class debug_print_statements_class():
                 include 'test_f1', 'test_roc_auc', 'test_accuracy', 'fit_time',
                 and 'score_time'.
         """
-        print(
+        debug_print_statements_class.logger.debug(
             "Mean MAE: %.3f (%.3f)"
             % (
                 absolute(mean(scores["test_f1"])),
                 std(scores["test_f1"]),
             )
         )
-        print(
+        debug_print_statements_class.logger.debug(
             "Mean ROC AUC: %.3f (%.3f)"
             % (
                 absolute(mean(scores["test_roc_auc"])),
                 std(scores["test_roc_auc"]),
             )
         )
-        print(
+        debug_print_statements_class.logger.debug(
             "Mean accuracy: %.3f (%.3f)"
             % (absolute(mean(scores["test_accuracy"])), std(scores["test_accuracy"]))
         )
-        print(
+        debug_print_statements_class.logger.debug(
             "Mean fit time: %.3f (%.3f)"
             % (absolute(mean(scores["fit_time"])), std(scores["fit_time"]))
         )
-        print(
+        debug_print_statements_class.logger.debug(
             "Mean score time: %.3f (%.3f)"
             % (absolute(mean(scores["score_time"])), std(scores["score_time"]))
         )
-        print(
+        debug_print_statements_class.logger.debug(
             "---------------------------------------------------------------------------------------------------"
         )

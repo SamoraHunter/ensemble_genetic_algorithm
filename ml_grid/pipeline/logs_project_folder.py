@@ -4,6 +4,8 @@ import os
 import pathlib
 from typing import Dict, Optional
 
+logger = logging.getLogger("ensemble_ga")
+
 
 class log_folder:
     """Manages the creation of a structured logging directory for an experiment.
@@ -66,7 +68,7 @@ class log_folder:
         self.global_param_str = str_b
         # self.global_param_str = str(global_param_dict).replace("{", "").replace("}", "").replace(":", "").replace(" ", "").replace(",", "").replace("'", "_").replace("__", "_").replace("'","").replace(",","").replace(": ", "_").replace("{","").replace("}","").replace("True","T").replace("False", "F").replace(" ","_").replace("[", "").replace("]", "").replace("_","")
 
-        print(self.global_param_str)
+        logger.info(self.global_param_str)
         words = self.global_param_str.split(
             "_"
         )  # Split the string into words using underscores
@@ -86,115 +88,45 @@ class log_folder:
                     words[i] = words[i][0]
 
         self.global_param_str = "_".join(words)
-        print(self.global_param_str)
+        logger.info(self.global_param_str)
 
         # self.global_param_str = "test_dir"
 
         # self.log_folder_path = f"{self.global_param_str + additional_naming}/logs/"
 
-        # pathlib.Path(self.base_project_dir + self.log_folder_path).mkdir(
-        #     parents=True, exist_ok=True
-        # )
-
-        # full_log_path = f"{self.base_project_dir+self.global_param_str + additional_naming}/logs/log.log"
-
-        full_log_path = (
-            f"{self.base_project_dir+self.global_param_str + additional_naming}/logs/"
+        # Construct path robustly to avoid double slashes or missing components
+        base_run_path = os.path.join(
+            self.base_project_dir, self.global_param_str + additional_naming
         )
+        full_log_path = os.path.join(base_run_path, "logs")
 
-        # full_log_path = ".log/"
+        # Define all required subdirectories
+        required_dirs = [
+            "",  # The main log folder itself
+            "figures",
+            "results_master_lists",
+            "progress_logs",
+            "progress_logs_scores",
+            "torch",
+            "xgb",
+        ]
 
         self.log_folder_path = full_log_path
 
-        def ensure_full_log_path(full_log_path):
-            directory = os.path.dirname(full_log_path)
-            if not os.path.exists(directory):
-                os.makedirs(directory)
+        # Create all directories in a single loop first
+        for sub_dir in required_dirs:
+            try:
+                pathlib.Path(os.path.join(self.log_folder_path, sub_dir)).mkdir(
+                    parents=True, exist_ok=True
+                )
+            except Exception as e:
+                logger.error("An error occurred while creating directory '%s': %s", sub_dir, e)
 
-        ensure_full_log_path(full_log_path)
-
+        # Now that directories are guaranteed to exist, set up logging
         try:
-            # Check if the directory exists, if not, create it.
-            log_dir = os.path.dirname(full_log_path)
-            if not os.path.exists(log_dir):
-                os.makedirs(log_dir)
-
-            self.logging_path = os.path.join(full_log_path, "logging.txt")
-
-            # Check if the file exists, if not, create it.
-            if not os.path.exists(self.logging_path):
-                with open(self.logging_path, "w"):
-                    pass  # Create the file
-
-            # Set up logging
-            logging.basicConfig(filename=self.logging_path)
-            stderrLogger = logging.StreamHandler()
-            stderrLogger.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
-            logging.getLogger().addHandler(stderrLogger)
-
-            # Test logging
-            logging.info("Logging setup successful")
-
+            self.logging_path = os.path.join(self.log_folder_path, "logging.txt")
         except Exception as e:
-            print("Failed to set log dir at ", self.logging_path)
-            print(e)
-
-        try:
-            logging.basicConfig(filename=full_log_path)
-            stderrLogger = logging.StreamHandler()
-            stderrLogger.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
-            logging.getLogger().addHandler(stderrLogger)
-        except Exception as e:
-            print("Failed to set log dir at ", full_log_path)
-            print(e)
-
-        try:
-            pathlib.Path(self.log_folder_path).mkdir(parents=True, exist_ok=True)
-        except Exception as e:
-            print(f"An error occurred while creating log folder: {e}")
-
-        try:
-            pathlib.Path(self.log_folder_path + "figures").mkdir(
-                parents=True, exist_ok=True
-            )
-        except Exception as e:
-            print(f"An error occurred while creating figures folder: {e}")
-
-        try:
-            pathlib.Path(self.log_folder_path + "/results_master_lists").mkdir(
-                parents=True, exist_ok=True
-            )
-        except Exception as e:
-            print(f"An error occurred while creating results_master_lists folder: {e}")
-
-        try:
-            pathlib.Path(self.log_folder_path + "/progress_logs").mkdir(
-                parents=True, exist_ok=True
-            )
-        except Exception as e:
-            print(f"An error occurred while creating progress_logs folder: {e}")
-
-        try:
-            pathlib.Path(self.log_folder_path + "/progress_logs_scores").mkdir(
-                parents=True, exist_ok=True
-            )
-        except Exception as e:
-            print(f"An error occurred while creating progress_logs_scores folder: {e}")
-
-        try:
-            pathlib.Path(f"{self.log_folder_path}/" + "/torch").mkdir(
-                parents=True, exist_ok=True
-            )
-        except Exception as e:
-            print(f"An error occurred while creating torch folder: {e}")
-
-        try:
-            pathlib.Path(f"{self.log_folder_path}/" + "/xgb").mkdir(
-                parents=True, exist_ok=True
-            )
-        except Exception as e:
-            print(f"An error occurred while creating xgb folder: {e}")
-
+            logger.error("Failed to set up logging at %s: %s", self.logging_path, e)
         self.model_store_path = f"{self.log_folder_path}/" + "/model_store.json"
 
         model_directory = {"models": {}}

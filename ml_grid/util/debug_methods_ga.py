@@ -1,8 +1,9 @@
 
 from typing import Any
+import logging
 
 import pandas as pd
-from ml_grid.util.global_params import global_parameters
+logger = logging.getLogger("ensemble_ga")
 
 
 def debug_base_learner(
@@ -27,18 +28,16 @@ def debug_base_learner(
         auc_score: The ROC AUC score of the model.
         model_train_time: The time taken to train the model, in seconds.
     """
+    from ml_grid.util.global_params import global_parameters
+
     global_parameters_vals = global_parameters()
 
     model_train_time_warning_threshold = (
         global_parameters_vals.model_train_time_warning_threshold
     )
 
-    print(
-        str(model).split("(")[0],
-        round(mccscore, 5),
-        len(X_train.columns),
-        auc_score,
-        model_train_time,
+    logger.debug(
+        "%s, %s, %s, %s, %s", str(model).split("(")[0], round(mccscore, 5), len(X_train.columns), auc_score, model_train_time
     )
     if model_train_time > model_train_time_warning_threshold:
-        print("Warning long train time, ")
+        logger.warning("Warning long train time, ")

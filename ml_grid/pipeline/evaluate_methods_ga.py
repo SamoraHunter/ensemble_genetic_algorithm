@@ -36,6 +36,9 @@ from ml_grid.pipeline.torch_binary_classification_method_ga import (
 from ml_grid.util.global_params import global_parameters
 from sklearn import metrics
 
+import logging
+
+logger = logging.getLogger("ensemble_ga")
 
 def get_y_pred_resolver(
     ensemble: List, ml_grid_object: Any, valid: bool = False
@@ -70,36 +73,36 @@ def get_y_pred_resolver(
             if an error occurs during prediction generation.
     """
     if ml_grid_object.verbose >= 1:
-        print("get_y_pred_resolver")
-        print(ensemble)
+        logger.info("get_y_pred_resolver")
+        logger.info(ensemble)
     local_param_dict = ml_grid_object.local_param_dict
     X_test_orig = ml_grid_object.X_test_orig
     y_test_orig = ml_grid_object.y_test_orig
 
     if ml_grid_object.verbose >= 2:
-        print("Starting get_y_pred_resolver function...")
-        print("local_param_dict:", local_param_dict)
-        print("X_test_orig shape:", X_test_orig.shape)
-        print("y_test_orig shape:", y_test_orig.shape)
+        logger.info("Starting get_y_pred_resolver function...")
+        logger.info("local_param_dict: %s", local_param_dict)
+        logger.info("X_test_orig shape: %s", X_test_orig.shape)
+        logger.info("y_test_orig shape: %s", y_test_orig.shape)
 
     if (
         local_param_dict.get("weighted") == None
         or local_param_dict.get("weighted") == "unweighted"
     ):
         if ml_grid_object.verbose >= 1:
-            print("Using unweighted ensemble prediction...")
+            logger.info("Using unweighted ensemble prediction...")
         try:
             y_pred = get_best_y_pred_unweighted(ensemble, ml_grid_object, valid=valid)
         except Exception as e:
-            print(
+            logger.error(
                 "exception on y_pred = get_best_y_pred_unweighted(ensemble, ml_grid_object, valid=valid)"
             )
-            print(ensemble)
-            print("valid", valid)
+            logger.error(ensemble)
+            logger.error("valid: %s", valid)
             raise e
     elif local_param_dict.get("weighted") == "de":
         if ml_grid_object.verbose >= 1:
-            print("Using DE weighted ensemble prediction...")
+            logger.info("Using DE weighted ensemble prediction...")
         y_pred = get_weighted_ensemble_prediction_de_y_pred_valid(
             ensemble,
             super_ensemble_weight_finder_differential_evolution(
@@ -109,10 +112,10 @@ def get_y_pred_resolver(
             valid=valid,
         )
         if ml_grid_object.verbose >= 2:
-            print("DE weighted y_pred shape:", y_pred.shape)
+            logger.info("DE weighted y_pred shape: %s", y_pred.shape)
     elif local_param_dict.get("weighted") == "ann":
         if ml_grid_object.verbose >= 1:
-            print("Using ANN weighted ensemble prediction...")
+            logger.info("Using ANN weighted ensemble prediction...")
         y_pred = get_y_pred_ann_torch_weighting(ensemble, ml_grid_object, valid=valid)
 
     return y_pred
@@ -146,8 +149,8 @@ def evaluate_weighted_ensemble_auc(
         individual, as required by DEAP.
     """
     if ml_grid_object.verbose >= 1:
-        print("evaluate_weighted_ensemble_auc: individual")
-        print(individual)
+        logger.info("evaluate_weighted_ensemble_auc: individual")
+        logger.info(individual)
 
     global_params = global_parameters()
 
@@ -189,7 +192,7 @@ def evaluate_weighted_ensemble_auc(
     accuracy = metrics.accuracy_score(y_test, y_pred)
 
     if verbose >= 1:
-        print(f"Ensemble MCC {mcc}, AUC {auc}, nb {len(individual[0])}")
+        logger.info("Ensemble MCC %s, AUC %s, nb %s", mcc, auc, len(individual[0]))
 
     # ?? how does the diversity weighting and the order of operations interact with the ensemble weights already
     # measure and incorporate diversity
@@ -292,7 +295,7 @@ def evaluate_weighted_ensemble_auc(
     )
 
     if verbose >= 1:
-        print(
+        logger.info(
             f"""Ensemble MCC {mcc}, diversity weighted MCC {mcc_div}
         , \n f1 {f1} precision {precision} recall {recall} accuracy {accuracy}
         , \n AUC {auc}, diversity weighted AUC {auc_div}

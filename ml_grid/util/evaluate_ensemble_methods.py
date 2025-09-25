@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import pickle
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 
@@ -39,13 +40,14 @@ from sklearn.svm import SVC
 from xgboost import XGBClassifier
 from numpy import array
 
+logger = logging.getLogger("ensemble_ga")
 try:
     from ml_grid.pipeline.data_train_test_split import get_data_split
     from ml_grid.pipeline.evaluate_methods_y_pred_resolver import (
         get_y_pred_resolver_eval,
     )
 except ImportError as e:
-    print(f"Error: Could not import required functions from 'ml_grid': {e}")
+    logger.error("Error: Could not import required functions from 'ml_grid': %s", e)
 
     # Define dummy functions to allow the script to be parsed.
     def get_data_split(*args, **kwargs):
@@ -125,7 +127,7 @@ class EnsembleEvaluator:
         """
         self.debug = debug
         if self.debug:
-            print("--- Initializing EnsembleEvaluator ---")
+            logger.debug("--- Initializing EnsembleEvaluator ---")
         self.ml_grid_object = _MLGridObject()
         self.ml_grid_object.local_param_dict = initial_param_dict
         self.ml_grid_object.verbose = 0
@@ -137,13 +139,13 @@ class EnsembleEvaluator:
     ) -> None:
         """Loads data from a CSV and splits it into train, test, and validation sets."""
         if self.debug:
-            print(f"Loading data from: {input_csv_path}")
+            logger.debug("Loading data from: %s", input_csv_path)
         df = pd.read_csv(input_csv_path)
         y = df[outcome_variable]
         X = df.drop(outcome_variable, axis=1)
         self.original_feature_names = list(X.columns)
         if self.debug:
-            print("Splitting data and assigning to ml_grid_object...")
+            logger.debug("Splitting data and assigning to ml_grid_object...")
         X_train, X_test, y_train, y_test, X_val, y_val = get_data_split(
             X, y, self.ml_grid_object.local_param_dict
         )
@@ -151,7 +153,7 @@ class EnsembleEvaluator:
         self.ml_grid_object.X_test, self.ml_grid_object.y_test = X_test, y_test
         self.ml_grid_object.X_test_orig, self.ml_grid_object.y_test_orig = X_val, y_val
         if self.debug:
-            print("Data splits assigned successfully.")
+            logger.debug("Data splits assigned successfully.")
 
     def _parse_ensemble(
         self, ensemble_record: Any, debug: bool = False
@@ -179,7 +181,7 @@ class EnsembleEvaluator:
         # If it's a pandas Series, extract the first value
         if isinstance(ensemble_record, pd.Series):
             if debug:
-                print(
+                logger.debug(
                     f"[DEBUG] ensemble_record is a Series, extracting first value: {ensemble_record}"
                 )
             ensemble_record = ensemble_record.iloc[0]
@@ -189,17 +191,17 @@ class EnsembleEvaluator:
                 ensembles = eval(ensemble_record, {"array": array})
             except Exception as e:
                 if debug:
-                    print(f"Could not eval ensemble_record: {e}")
+                    logger.debug("Could not eval ensemble_record: %s", e)
                 return []
         else:
             ensembles = ensemble_record
         if debug:
-            print(f"[DEBUG] ensembles after eval: {ensembles}")
+            logger.debug("[DEBUG] ensembles after eval: %s", ensembles)
         processed_ensembles = []
         # If ensembles is a Series, extract first value
         if hasattr(ensembles, "iloc") and not isinstance(ensembles, (list, tuple)):
             if debug:
-                print(
+                logger.debug(
                     f"[DEBUG] ensembles is a Series-like, extracting first value: {ensembles}"
                 )
             ensembles = ensembles.iloc[0]
@@ -213,13 +215,13 @@ class EnsembleEvaluator:
         for ensemble in ensembles:
             if not isinstance(ensemble, (list, tuple)):
                 if debug:
-                    print(f"[DEBUG] Skipping non-list/tuple ensemble: {ensemble}")
+                    logger.debug("[DEBUG] Skipping non-list/tuple ensemble: %s", ensemble)
                 continue
             processed_ensemble = []
             for model_tuple in ensemble:
                 if not isinstance(model_tuple, (list, tuple)) or len(model_tuple) < 2:
                     if debug:
-                        print(
+                        logger.debug(
                             f"Skipping invalid model_tuple (expected at least 2 elements): {model_tuple}"
                         )
                     continue
@@ -231,7 +233,7 @@ class EnsembleEvaluator:
                     processed_ensemble.append(tuple(new_tuple))
                 except Exception as e:
                     if debug:
-                        print(
+                        logger.debug(
                             f"Could not eval model string: '{model_string}'. Error: {e}"
                         )
                     continue
@@ -284,7 +286,7 @@ class EnsembleEvaluator:
             if hasattr(ensemble_record, "iloc") and not isinstance(
                 ensemble_record, (list, tuple, str)
             ):
-                print(
+                logger.debug(
                     f"[DEBUG] ensemble_record is a Series-like in _run_evaluation_from_df, extracting first value: {ensemble_record}"
                 )
                 ensemble_record = ensemble_record.iloc[0]
@@ -349,10 +351,10 @@ class EnsembleEvaluator:
 
                         # Debug: print lengths and feature names
                         if self.debug:
-                            print(
+                            logger.debug(
                                 f"[DEBUG] y_true length: {len(y_true)}, y_pred length: {len(y_pred)}"
                             )
-                            print(
+                            logger.debug(
                                 f"[DEBUG] Features used in ensemble: {[t[2] for t in ensemble_with_features]}"
                             )
 
@@ -373,7 +375,7 @@ class EnsembleEvaluator:
                         all_results.append(result)
 
                     except Exception as e:
-                        print(
+                        logger.error(
                             f"Error evaluating ensemble {i+1} with method {weight_method}: {e}"
                         )
                         import traceback
@@ -413,7 +415,7 @@ class EnsembleEvaluator:
                 evaluates the single best run by 'auc_score'.
         """
         dataset_name = "TEST SET"  # For logging purposes
-        print(
+        logger.info(
             f"\n--- Evaluating on {dataset_name} for methods: {weighting_methods} ---"
         )
         return self._run_evaluation_from_df(
@@ -441,7 +443,7 @@ class EnsembleEvaluator:
                 evaluates the single best run by 'auc_score'.
         """
         dataset_name = "VALIDATION (HOLD-OUT) SET"  # For logging purposes
-        print(
+        logger.info(
             f"\n--- Validating on {dataset_name} for methods: {weighting_methods} ---"
         )
         return self._run_evaluation_from_df(

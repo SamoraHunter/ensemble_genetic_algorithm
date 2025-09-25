@@ -1,6 +1,7 @@
 import random
 import pandas as pd
 import numpy as np
+import logging
 
 
 import polars as pl
@@ -25,24 +26,25 @@ class read:
             use_polars: If True, attempts to use Polars for faster reading.
                 Defaults to False.
         """
-        print(f"Init main >read on {input_filename}")
+        self.logger = logging.getLogger("ensemble_ga")
+        self.logger.info("Init main >read on %s", input_filename)
         if use_polars:
             try:
                 self.raw_input_data = pl.read_csv(input_filename, ignore_errors=True)
                 self.raw_input_data = self.raw_input_data.to_pandas()
             except Exception as e:
-                print(f"Error reading with Polars: {e}")
-                print("Trying to read with Pandas...")
+                self.logger.warning("Error reading with Polars: %s", e)
+                self.logger.info("Trying to read with Pandas...")
                 try:
                     self.raw_input_data = pd.read_csv(input_filename)
                 except Exception as e:
-                    print(f"Error reading with Pandas: {e}")
+                    self.logger.error("Error reading with Pandas: %s", e)
                     self.raw_input_data = pd.DataFrame()
         else:
             try:
                 self.raw_input_data = pd.read_csv(input_filename)
             except Exception as e:
-                print(f"Error reading with Pandas: {e}")
+                self.logger.error("Error reading with Pandas: %s", e)
                 self.raw_input_data = pd.DataFrame()
 
 
@@ -76,7 +78,8 @@ class read_sample:
                 contains fewer than two unique classes.
         """
         self.filename = input_filename
-        print(f"Init main > read_sample on {self.filename}")
+        self.logger = logging.getLogger("ensemble_ga")
+        self.logger.info("Init main > read_sample on %s", self.filename)
 
         necessary_columns = ["outcome_var_1", "age", "male"]
         read_csv_args = {}
@@ -113,7 +116,7 @@ class read_sample:
         try:
             self.raw_input_data = pd.read_csv(self.filename, **read_csv_args)
         except Exception as e:
-            print(f"Error reading sampled CSV: {e}")
+            self.logger.error("Error reading sampled CSV: %s", e)
             self.raw_input_data = pd.DataFrame()
 
         if (

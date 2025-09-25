@@ -2,10 +2,12 @@ import json
 import pickle
 import random
 import time
+import logging
 
 from typing import Any, Dict, List, Tuple
 import numpy as np
 import torch
+logger = logging.getLogger("ensemble_ga")
 
 
 def store_model(
@@ -42,7 +44,7 @@ def store_model(
             Defaults to "sklearn".
     """
     if ml_grid_object.verbose >= 11:
-        print("store_model")
+        logger.debug("store_model")
 
     model_store_path = ml_grid_object.logging_paths_obj.model_store_path
 
@@ -55,12 +57,8 @@ def store_model(
     log_folder_path = ml_grid_object.logging_paths_obj.log_folder_path
 
     if ml_grid_object.verbose >= 1:
-        print(
-            "model_store_path",
-            model_store_path,
-            "log_folder_path",
-            log_folder_path,
-        )
+        logger.info("model_store_path: %s", model_store_path)
+        logger.info("log_folder_path: %s", log_folder_path)
 
     with open(model_store_path, "r") as f:
         model_store_data = json.load(f)
@@ -70,7 +68,7 @@ def store_model(
     time_stamp = time.time_ns()
 
     if ml_grid_object.verbose >= 11:
-        print("saving model type", model_type)
+        logger.debug("saving model type: %s", model_type)
 
     if model_type == "sklearn":
         model = str(model)
@@ -102,7 +100,6 @@ def store_model(
         "y_pred": list(y_pred),
         "model_type": model_type,
     }
-    # print(model_store_entry)
 
     model_store_data["models"].update({idx: model_store_entry})
 
@@ -114,7 +111,7 @@ def store_model(
     try:
         torch.cuda.empty_cache()  # exp
     except Exception as e:
-        print("Failed to torch empty cache", e)
+        logger.warning("Failed to torch empty cache: %s", e)
 
 
 def get_stored_model(ml_grid_object: Any) -> Tuple:
@@ -162,7 +159,7 @@ def get_stored_model(ml_grid_object: Any) -> Tuple:
     try:
         model_key = str(random.choice(model_key_list))
 
-        print(f"Returning stored model at index {model_key}/{len(model_key_list)}")
+        logger.info("Returning stored model at index %s/%s", model_key, len(model_key_list))
 
         if model_store_data["models"].get(model_key)["model_type"] == "sklearn":
             model = eval(model_store_data["models"].get(model_key)["model"])
@@ -186,7 +183,7 @@ def get_stored_model(ml_grid_object: Any) -> Tuple:
             np.array(model_store_data["models"].get(model_key)["y_pred"]),
         )
     except Exception as e:
-        print("Failed inside getting stored model, returning random new model")
+        logger.error("Failed inside getting stored model, returning random new model: %s", e)
         index = random.randint(0, len(modelFuncList) - 1)
 
         return modelFuncList[index](ml_grid_object, ml_grid_object.local_param_dict)

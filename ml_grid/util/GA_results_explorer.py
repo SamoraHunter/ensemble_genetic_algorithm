@@ -10,6 +10,9 @@ import ast
 import re
 import os
 from typing import List, Optional, Tuple
+import logging
+
+logger = logging.getLogger("ensemble_ga")
 
 # the plots should use the feature names which we extract in the init method. these are a nested list of lists of features. each corresponds to each base learner in order they appear in best_ensemble
 
@@ -67,7 +70,7 @@ class GA_results_explorer:
             ]
         )
 
-        print("Feature names extracted for all ensembles.")
+        logger.info("Feature names extracted for all ensembles.")
 
         self.config_params = [
             "nb_size",
@@ -166,13 +169,13 @@ class GA_results_explorer:
         """
         # Check if the outcome variable exists in the dataframe
         if outcome_variable not in self.df.columns:
-            print(
+            logger.error(
                 f"❌ Error: Outcome variable '{outcome_variable}' not found in the DataFrame."
             )
             return
 
         anova_results = []
-        print(
+        logger.info(
             f"📊 Performing ANOVA F-tests for parameters against '{outcome_variable}'..."
         )
 
@@ -198,13 +201,13 @@ class GA_results_explorer:
                         {"Parameter": param, "F-statistic": f_value, "p-value": p_value}
                     )
                 except Exception as e:
-                    print(f"⚠️ Could not perform ANOVA for parameter '{param}': {e}")
+                    logger.warning("Could not perform ANOVA for parameter '%s': %s", param, e)
             else:
-                print(f"⏩ Skipping '{param}': Not enough unique values for ANOVA.")
+                logger.info("⏩ Skipping '%s': Not enough unique values for ANOVA.", param)
 
         # Check if any results were generated
         if not anova_results:
-            print(
+            logger.warning(
                 "No ANOVA results to plot. This may be because no parameters had sufficient unique values."
             )
             return
@@ -260,16 +263,16 @@ class GA_results_explorer:
                     os.path.join(plot_dir, f"config_anova_{outcome_variable}.png"),
                     bbox_inches="tight",
                 )
-                print(
+                logger.info(
                     f"📈 Plot saved to {os.path.join(plot_dir, f'config_anova_{outcome_variable}.png')}"
                 )
             except Exception as e:
-                print(f"⚠️ Could not save plot to '{plot_dir}': {e}")
+                logger.warning("Could not save plot to '%s': %s", plot_dir, e)
         plt.show()
 
         # Print the detailed results table
-        print("\nANOVA F-test Results (sorted by importance):")
-        print(results_df.to_string())
+        logger.info("\nANOVA F-test Results (sorted by importance):")
+        logger.info(results_df.to_string())
 
     def plot_run_details_anova_feature_importances(
         self, outcome_variable: str = "auc", plot_dir: Optional[str] = None
@@ -290,13 +293,13 @@ class GA_results_explorer:
         """
         # Check if the outcome variable exists in the dataframe
         if outcome_variable not in self.df.columns:
-            print(
+            logger.error(
                 f"❌ Error: Outcome variable '{outcome_variable}' not found in the DataFrame."
             )
             return
 
         anova_results = []
-        print(
+        logger.info(
             f"📊 Performing ANOVA F-tests for run details against '{outcome_variable}'..."
         )
 
@@ -326,15 +329,15 @@ class GA_results_explorer:
                         }
                     )
                 except Exception as e:
-                    print(f"⚠️ Could not perform ANOVA for run detail '{detail}': {e}")
+                    logger.warning("Could not perform ANOVA for run detail '%s': %s", detail, e)
             else:
-                print(
+                logger.info(
                     f"⏩ Skipping '{detail}': Not in DataFrame or not enough unique values for ANOVA."
                 )
 
         # Check if any results were generated
         if not anova_results:
-            print(
+            logger.warning(
                 "No ANOVA results to plot. This may be because no run details had sufficient unique values."
             )
             return
@@ -390,15 +393,15 @@ class GA_results_explorer:
         plt.show()
 
         # Print the detailed results table
-        print("\nANOVA F-test Results (sorted by importance):")
-        print(results_df.to_string())
+        logger.info("\nANOVA F-test Results (sorted by importance):")
+        logger.info(results_df.to_string())
 
     def plot_combined_anova_feature_importances(
         self, outcome_variable: str = "auc", plot_dir: Optional[str] = None
     ) -> None:
         """Plots the combined importance of all parameters using ANOVA.
-
-        This method calculates the F-statistic for every item in both
+        
+        This method calculates the F-statistic for every item in both 
         self.config_params and self.run_details against the outcome variable.
         The results are displayed on one sorted bar chart, with colors
         distinguishing between Hyperparameters and Run Details.
@@ -408,7 +411,7 @@ class GA_results_explorer:
                 variable in self.df to use for the ANOVA test. Defaults to 'auc'.
         """
         if outcome_variable not in self.df.columns:
-            print(
+            logger.error(
                 f"❌ Error: Outcome variable '{outcome_variable}' not found in the DataFrame."
             )
             return
@@ -419,7 +422,7 @@ class GA_results_explorer:
             "Run Detail": self.run_details,
         }
 
-        print(f"📊 Performing combined ANOVA F-tests against '{outcome_variable}'...")
+        logger.info("📊 Performing combined ANOVA F-tests against '%s'...", outcome_variable)
 
         # Loop through both parameter types (Hyperparameter and Run Detail)
         for param_type, param_list in param_lists.items():
@@ -439,14 +442,14 @@ class GA_results_explorer:
                             }
                         )
                     except Exception as e:
-                        print(f"⚠️ Could not process '{param_name}': {e}")
+                        logger.warning("Could not process '%s': %s", param_name, e)
                 else:
-                    print(
+                    logger.info(
                         f"⏩ Skipping '{param_name}': Not in DataFrame or not enough unique values."
                     )
 
         if not all_results:
-            print("No ANOVA results to plot.")
+            logger.warning("No ANOVA results to plot.")
             return
 
         # Create and sort the combined DataFrame
@@ -502,8 +505,8 @@ class GA_results_explorer:
         plt.close()
 
         # Print the detailed results table
-        print("\nCombined ANOVA F-test Results (sorted by importance):")
-        print(results_df.to_string())
+        logger.info("\nCombined ANOVA F-test Results (sorted by importance):")
+        logger.info(results_df.to_string())
 
     def plot_initial_feature_importance(self, outcome_variable="auc", plot_dir=None):
         """
@@ -520,12 +523,12 @@ class GA_results_explorer:
                 dependent variable in the ANOVA test. Defaults to 'auc'.
         """
         if outcome_variable not in self.df.columns:
-            print(
+            logger.error(
                 f"❌ Error: Outcome variable '{outcome_variable}' not found in the DataFrame."
             )
             return
 
-        print(
+        logger.info(
             f"📊 Calculating importance for initial features against '{outcome_variable}'..."
         )
 
@@ -598,10 +601,10 @@ class GA_results_explorer:
             ]
             unique_features = sorted(list(set(all_features_flat)))
             if not unique_features:
-                print("No features found in the 'f_list' column after decoding.")
+                logger.warning("No features found in the 'f_list' column after decoding.")
                 return
         except TypeError:
-            print(
+            logger.error(
                 "❌ Error: Could not process 'f_list'. Ensure it contains lists of binary/int masks or feature names."
             )
             return
@@ -619,7 +622,7 @@ class GA_results_explorer:
 
             # A test is only possible if we have both groups (with and without the feature)
             if temp_df["has_feature"].nunique() < 2:
-                print(
+                logger.info(
                     f"⏩ Skipping '{feature}': Feature is always present or always absent."
                 )
                 continue
@@ -637,10 +640,10 @@ class GA_results_explorer:
                     }
                 )
             except Exception as e:
-                print(f"⚠️ Could not perform ANOVA for '{feature}': {e}")
+                logger.warning("Could not perform ANOVA for '%s': %s", feature, e)
 
         if not anova_results:
-            print("No feature importance results to plot.")
+            logger.warning("No feature importance results to plot.")
             return
 
         # 4. Create DataFrame and plot the results
@@ -671,14 +674,14 @@ class GA_results_explorer:
         if plot_dir is not None:
             plot_path = os.path.join(plot_dir, "initial_feature_importance.png")
             plt.savefig(plot_path)
-            print(f"✅ Feature importance plot saved to: {plot_path}")
+            logger.info("✅ Feature importance plot saved to: %s", plot_path)
 
         plt.show()
         plt.close()
 
         # 5. Print the results table
-        print("\nInitial Feature Importance (sorted):")
-        print(results_df.to_string())
+        logger.info("\nInitial Feature Importance (sorted):")
+        logger.info(results_df.to_string())
 
     def plot_base_learner_feature_importance(
         self, outcome_variable: str = "auc", plot_dir: Optional[str] = None
@@ -696,19 +699,19 @@ class GA_results_explorer:
                 dependent variable. Defaults to 'auc'.
         """
         if outcome_variable not in self.df.columns:
-            print(
+            logger.error(
                 f"❌ Error: Outcome variable '{outcome_variable}' not found in the DataFrame."
             )
             return
 
         feature_names_col = "feature_names"
         if feature_names_col not in self.df.columns:
-            print(
+            logger.error(
                 f"❌ Error: Feature column '{feature_names_col}' not found. Was the explorer initialized correctly?"
             )
             return
 
-        print(f"📊 Aggregating features from 'feature_names' column...")
+        logger.info("📊 Aggregating features from 'feature_names' column...")
         temp_df = self.df[[outcome_variable, feature_names_col]].copy()
 
         # For each run, combine all features from its base learners into a single set
@@ -735,16 +738,16 @@ class GA_results_explorer:
             ]
             unique_features = sorted(list(set(all_features_flat)))
             if not unique_features:
-                print("No features found in any 'feature_names' entries.")
+                logger.warning("No features found in any 'feature_names' entries.")
                 return
         except TypeError:
-            print(
+            logger.error(
                 "❌ Error: Could not process 'feature_names'. Ensure it contains lists of strings."
             )
             return
 
         # 4. Perform ANOVA for each unique feature
-        print(
+        logger.info(
             f"📈 Calculating importance for {len(unique_features)} unique base learner features..."
         )
         anova_results = []
@@ -755,7 +758,7 @@ class GA_results_explorer:
             )
 
             if temp_df["has_feature"].nunique() < 2:
-                print(
+                logger.info(
                     f"⏩ Skipping '{feature}': Feature is always present or always absent in base learners."
                 )
                 continue
@@ -772,10 +775,10 @@ class GA_results_explorer:
                     }
                 )
             except Exception as e:
-                print(f"⚠️ Could not perform ANOVA for '{feature}': {e}")
+                logger.warning("Could not perform ANOVA for '%s': %s", feature, e)
 
         if not anova_results:
-            print("No feature importance results to plot.")
+            logger.warning("No feature importance results to plot.")
             return
 
         # 5. Create DataFrame and plot the results
@@ -806,15 +809,15 @@ class GA_results_explorer:
         if plot_dir is not None:
             plot_path = os.path.join(plot_dir, "base_learner_feature_importance.png")
             plt.savefig(plot_path)
-            print(f"✅ Feature importance plot saved to: {plot_path}")
+            logger.info("✅ Feature importance plot saved to: %s", plot_path)
             plt.close()
 
         plt.show()
         plt.close()
 
         # 6. Print the results table
-        print("\nBase Learner Feature Importance (sorted):")
-        print(results_df.to_string())
+        logger.info("\nBase Learner Feature Importance (sorted):")
+        logger.info(results_df.to_string())
 
     def plot_parameter_distributions(self, param_type="config", plot_dir=None):
         """
@@ -845,12 +848,12 @@ class GA_results_explorer:
                     self.run_details,
                     "Distribution of Run Details & Metadata",
                 ),
-            }
-            params_to_plot, title = param_map[param_type]
-            params_to_plot = [p for p in params_to_plot if p in self.df.columns]
+            }  # fmt: skip
+            params_to_plot, title = param_map[param_type]  # type: ignore
+            params_to_plot = [p for p in params_to_plot if p in self.df.columns]  # type: ignore
 
             if not params_to_plot:
-                print(f"No columns found for type '{param_type}'.")
+                logger.warning("No columns found for type '%s'.", param_type)
                 return
 
             # Setup subplot grid
@@ -859,7 +862,7 @@ class GA_results_explorer:
             fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 4.5 * n_rows))
             axes = axes.flatten()
 
-            print(f"📊 Generating distribution plots for {param_type}...")
+            logger.info("📊 Generating distribution plots for %s...", param_type)
             for i, param in enumerate(params_to_plot):
                 ax = axes[i]
                 data = self.df[param].dropna()
@@ -903,12 +906,12 @@ class GA_results_explorer:
                     features_flat = self.df["f_list"].explode().dropna().tolist()
                     title = "Selection Frequency of Initial Features"
                 except Exception as e:
-                    print(f"Could not process 'f_list': {e}")
+                    logger.error("Could not process 'f_list': %s", e)
                     return
             else:  # 'base_learner_features'
                 bl_cols = [col for col in self.df.columns if col.startswith("BL_")]
                 if not bl_cols:
-                    print("No 'BL_' columns found.")
+                    logger.warning("No 'BL_' columns found.")
                     return
 
                 all_bl_features = []
@@ -918,10 +921,10 @@ class GA_results_explorer:
                 title = "Selection Frequency of Base Learner Features"
 
             if not features_flat:
-                print(f"No features found for type '{param_type}'.")
+                logger.warning("No features found for type '%s'.", param_type)
                 return
 
-            print(f"📊 Generating frequency plot for {param_type}...")
+            logger.info("📊 Generating frequency plot for %s...", param_type)
             freq_df = pd.Series(features_flat).value_counts().reset_index()
             freq_df.columns = ["Feature", "Frequency"]
 
@@ -937,11 +940,11 @@ class GA_results_explorer:
             if plot_dir is not None:
                 plot_path = os.path.join(plot_dir, f"{param_type}_frequency.png")
                 plt.savefig(plot_path)
-                print(f"✅ Frequency plot saved to: {plot_path}")
+                logger.info("✅ Frequency plot saved to: %s", plot_path)
             plt.show()
 
         else:
-            print(
+            logger.error(
                 f"❌ Error: Invalid 'param_type'. Choose from: 'config', 'run_details', 'initial_features', or 'base_learner_features'."
             )
 
@@ -960,7 +963,7 @@ class GA_results_explorer:
         """
         # Prefer using 'feature_names' column if available
         if "feature_names" in self.df.columns:
-            print(
+            logger.info(
                 "📊 Calculating internal ensemble diversity for each run using 'feature_names' column..."
             )
 
@@ -991,11 +994,11 @@ class GA_results_explorer:
         else:
             bl_cols = [col for col in self.df.columns if col.startswith("BL_")]
             if len(bl_cols) < 2:
-                print(
+                logger.error(
                     "❌ Error: Need at least 2 base learner columns (e.g., 'BL_0', 'BL_1') to compare."
                 )
                 return
-            print(
+            logger.info(
                 "📊 Calculating internal ensemble diversity for each run using BL_ columns..."
             )
 
@@ -1074,7 +1077,7 @@ class GA_results_explorer:
         if plot_dir is not None:
             plot_path = os.path.join(plot_dir, "ensemble_feature_diversity.png")
             plt.savefig(plot_path)
-            print(f"✅ Diversity plot saved to: {plot_path}")
+            logger.info("✅ Diversity plot saved to: %s", plot_path)
 
         plt.show()
         plt.close()
@@ -1101,17 +1104,17 @@ class GA_results_explorer:
         required_cols = [performance_metric, cost_metric, hue_parameter]
         for col in required_cols:
             if col not in self.df.columns:
-                print(f"❌ Error: Column '{col}' not found in the DataFrame.")
+                logger.error("❌ Error: Column '%s' not found in the DataFrame.", col)
                 return
 
-        print(
+        logger.info(
             f"📊 Plotting {performance_metric} vs. {cost_metric}, colored by {hue_parameter}..."
         )
 
         # --- 2. Prepare Data ---
         plot_df = self.df[required_cols].dropna()
         if plot_df.empty:
-            print("No data available to plot after removing missing values.")
+            logger.warning("No data available to plot after removing missing values.")
             return
 
         # Ensure the hue parameter is treated as a category for distinct colors
@@ -1155,7 +1158,7 @@ class GA_results_explorer:
         if plot_dir is not None:
             plot_path = os.path.join(plot_dir, "performance_tradeoff.png")
             plt.savefig(plot_path)
-            print(f"✅ Trade-off plot saved to: {plot_path}")
+            logger.info("✅ Trade-off plot saved to: %s", plot_path)
 
         plt.show()
         plt.close()
@@ -1181,10 +1184,10 @@ class GA_results_explorer:
         """
         # --- 1. Validate Inputs & Prepare Data ---
         if history_column not in self.df.columns:
-            print(f"❌ Error: History column '{history_column}' not found.")
+            logger.error("❌ Error: History column '%s' not found.", history_column)
             return
         if highlight_best and performance_metric not in self.df.columns:
-            print(
+            logger.error(
                 f"❌ Error: Performance metric column '{performance_metric}' not found."
             )
             return
@@ -1192,7 +1195,7 @@ class GA_results_explorer:
         plot_df = self.df.dropna(subset=[history_column]).reset_index()
 
         if plot_df.empty:
-            print(f"No data to plot in '{history_column}'.")
+            logger.warning("No data to plot in '%s'.", history_column)
             return
 
         # --- Helper function to safely parse string-lists ---
@@ -1210,7 +1213,7 @@ class GA_results_explorer:
         # --- 2. Create Plot ---
         plt.style.use("seaborn-v0_8-whitegrid")
         fig, ax = plt.subplots(figsize=(12, 8))
-        print(f"📊 Plotting {len(plot_df)} convergence curves...")
+        logger.info("📊 Plotting %s convergence curves...", len(plot_df))
         min_fitness = float("inf")
 
         # Plot all runs with transparency
@@ -1244,7 +1247,7 @@ class GA_results_explorer:
                     )
                     ax.legend(fontsize=12)
             except (ValueError, KeyError) as e:
-                print(f"⚠️ Could not highlight best run: {e}")
+                logger.warning("Could not highlight best run: %s", e)
 
         # --- 3. Customize Labels and Title ---
         ax.set_title("GA Convergence for All Runs", fontsize=18, fontweight="bold")
@@ -1260,7 +1263,7 @@ class GA_results_explorer:
         if plot_dir is not None:
             plot_path = os.path.join(plot_dir, "convergence_curves.png")
             plt.savefig(plot_path)
-            print(f"✅ Convergence plot saved to: {plot_path}")
+            logger.info("✅ Convergence plot saved to: %s", plot_path)
 
         plt.show()
         plt.close()
@@ -1284,16 +1287,16 @@ class GA_results_explorer:
         required_cols = [param1, param2, performance_metric]
         for col in required_cols:
             if col not in self.df.columns:
-                print(f"❌ Error: Column '{col}' not found in the DataFrame.")
+                logger.error("❌ Error: Column '%s' not found in the DataFrame.", col)
                 return
 
         # Warn if parameters have too many unique values, which can make the heatmap unreadable
         if self.df[param1].nunique() > 15 or self.df[param2].nunique() > 15:
-            print(
+            logger.warning(
                 f"⚠️ Warning: '{param1}' or '{param2}' has many unique values. The heatmap may be large."
             )
 
-        print(f"📊 Generating interaction heatmap for '{param1}' and '{param2}'...")
+        logger.info("📊 Generating interaction heatmap for '%s' and '%s'...", param1, param2)
 
         # --- 2. Create Pivot Table ---
         # This groups the data by the two parameters and calculates the mean performance for each combination.
@@ -1306,7 +1309,7 @@ class GA_results_explorer:
                 aggfunc="mean",
             )
         except Exception as e:
-            print(f"❌ Error creating pivot table: {e}")
+            logger.error("❌ Error creating pivot table: %s", e)
             return
 
         # --- 3. Create Heatmap ---
@@ -1335,7 +1338,7 @@ class GA_results_explorer:
         if plot_dir is not None:
             plot_path = os.path.join(plot_dir, "interaction_heatmap.png")
             plt.savefig(plot_path)
-            print(f"✅ Interaction heatmap saved to: {plot_path}")
+            logger.info("✅ Interaction heatmap saved to: %s", plot_path)
 
         plt.show()
         plt.close()
@@ -1362,13 +1365,13 @@ class GA_results_explorer:
         """
         # --- 1. Validate Inputs ---
         if performance_metric not in self.df.columns:
-            print(f"❌ Error: Performance metric '{performance_metric}' not found.")
+            logger.error("❌ Error: Performance metric '%s' not found.", performance_metric)
             return
         if not 0 < top_percent <= 100:
-            print(f"❌ Error: top_percent must be between 0 and 100.")
+            logger.error("❌ Error: top_percent must be between 0 and 100.")
             return
         if feature_type not in ["initial", "base_learner"]:
-            print(f"❌ Error: feature_type must be 'initial' or 'base_learner'.")
+            logger.error("❌ Error: feature_type must be 'initial' or 'base_learner'.")
             return
 
         # --- 2. Filter for Top Runs ---
@@ -1377,10 +1380,10 @@ class GA_results_explorer:
         top_runs_df = self.df[self.df[performance_metric] >= threshold]
 
         if top_runs_df.empty:
-            print(f"⚠️ No runs found in the top {top_percent}%. Cannot generate plot.")
+            logger.warning("⚠️ No runs found in the top %s%%. Cannot generate plot.", top_percent)
             return
 
-        print(
+        logger.info(
             f"📊 Analyzing features from {len(top_runs_df)} runs in the top {top_percent}% by {performance_metric.upper()}..."
         )
 
@@ -1389,14 +1392,14 @@ class GA_results_explorer:
             source_title = "Initial Feature"
             feature_source_col = "f_list"
             if feature_source_col not in top_runs_df.columns:
-                print(f"❌ Error: Feature column '{feature_source_col}' not found.")
+                logger.error("❌ Error: Feature column '%s' not found.", feature_source_col)
                 return
             features_flat = top_runs_df[feature_source_col].explode().dropna().tolist()
         else:  # 'base_learner'
             source_title = "Base Learner Feature"
             feature_names_col = "feature_names"
             if feature_names_col not in top_runs_df.columns:
-                print(
+                logger.error(
                     f"❌ Error: Feature column '{feature_names_col}' not found. Was the explorer initialized correctly?"
                 )
                 return
@@ -1409,7 +1412,7 @@ class GA_results_explorer:
                             features_flat.extend(feature_list)
 
         if not features_flat:
-            print("No features found in the selected top runs.")
+            logger.warning("No features found in the selected top runs.")
             return
 
         freq_df = pd.Series(features_flat).value_counts().reset_index()
@@ -1438,7 +1441,7 @@ class GA_results_explorer:
         if plot_dir is not None:
             plot_path = os.path.join(plot_dir, "feature_stability.png")
             plt.savefig(plot_path)
-            print(f"✅ Stability plot saved to: {plot_path}")
+            logger.info("✅ Stability plot saved to: %s", plot_path)
 
         plt.show()
         plt.close()
@@ -1464,13 +1467,13 @@ class GA_results_explorer:
         """
         # 1. Validate Inputs
         if performance_metric not in self.df.columns:
-            print(f"❌ Error: Performance metric '{performance_metric}' not found.")
+            logger.error("❌ Error: Performance metric '%s' not found.", performance_metric)
             return
         if feature_type not in ["initial", "base_learner"]:
-            print(f"❌ Error: feature_type must be 'initial' or 'base_learner'.")
+            logger.error("❌ Error: feature_type must be 'initial' or 'base_learner'.")
             return
 
-        print(
+        logger.info(
             f"📊 Plotting {performance_metric} vs. number of {feature_type} features..."
         )
 
@@ -1480,7 +1483,7 @@ class GA_results_explorer:
         if feature_type == "initial":
             source_col, title_frag = "f_list", "Initial"
             if source_col not in self.df.columns:
-                print(f"❌ Error: Feature column '{source_col}' not found.")
+                logger.error("❌ Error: Feature column '%s' not found.", source_col)
                 return
             temp_df["solution_size"] = self.df[source_col].apply(
                 lambda x: len(x) if isinstance(x, list) else 0
@@ -1488,7 +1491,7 @@ class GA_results_explorer:
         else:  # 'base_learner'
             source_col, title_frag = "feature_names", "Base Learner"
             if source_col not in self.df.columns:
-                print(
+                logger.error(
                     f"❌ Error: Feature column '{source_col}' not found. Was the explorer initialized correctly?"
                 )
                 return
@@ -1521,7 +1524,7 @@ class GA_results_explorer:
                 scatter_kws={"alpha": 0.5, "color": "darkslateblue"},
             )
         except np.linalg.LinAlgError:
-            print(
+            logger.warning(
                 "⚠️ Warning: Could not fit a 2nd-order polynomial due to a numerical issue (e.g., insufficient unique data points)."
                 "\nDisplaying a scatter plot without the trend line."
             )
@@ -1547,7 +1550,7 @@ class GA_results_explorer:
         if plot_dir is not None:
             plot_path = os.path.join(plot_dir, "performance_vs_size.png")
             plt.savefig(plot_path)
-            print(f"✅ Performance vs. Size plot saved to: {plot_path}")
+            logger.info("✅ Performance vs. Size plot saved to: %s", plot_path)
 
         plt.show()
         plt.close()
@@ -1571,16 +1574,16 @@ class GA_results_explorer:
         """
         # 1. Validate Inputs
         if performance_metric not in self.df.columns:
-            print(f"❌ Error: Performance metric '{performance_metric}' not found.")
+            logger.error("❌ Error: Performance metric '%s' not found.", performance_metric)
             return
         if not 0 < top_percent <= 100:
-            print(f"❌ Error: top_percent must be between 0 and 100.")
+            logger.error("❌ Error: top_percent must be between 0 and 100.")
             return
         if not isinstance(top_n_features, int) or top_n_features <= 0:
-            print(f"❌ Error: top_n_features must be a positive integer.")
+            logger.error("❌ Error: top_n_features must be a positive integer.")
             return
         if feature_type not in ["initial", "base_learner"]:
-            print(f"❌ Error: feature_type must be 'initial' or 'base_learner'.")
+            logger.error("❌ Error: feature_type must be 'initial' or 'base_learner'.")
             return
 
         # 2. Filter for Top Runs and Identify Top N Features
@@ -1588,7 +1591,7 @@ class GA_results_explorer:
         top_runs_df = self.df[self.df[performance_metric] >= threshold]
 
         if top_runs_df.empty:
-            print(f"⚠️ No runs found in the top {top_percent}%. Cannot generate plot.")
+            logger.warning("⚠️ No runs found in the top %s%%. Cannot generate plot.", top_percent)
             return
 
         # Calculate co-occurrence matrix
@@ -1601,7 +1604,7 @@ class GA_results_explorer:
         plt.figure(figsize=(12, 10))
 
         if cooccurrence_matrix.empty:
-            print("⚠️ Co-occurrence matrix is empty. Cannot generate plot.")
+            logger.warning("⚠️ Co-occurrence matrix is empty. Cannot generate plot.")
             return
 
         sns.heatmap(
@@ -1695,12 +1698,12 @@ class GA_results_explorer:
         best-performing ensembles across all runs.
         """
         if "best_ensemble" not in self.df.columns:
-            print(self.df["best_ensemble"].iloc[0])
-
-            print("❌ Error: 'best_ensemble' column not found in the DataFrame.")
+            logger.error(
+                "❌ Error: 'best_ensemble' column not found in the DataFrame."
+            )
             return
 
-        print("📊 Analyzing algorithm distribution in best ensembles...")
+        logger.info("📊 Analyzing algorithm distribution in best ensembles...")
 
         all_algorithms = []
         # Iterate over each run's best ensemble string
@@ -1713,11 +1716,11 @@ class GA_results_explorer:
                 all_algorithms.extend(algorithms_in_run)
             except Exception as e:
                 # This is a fallback, but the regex should be quite safe.
-                print(f"Could not parse algorithms from an ensemble string: {e}")
+                logger.warning("Could not parse algorithms from an ensemble string: %s", e)
                 continue
 
         if not all_algorithms:
-            print("No algorithms could be extracted from the 'best_ensemble' column.")
+            logger.warning("No algorithms could be extracted from the 'best_ensemble' column.")
             return
 
         # Calculate the frequency of each algorithm
@@ -1782,7 +1785,7 @@ class GA_results_explorer:
             interaction_params: The two parameters for the interaction heatmap.
             tradeoff_params: The cost and hue parameters for the tradeoff plot.
         """
-        print("--- Running All Plots ---")
+        logger.info("--- Running All Plots ---")
 
         # Parameter and Run Detail Importance
         self.plot_config_anova_feature_importances(
@@ -1846,7 +1849,7 @@ class GA_results_explorer:
                 plot_dir=plot_dir,
             )
 
-        print("--- All Plots Finished ---")
+        logger.info("--- All Plots Finished ---")
 
 
 def extract_feature_arrays_from_string(raw_ensemble_string: str) -> List[List[int]]:
@@ -1881,7 +1884,7 @@ def extract_feature_arrays_from_string(raw_ensemble_string: str) -> List[List[in
         return feature_arrays
 
     except Exception as e:
-        print(f"❌ An error occurred during extraction: {e}")
+        logger.error("❌ An error occurred during extraction: %s", e)
         return []
 
 

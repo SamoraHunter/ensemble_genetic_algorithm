@@ -1,5 +1,7 @@
 import os
 import time
+import logging
+import pathlib
 import traceback
 from typing import Any, Dict, List
 import warnings
@@ -12,6 +14,7 @@ from sklearn import metrics
 # from sklearn.utils.testing import ignore_warnings
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.metrics import *
+logger = logging.getLogger("ensemble_ga")
 
 
 class project_score_save_class:
@@ -111,6 +114,9 @@ class project_score_save_class:
 
         file_path = base_project_dir + "final_grid_score_log.csv"
 
+        # Ensure the base project directory exists before trying to write to it.
+        pathlib.Path(base_project_dir).mkdir(parents=True, exist_ok=True)
+
         if not os.path.exists(file_path):
             df.to_csv(
                 file_path,
@@ -158,17 +164,17 @@ class project_score_save_class:
         """
 
         if ml_grid_object.verbose >= 1:
-            print("update_score_log")
+            logger.info("update_score_log")
             # Debugging messages and variable prints
-            print("Valid:", valid)
-            print("ML grid object:", ml_grid_object)
-            print("Scores:", scores)
-            print("Best prediction original:", best_pred_orig)
-            print("Current algorithm:", current_algorithm)
-            print("Method name:", method_name)
-            print("PG:", pg)
-            print("Start:", start)
-            print("Number of iterations:", n_iter_v)
+            logger.info("Valid: %s", valid)
+            logger.info("ML grid object: %s", ml_grid_object)
+            logger.info("Scores: %s", scores)
+            logger.info("Best prediction original: %s", best_pred_orig)
+            logger.info("Current algorithm: %s", current_algorithm)
+            logger.info("Method name: %s", method_name)
+            logger.info("PG: %s", pg)
+            logger.info("Start: %s", start)
+            logger.info("Number of iterations: %s", n_iter_v)
 
         self.global_parameters = global_parameters()
 
@@ -191,16 +197,16 @@ class project_score_save_class:
 
         if ml_grid_object.verbose >= 1:
             # Print shapes of data
-            print("X_train shape:", self.X_train.shape)
-            print("y_train shape:", self.y_train.shape)
-            print("X_test shape:", self.X_test.shape)
-            print("y_test shape:", self.y_test.shape)
-            print("X_test_orig shape:", self.X_test_orig.shape)
-            print("y_test_orig shape:", self.y_test_orig.shape)
-            print("Global parameters:", self.global_parameters)
-            print("best_pred_orig len", len(best_pred_orig))
+            logger.info("X_train shape: %s", self.X_train.shape)
+            logger.info("y_train shape: %s", self.y_train.shape)
+            logger.info("X_test shape: %s", self.X_test.shape)
+            logger.info("y_test shape: %s", self.y_test.shape)
+            logger.info("X_test_orig shape: %s", self.X_test_orig.shape)
+            logger.info("y_test_orig shape: %s", self.y_test_orig.shape)
+            logger.info("Global parameters: %s", self.global_parameters)
+            logger.info("best_pred_orig len %s", len(best_pred_orig))
         try:
-            print("Writing grid permutation to log")
+            logger.info("Writing grid permutation to log")
             # write line to best grid scores---------------------
             column_list = [
                 "nb_size",
@@ -269,7 +275,7 @@ class project_score_save_class:
                 y_true = self.y_test
                 debug_message = "Using self.y_test for evaluation."
             if ml_grid_object.verbose > 1:
-                print(debug_message)
+                logger.info(debug_message)
             auc = metrics.roc_auc_score(y_true, best_pred_orig)
             mcc = matthews_corrcoef(y_true, best_pred_orig)
             f1 = f1_score(y_true, best_pred_orig, average="binary")
@@ -335,8 +341,8 @@ class project_score_save_class:
             line["best_ensemble"] = [str(best_ensemble)]
 
             if ml_grid_object.verbose >= 1:
-                print("current_algorithm")
-                print(current_algorithm)
+                logger.info("current_algorithm")
+                logger.info(current_algorithm)
 
             # for iii in range(0, len(current_algorithm[0])):
             #     f_list = []
@@ -353,7 +359,7 @@ class project_score_save_class:
 
             #     line["BL_" + str(iii)] = [f_list]
 
-            print(line)
+            logger.info(line)
 
             line[column_list].to_csv(
                 ml_grid_object.base_project_dir + "final_grid_score_log.csv",
@@ -363,9 +369,9 @@ class project_score_save_class:
             )
 
         except Exception as e:
-            print(e)
-            print(traceback.format_exc())
-            print("Failed to upgrade grid entry")
+            logger.error(e)
+            logger.error(traceback.format_exc())
+            logger.error("Failed to upgrade grid entry")
             raise
             if self.error_raise:
                 input()

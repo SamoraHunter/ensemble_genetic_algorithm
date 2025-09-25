@@ -1,9 +1,11 @@
 import itertools as it
 import random
 from typing import Dict, List, Iterator, Any
+import logging
 
 from ml_grid.util.config import load_config, merge_configs
 from ml_grid.util.global_params import global_parameters
+logger = logging.getLogger("ensemble_ga")
 
 
 class Grid:
@@ -66,7 +68,7 @@ class Grid:
         self.sample_n = sample_n if sample_n is not None else 1000
 
         if self.verbose >= 1:
-            print(f"Feature space slice sample_n {self.sample_n}")
+            logger.info("Feature space slice sample_n %s", self.sample_n)
 
         # 1. Define default grid
         default_grid = {
@@ -164,7 +166,7 @@ class Grid:
                     yield dict(zip(d.keys(), i))
 
         self.settings_list = list(c_prod(self.grid))
-        print(f"Full settings_list size: {len(self.settings_list)}")
+        logger.info("Full settings_list size: %s", len(self.settings_list))
 
         random.shuffle(self.settings_list)
 
@@ -202,7 +204,7 @@ class Grid:
 
         # If test grid is enabled, override parameters for testing purposes
         if self.test_grid:
-            print("Testing grid enabled")
+            logger.info("Testing grid enabled")
             # Override number of parameters for testing
             self.nb_params = [
                 4,

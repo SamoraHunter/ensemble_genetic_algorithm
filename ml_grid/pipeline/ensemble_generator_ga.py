@@ -1,5 +1,6 @@
 import multiprocessing
 import random
+import logging
 import warnings
 from typing import Any, List, Tuple
 from multiprocessing import Manager, Process
@@ -11,6 +12,7 @@ from ml_grid.util.model_methods_ga import get_stored_model
 from scipy.stats import skewnorm
 from tqdm import tqdm
 from functools import partial
+logger = logging.getLogger("ensemble_ga")
 
 
 # v3
@@ -33,7 +35,7 @@ def do_work(n: int = 0, ml_grid_object: Any = None) -> Tuple:
         format (mccscore, model_object, feature_list, ...).
     """
     if ml_grid_object.verbose >= 11:
-        print("do_work")
+        logger.debug("do_work")
 
     use_stored_base_learners = ml_grid_object.config_dict.get(
         "use_stored_base_learners"
@@ -46,17 +48,17 @@ def do_work(n: int = 0, ml_grid_object: Any = None) -> Tuple:
     try:
         if use_stored_base_learners and random.random() > 0.5:
             if ml_grid_object.verbose >= 2:
-                print("get_stored_model...")
+                logger.debug("get_stored_model...")
 
             return get_stored_model(ml_grid_object)
 
         else:
             if ml_grid_object.verbose >= 11:
-                print(f"Generating new model with {modelFuncList[index].__name__}")
+                logger.debug("Generating new model with %s", modelFuncList[index].__name__)
             return modelFuncList[index](ml_grid_object, ml_grid_object.local_param_dict)
     except Exception as e:
-        print(e)
-        print(f"Failed to return model at index {index}, returning perceptron")
+        logger.error(e)
+        logger.error("Failed to return model at index %s, returning perceptron", index)
         raise e
         # Fallback to a known simple model
         return modelFuncList[1](ml_grid_object, ml_grid_object.local_param_dict)
@@ -105,10 +107,8 @@ def ensembleGenerator(nb_val: int = 28, ml_grid_object: Any = None) -> List[Tupl
         This list constitutes a single ensemble (an "individual" in GA terms).
     """
     if ml_grid_object.verbose >= 11:
-        print("Generating ensemble...ensembleGenerator", nb_val)
-        print("ensembleGenerator>>ml_grid_object", ml_grid_object)
-
-    # print("ensembleGenerator: ", nb_val)
+        logger.debug("Generating ensemble...ensembleGenerator %s", nb_val)
+        logger.debug("ensembleGenerator>>ml_grid_object %s", ml_grid_object)
 
     # nb_val = random.randint(2, nb_val) # dynamic individual size
     max_Value = nb_val - 2
@@ -141,16 +141,16 @@ def ensembleGenerator(nb_val: int = 28, ml_grid_object: Any = None) -> List[Tupl
             ensemble.append(do_work(ml_grid_object=ml_grid_object, n=_))
 
         if len(ensemble) != nb_val:
-            print(
-                f"Error generating ensemble {len(ensemble)} {nb_val} {len(dummy_list)}"
+            logger.error(
+                "Error generating ensemble %s %s %s", len(ensemble), nb_val, len(dummy_list)
             )
             raise Exception(
-                f"Error generating ensemble {len(ensemble)} {nb_val} {len(dummy_list)}"
+                f"Error generating ensemble {len(ensemble)} {nb_val} {len(dummy_list)}" # f-string is fine for exceptions
             )
 
         if ml_grid_object.verbose >= 11:
-            print("Returning ensemble of size ", len(ensemble))
-            print(ensemble)
+            logger.debug("Returning ensemble of size %s", len(ensemble))
+            logger.debug(ensemble)
         return ensemble
 
     elif nb_val > 1:
@@ -164,20 +164,20 @@ def ensembleGenerator(nb_val: int = 28, ml_grid_object: Any = None) -> List[Tupl
             ensemble.append(_)
 
         if len(ensemble) != nb_val:
-            print(
-                f"Error generating ensemble {len(ensemble)} {nb_val} {len(dummy_list)}"
+            logger.error(
+                "Error generating ensemble %s %s %s", len(ensemble), nb_val, len(dummy_list)
             )
             raise Exception(
-                f"Error generating ensemble {len(ensemble)} {nb_val} {len(dummy_list)}"
+                f"Error generating ensemble {len(ensemble)} {nb_val} {len(dummy_list)}" # f-string is fine for exceptions
             )
 
         if ml_grid_object.verbose >= 11:
-            print("Returning ensemble of size ", len(ensemble))
-            print(ensemble)
+            logger.debug("Returning ensemble of size %s", len(ensemble))
+            logger.debug(ensemble)
         return ensemble
 
     else:
-        print(
+        logger.warning(
             "Nb_val passed <1 Returning individual of size from baseLearnerGenerator",
             nb_val,
         )
