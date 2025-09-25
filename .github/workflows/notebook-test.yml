@@ -69,8 +69,8 @@ jobs:
         id: setup
         run: |
           chmod +x ./setup.sh
-          # Use the --cpu flag for CI, which matches the intent of the original steps
-          ./setup.sh --cpu
+          # Use --cpu for CPU-only PyTorch and --dev to install testing tools like pytest
+          ./setup.sh --cpu --dev
 
       - name: Run unit tests with pytest
         run: |
@@ -84,4 +84,4 @@ jobs:
         run: |
           # Execute the example notebook with an increased timeout of 60 minutes (3600 seconds).
           # The default is 30s, which is often too short for ML experiments.
-          ga_env/bin/jupyter nbconvert --to notebook --execute --ExecutePreprocessor.timeout=3600 notebooks/example_usage.ipynb --output notebooks/executed_example_usage.ipynb
+          ga_env/bin/jupyter nbconvert --to notebook --execute --ExecutePreprocessor.timeout=3600 notebooks/example_usage.ipynb --output executed_example_usage.ipynb
