@@ -7,7 +7,6 @@ from sklearn.metrics import matthews_corrcoef, roc_auc_score
 from sklearn import metrics
 from ml_grid.util.debug_methods_ga import debug_base_learner
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
-from ml_grid.util.global_params import global_parameters
 from ml_grid.util.model_methods_ga import store_model
 from ml_grid.util.param_space import ParamSpace
 
@@ -46,7 +45,9 @@ def SVC_ModelGenerator(
         0.5 is returned.
 
     """
+    from ml_grid.util.global_params import global_parameters
     global_parameter_val = global_parameters()
+
 
     verbose = global_parameter_val.verbose
     store_base_learners = ml_grid_object.global_params.store_base_learners

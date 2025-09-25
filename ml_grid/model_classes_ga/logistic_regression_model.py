@@ -5,7 +5,6 @@ import numpy as np
 
 from ml_grid.util.debug_methods_ga import debug_base_learner
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
-from ml_grid.util.global_params import global_parameters
 from ml_grid.util.model_methods_ga import store_model
 from sklearn import metrics
 from sklearn.linear_model import LogisticRegression
@@ -44,8 +43,9 @@ def logisticRegressionModelGenerator(
             - auc_score (float): The ROC AUC score.
             - y_pred (np.ndarray): The model's predictions on the test set.
     """
-
+    from ml_grid.util.global_params import global_parameters
     global_parameter_val = global_parameters()
+
 
     verbose = global_parameter_val.verbose
 

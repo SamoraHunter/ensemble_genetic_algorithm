@@ -18,7 +18,6 @@ from ml_grid.ga_functions.ga_ann_util import (
 )
 from ml_grid.util.debug_methods_ga import debug_base_learner
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
-from ml_grid.util.global_params import global_parameters
 from ml_grid.util.model_methods_ga import store_model
 from sklearn.preprocessing import StandardScaler
 
@@ -95,7 +94,9 @@ def Pytorch_binary_class_ModelGenerator(
             - y_pred (np.ndarray): The model's predictions on the test set.
 
     """
+    from ml_grid.util.global_params import global_parameters
     global_parameter_val = global_parameters()
+
 
     verbose = global_parameter_val.verbose
     store_base_learners = ml_grid_object.global_params.store_base_learners

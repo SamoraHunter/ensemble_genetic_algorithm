@@ -11,6 +11,7 @@
 - [Key Features](#key-features)
 - [Installation](#installation)
 - [Quickstart](#quickstart)
+- [Configuration](#configuration)
 - [Documentation](#-documentation)
 - [Contributing](#contributing)
 - [Diagrams](#diagrams)
@@ -94,47 +95,77 @@ A numeric data matrix (Pandas dataframe) with a binary outcome variable with the
 - **Python**: >=3.10
 - **Operating System**: Linux-5.4.0-125-generic-x86_64-with-debian-buster-sid
 
-## Usage
+## Quickstart
 
-To use this project, follow the steps below:
-
-1. **Set Paths for Input Data**: Ensure you have the necessary input data and set the paths accordingly. Refer to the unit test synthetic data for an example of the feature column naming convention.
-
-2. **Configure Feature Space Exploration**:
-   - Determine which parameters to include in the feature space exploration by setting the `grid` parameter to `True` or `False`.
-
-3. **Configure Learning Algorithm Inclusion**:
-   - Customize the list of learning algorithms you want to include by populating the `modelFuncList` variable.
-
-4. **Configure Genetic Algorithm Hyperparameters**:
-   - Adjust the genetic algorithm's hyperparameters as needed:
-     - Maximum Individual Size: Set the value for `nb_params`.
-     - Population Size: Set the value for `pop_params`.
-     - Maximum Generation Number: Set the value for `g_params`.
-
-Example Configuration:
+Here is a minimal example of how to run an experiment programmatically within a Python script or Jupyter notebook.
 
 ```python
-# Example Configuration
-grid = {
-    # Set feature space exploration parameters
-    "parameter1": True,
-    "parameter2": False,
-    # Add more parameters as needed
-}
+import os
+import time
+from ml_grid.util.global_params import global_parameters
+from ml_grid.util.grid_param_space_ga import Grid
+from ml_grid.pipeline import data_pipe_grid
+from ml_grid.ga_model_pipeline import main_ga
 
-modelFuncList = [
-    # Add learning algorithms to include in the experiment
-    "Algorithm1",
-    "Algorithm2",
-    # Add more algorithms as needed
-]
+# 1. Initialize global parameters. This will load from config.yml if it exists.
+# You can override specific parameters at runtime.
+global_params = global_parameters(
+    input_csv_path="path/to/your/data.csv",
+    n_iter=2, # Number of grid search iterations
+    testing=True, # Use a smaller test grid for speed
+    verbose=1
+)
 
-# Genetic algorithm hyperparameters
-nb_params = 100  # Maximum individual size
-pop_params = 50  # Population size
-g_params = 10    # Maximum generation number
+# 2. Define the search space for the experiment.
+grid = Grid(sample_n=global_params.n_iter, test_grid=global_params.testing)
 
+# 3. Run the main experiment loop.
+for i in range(global_params.n_iter):
+    
+    # Get the next set of hyperparameters from the grid
+    local_param_dict = next(grid.settings_list_iterator)
+
+    # Create the ml_grid_object for this iteration
+    ml_grid_object = data_pipe_grid.pipe(
+        global_params, local_param_dict
+    )
+
+    # Run the genetic algorithm with these settings
+    main_ga.run(ml_grid_object).execute()
+```
+
+## Configuration
+
+The recommended way to configure the project is by creating a `config.yml` file in your project's root directory. This allows you to manage all settings in one place.
+
+1.  **Create `config.yml`**: Copy the `config.yml.example` file from the repository to a new file named `config.yml`.
+2.  **Edit**: Uncomment and modify the parameters you wish to change. Any parameter not specified in your `config.yml` will use its default value.
+
+### Example `config.yml`
+
+```yaml
+# config.yml
+
+global_params:
+  # --- Experiment Settings ---
+  input_csv_path: "data/my_dataset.csv"
+  n_iter: 20
+  model_list: ["logisticRegression", "randomForest", "XGBoost", "Pytorch_binary_class"]
+
+  # --- Execution & Logging ---
+  verbose: 2
+  grid_n_jobs: 8
+  store_base_learners: True
+
+ga_params:
+  nb_params: [8, 16, 24]       # Number of base learners per ensemble
+  pop_params: [64, 128]        # Population size
+  g_params: [100]              # Number of generations
+
+grid_params:
+  weighted: ["unweighted", "de"] # Ensemble weighting methods
+  resample: ["undersample", None]
+  corr: [0.95]
 ```
 
 ## 📘 FAQ / User Guide
