@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "A project for ensemble methods using genetic algorithms."
 readme = "README.md"
 requires-python = ">=3.10"
-license = "MIT"
+license = {text = "MIT"}
 authors = [
     { name = "Samora Hunter", email = "samorahunter@hotmail.co.uk" },
 ]
@@ -18,18 +18,10 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Operating System :: OS Independent",
-    "License :: OSI Approved :: MIT License",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-
-[project.urls]
-Homepage = "https://github.com/SamoraHunter/ensemble_genetic_algorithm"
-Documentation = "https://ensemble-genetic-algorithm.readthedocs.io/en/latest/"
-Repository = "https://github.com/SamoraHunter/ensemble_genetic_algorithm"
-
-# Core dependencies required for the project to run
 dependencies = [
     "deap",
     "eventlet",
@@ -58,8 +50,13 @@ dependencies = [
     "PyYAML",
 ]
 
-[project.optional-dependencies]
+[project.urls]
+Homepage = "https://github.com/SamoraHunter/ensemble_genetic_algorithm"
+Documentation = "https://ensemble-genetic-algorithm.readthedocs.io/en/latest/"
+Repository = "https://github.com/SamoraHunter/ensemble_genetic_algorithm"
+
 # Dependencies for development, testing, and code quality
+[project.optional-dependencies]
 dev = [
     "pytest",
     "pre-commit",
