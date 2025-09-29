@@ -30,3 +30,11 @@ class TestHandleColumnNames(unittest.TestCase):
             ),
             "Columns with bad characters should be renamed.",
         )
+
+    def test_empty_dataframe(self):
+        """Test that an empty DataFrame is handled without errors."""
+        df = pd.DataFrame()
+        clean_up = clean_up_class()
+        clean_up.rename_cols = True
+        result = clean_up.handle_column_names(df)
+        self.assertTrue(result.empty)

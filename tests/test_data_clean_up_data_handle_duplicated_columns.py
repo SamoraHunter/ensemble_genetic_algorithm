@@ -8,11 +8,8 @@ class TestHandleDuplicatedColumns(unittest.TestCase):
     def test_handle_duplicated_columns_normal_case(self):
         # Prepare input DataFrame with duplicated columns
         # Create a sample DataFrame with duplicate columns
-        data = {"A": [1, 2, 3], "B": [4, 5, 6], "A": [7, 8, 9]}  # 'A' is duplicated
-        df = pd.DataFrame(data)
-
-        # Apply the operation to remove duplicate columns
-        df = df.loc[:, ~df.columns.duplicated()]
+        data = {"A": [1, 2, 3], "B": [4, 5, 6], "C": [7, 8, 9]}
+        df = pd.DataFrame(data, columns=["A", "B", "A"])  # Creates duplicate 'A' column
 
         # Create an instance of YourClass
         your_instance = clean_up_class()

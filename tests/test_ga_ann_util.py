@@ -86,5 +86,19 @@ class TestBinaryClassification(unittest.TestCase):
         output2_eval = self.model(input_tensor)
         self.assertTrue(torch.equal(output1_eval, output2_eval), "Outputs should be identical in eval mode.")
 
+    @unittest.skipIf(not torch.cuda.is_available(), "CUDA not available")
+    def test_forward_pass_on_gpu(self):
+        """Test the forward pass on a CUDA device, if available."""
+        device = torch.device("cuda")
+        model_gpu = self.model.to(device)
+        input_tensor = torch.randn(self.batch_size, self.column_length).to(device)
+        
+        try:
+            output = model_gpu(input_tensor)
+            self.assertEqual(output.shape, (self.batch_size, 1))
+            self.assertEqual(output.device.type, "cuda")
+        except Exception as e:
+            self.fail(f"Forward pass on GPU failed with exception: {e}")
+
 if __name__ == '__main__':
     unittest.main()

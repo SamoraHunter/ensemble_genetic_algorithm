@@ -39,6 +39,24 @@ class TestHandleCorrelationMatrix(unittest.TestCase):
         )
         self.assertEqual(result, [])
 
+    def test_empty_dataframe(self):
+        """Test that an empty DataFrame is handled gracefully."""
+        result = handle_correlation_matrix(
+            self.local_param_dict, self.drop_list, pd.DataFrame(), chunk_size=1
+        )
+        self.assertEqual(result, [])
+
+    def test_negative_correlation(self):
+        """Test that high negative correlation is also detected."""
+        self.df["C"] = -self.df["A"] + np.random.normal(loc=0, scale=0.1, size=100)
+        result = handle_correlation_matrix(
+            self.local_param_dict, self.drop_list, self.df, chunk_size=3
+        )
+        # Should find both ('A', 'B') and ('A', 'C')
+        self.assertEqual(len(result), 2)
+        self.assertIn(frozenset(("A", "B")), [frozenset(p) for p in result])
+        self.assertIn(frozenset(("A", "C")), [frozenset(p) for p in result])
+
     def test_all_columns_in_single_chunk(self):
         result = handle_correlation_matrix(
             self.local_param_dict, self.drop_list, self.df, chunk_size=3

@@ -26,6 +26,19 @@ class TestEnsembleDiversity(unittest.TestCase):
             (0, 0, 0, 0, 0, np.array([1, 0, 1, 0]))
         ]]
 
+        # Ensemble with a single member
+        self.single_member_ensemble = [[
+            (0, 0, 0, 0, 0, np.array([1, 1, 0, 0]))
+        ]]
+
+        # Empty ensemble
+        self.empty_ensemble = [[]]
+
+        # Ensemble with non-binary predictions (should be handled gracefully)
+        self.float_ensemble = [[
+            (0, 0, 0, 0, 0, np.array([0.8, 0.2, 0.6, 0.4]))
+        ]]
+
     def test_jaccard_diversity(self):
         """Test Jaccard diversity calculation."""
         self.assertEqual(self.measurer.measure_jaccard_diversity(self.identical_ensemble), 0.0)
@@ -85,6 +98,19 @@ class TestEnsembleDiversity(unittest.TestCase):
         penalized_auc, penalized_mcc = apply_diversity_penalty(auc, mcc, 0.5, params)
         self.assertEqual(penalized_auc, auc * 0.75)
         self.assertEqual(penalized_mcc, mcc * 0.75)
+
+    def test_diversity_with_single_member(self):
+        """Test that diversity is 0 for an ensemble with one member."""
+        self.assertEqual(self.measurer.measure_jaccard_diversity(self.single_member_ensemble), 0.0)
+        self.assertEqual(self.measurer.measure_hamming_diversity(self.single_member_ensemble), 0.0)
+        self.assertEqual(self.measurer.measure_disagreement_diversity(self.single_member_ensemble), 0.0)
+
+    def test_diversity_with_empty_ensemble(self):
+        """Test that diversity is 0 for an empty ensemble."""
+        self.assertEqual(self.measurer.measure_jaccard_diversity(self.empty_ensemble), 0.0)
+        self.assertEqual(self.measurer.measure_hamming_diversity(self.empty_ensemble), 0.0)
+        self.assertEqual(self.measurer.measure_disagreement_diversity(self.empty_ensemble), 0.0)
+
 
 if __name__ == '__main__':
     unittest.main()

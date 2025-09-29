@@ -48,6 +48,21 @@ class TestFeatureMethods(unittest.TestCase):
         result = self.feature_methods.getNfeaturesANOVAF(n_features, X_train, y_train)
         self.assertEqual(result, ["feature1"])
 
+    def test_getNfeaturesANOVAF_n_greater_than_features(self):
+        """Test that it returns all features if n is larger than available features."""
+        X_train = pd.DataFrame(
+            {
+                "feature1": [1, 2, 3],
+                "feature2": [4, 5, 6],
+            }
+        )
+        y_train = np.array([1, 0, 1])
+        n_features = 5  # More than available features
+        result = self.feature_methods.getNfeaturesANOVAF(n_features, X_train, y_train)
+        
+        self.assertEqual(len(result), 2)
+        self.assertCountEqual(result, ["feature1", "feature2"])
+
 
 if __name__ == "__main__":
     unittest.main()

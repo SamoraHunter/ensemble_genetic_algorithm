@@ -43,6 +43,18 @@ class TestPredictWithFallback(unittest.TestCase):
         # Verify that the output is correct
         self.assertTrue(torch.allclose(y_pred, mock_model.return_value))
 
+    def test_predict_with_fallback_with_empty_input(self):
+        """Test that the fallback handles empty input tensors correctly."""
+        empty_input = torch.empty(0, 10)
+        empty_target = torch.empty(0)
+
+        y_pred = predict_with_fallback(
+            model=self.model, X_batch=empty_input, y_batch=empty_target
+        )
+
+        # The prediction should also be an empty tensor
+        self.assertEqual(y_pred.shape[0], 0)
+
 
 if __name__ == "__main__":
     unittest.main()
