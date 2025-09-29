@@ -304,45 +304,39 @@ class pipe:
             if (self.X not in self.drop_list)
         ]
 
-        # Add safety mechanism to retain minimum features
-        min_required_features = 5  # Set your minimum threshold
-        core_protected_columns = ["age", "male", "client_idcode"]  # Columns to protect
-
+        # Safety mechanism to retain minimum features if all are pruned
         if not self.final_column_list:
             logger.warning("All features pruned! Activating safety retention...")
 
-            # Try to keep protected columns first
+            # Start with all original columns and remove those in the drop_list
             safety_columns = [
                 col
-                for col in core_protected_columns
-                if col in self.df.columns and col in self.pertubation_columns
+                for col in self.original_feature_names
+                if col not in self.drop_list and col != self.outcome_variable
             ]
 
-            # If no protected columns, use first available columns
+            # If still empty, it's a critical issue, but we can try a last resort
             if not safety_columns:
-                safety_columns = [
-                    col for col in self.pertubation_columns if col in self.df.columns
-                ][:min_required_features]
+                logger.error(
+                    "No features available even after safety retention. Trying to select random non-outcome columns."
+                )
+                potential_features = [
+                    c
+                    for c in self.original_feature_names
+                    if c != self.outcome_variable and c not in self.drop_list
+                ]
+                if len(potential_features) >= 2:
+                    safety_columns = random.sample(potential_features, 2)
+                elif potential_features:
+                    safety_columns = potential_features
 
-            # Update final columns and drop list
             self.final_column_list = safety_columns
-            self.drop_list = [
-                col for col in self.drop_list if col not in self.final_column_list
-            ]
-
             logger.info("Retaining minimum features: %s", self.final_column_list)
-
-            # Add two random features if list still empty
-            if not self.final_column_list:
-                logger.warning("No feature columns retained, selecting two at random")
-                self.final_column_list = []
-                self.final_column_list.append(random.choice(self.original_feature_names))
-                self.final_column_list.append(random.choice(self.original_feature_names))
 
         # Ensure we still have at least 1 feature
         if not self.final_column_list:
             raise ValueError(
-                "CRITICAL: Unable to retain any features despite safety measures"
+                "CRITICAL: Unable to retain any features. The dataset might be empty or only contain the outcome variable."
             )
 
         if not self.final_column_list:

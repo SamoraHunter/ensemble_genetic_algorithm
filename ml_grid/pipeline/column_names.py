@@ -379,4 +379,21 @@ def get_pertubation_columns(
 
     pertubation_columns = deduplicate_list(pertubation_columns)
 
+    # Fallback for generic datasets without specific suffixes
+    if not pertubation_columns:
+        logger.warning(
+            "No columns selected with suffix-based logic. Falling back to generic column selection."
+        )
+        # Get all columns that are not in the initial drop_list
+        potential_columns = [
+            col for col in all_df_columns if col not in set(drop_list)
+        ]
+        # Also exclude the outcome variable from the feature list
+        pertubation_columns = [
+            col for col in potential_columns if col != outcome_variable
+        ]
+        logger.info(
+            f"Selected {len(pertubation_columns)} columns using generic fallback logic."
+        )
+
     return pertubation_columns, drop_list
