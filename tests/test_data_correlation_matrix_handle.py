@@ -52,22 +52,20 @@ class TestHandleCorrelationMatrix(unittest.TestCase):
         result = handle_correlation_matrix(
             self.local_param_dict, self.drop_list, self.df, chunk_size=3
         )
-        # Should find both ('A', 'B') and ('A', 'C')
-        self.assertEqual(len(result), 2)
-        self.assertIn(frozenset(("A", "B")), [frozenset(p) for p in result])
-        self.assertIn(frozenset(("A", "C")), [frozenset(p) for p in result])
+        # Pairs found: (A,B), (A,C), (B,C)
+        # Logic: drop B (from A,B), drop C (from A,C). B is already processed when we check (B,C).
+        # The function now correctly identifies that 'B' and 'C' should be dropped.
+        self.assertEqual(len(result), 2, f"Expected 2 items, but got {len(result)}: {result}")
+        self.assertCountEqual(result, ["B", "C"])
 
     def test_all_columns_in_single_chunk(self):
         result = handle_correlation_matrix(
             self.local_param_dict, self.drop_list, self.df, chunk_size=3
         )
 
-        # fmt: off
-        # Since the function uses frozenset for order-independent pairs, the output will contain
-        # either ('A', 'B') or ('B', 'A'), but not both. We check for the presence of one.
-        self.assertTrue(len(result) == 1)
-        self.assertEqual(frozenset(result[0]), frozenset(('A', 'B')))
-        # fmt: on
+        # 'B' is highly correlated with 'A', so 'B' should be added to the drop list.
+        self.assertEqual(len(result), 1, f"Expected 1 item, but got {len(result)}: {result}")
+        self.assertCountEqual(result, ["B"])
 
 
 if __name__ == "__main__":

@@ -22,7 +22,7 @@ def correlation_coefficient(col1: pd.Series, col2: pd.Series) -> float:
 
 def handle_correlation_matrix(
     local_param_dict: Dict, drop_list: List, df: pd.DataFrame, chunk_size: int = 50
-) -> List[Tuple[str, str]]:
+) -> List[str]:
     """Identifies highly correlated column pairs and adds them to a drop list.
 
     This function calculates the correlation matrix of a DataFrame in chunks to
@@ -33,15 +33,15 @@ def handle_correlation_matrix(
     Args:
         local_param_dict: A dictionary containing local parameters, including
             the 'corr' threshold.
-        drop_list: A list to which correlated column pairs `(col1, col2)`
+        drop_list: A list to which one column from each highly correlated pair
             will be appended.
         df: The input DataFrame to analyze.
         chunk_size: The number of columns to process in each chunk.
             Defaults to 50.
 
     Returns:
-        A list of unique tuples, where each tuple contains a pair of
-        column names that are correlated above the threshold.
+        An updated list of columns to drop, including one column from each
+        highly correlated pair.
     """
 
     # Define the correlation threshold
@@ -55,51 +55,46 @@ def handle_correlation_matrix(
     numeric_columns = df.select_dtypes(include=["number"]).columns
     df_numeric = df[numeric_columns]
 
-    # Split columns into chunks
+    if df_numeric.empty:
+        return []
+
+    n_cols = len(df_numeric.columns)
+    to_drop = set()
+    processed_cols = set()
+
+    # Split columns into chunks for memory efficiency
     column_chunks = [
         df_numeric.columns[i : i + chunk_size]
-        for i in range(0, len(df_numeric.columns), chunk_size)
+        for i in range(0, n_cols, chunk_size)
     ]
 
-    # Iterate through each column chunk
-    for chunk in tqdm(column_chunks, desc="Calculating Correlations"):
-        # Calculate the correlation coefficients for the current chunk
-        try:
-            # Using abs() to consider both positive and negative correlations
-            correlations = df_numeric[chunk].corr().abs()
-        except Exception as e:
-            logger.error(
-                "Encountered exception while calculating correlations for chunk", chunk
-            )
-            logger.error(e)
-            continue
+    with tqdm(total=n_cols, desc="Calculating Correlations") as pbar:
+        for i, chunk_cols in enumerate(column_chunks):
+            # Define the columns to correlate against: the current chunk and all subsequent chunks
+            remaining_cols = df_numeric.columns[i * chunk_size :]
+            
+            # Calculate correlation for the current slice of the matrix
+            corr_matrix_chunk = df_numeric[remaining_cols].corr().abs()
+            
+            # We only need to check correlations of the current chunk against all remaining columns
+            # This is equivalent to the top-left block of the chunk's correlation matrix
+            sub_matrix = corr_matrix_chunk.loc[chunk_cols, :]
 
-        # Iterate through each column in the chunk
-        for col in chunk:
-            # Filter columns with correlation coefficient greater than the threshold
-            try:
-                # Exclude self-correlation (which is always 1)
-                correlated_cols = correlations[col][
-                    (correlations[col] > threshold) & (correlations[col] <= 1.0)
-                ].index.tolist()
-                # Explicitly remove self-correlation if present
-                if col in correlated_cols:
-                    correlated_cols.remove(col)
-            except KeyError:
-                logger.error(
-                    "Encountered KeyError while calculating correlations for column",
-                    col,
-                )
-                logger.error("Continuing with an empty list of correlated columns")
-                correlated_cols = []
+            # Find highly correlated pairs
+            for col1 in chunk_cols:
+                # Skip if this column is already marked to be dropped
+                if col1 in to_drop:
+                    continue
+                # Find correlations above the threshold, excluding self-correlation
+                correlated_series = sub_matrix.loc[col1][sub_matrix.loc[col1] > threshold]
+                for col2, _ in correlated_series.items():
+                    # Ensure we don't drop both columns in a pair.
+                    # If col2 is not already in to_drop, add it.
+                    if col1 != col2 and col2 not in to_drop:
+                        to_drop.add(col2)
+            pbar.update(len(chunk_cols))
 
-            # Add the correlated columns to the list
-            drop_list.extend([(col, corr_col) for corr_col in correlated_cols])
+    logger.info(f"Identified {len(to_drop)} columns to drop due to high correlation.")
 
-    # Remove duplicates from the list
-    # A frozenset is used to make pairs order-independent, e.g., (a, b) is same as (b, a)
-    unique_pairs = {frozenset(pair) for pair in drop_list}
-    # Convert back to list of tuples
-    drop_list = [tuple(pair) for pair in unique_pairs]
-
-    return drop_list
+    # Return a list of unique columns to drop
+    return sorted(list(to_drop))
