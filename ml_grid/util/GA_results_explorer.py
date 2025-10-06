@@ -7,6 +7,7 @@ import math
 import itertools
 import numpy as np
 import ast
+import json
 import re
 import os
 from typing import List, Optional, Tuple
@@ -58,17 +59,25 @@ class GA_results_explorer:
             extract_feature_arrays_from_string
         )
 
-        # Use the feature arrays as a map on the original feature names
-        self.df["feature_names"] = self.df["feature_arrays"].apply(
-            lambda x: [
-                [
-                    f
-                    for i, f in enumerate(self.original_feature_names)
-                    if i < len(arr) and arr[i] == 1
+        # 2. Decode the run-specific feature names and the feature arrays.
+        def decode_features_per_row(row):
+            try:
+                # Load the specific feature names for this run from the log.
+                run_feature_names = json.loads(row["original_feature_names"])
+                feature_arrays = row["feature_arrays"]
+                # Map each binary array to its corresponding feature names.
+                return [
+                    [run_feature_names[i] for i, bit in enumerate(arr) if bit == 1 and i < len(run_feature_names)]
+                    for arr in feature_arrays
                 ]
-                for arr in x
-            ]
-        )
+            except (json.JSONDecodeError, TypeError, KeyError):
+                # Fallback for old log files or corrupted data
+                return [
+                    [f for i, f in enumerate(self.original_feature_names) if i < len(arr) and arr[i] == 1]
+                    for arr in row.get("feature_arrays", [])
+                ]
+
+        self.df["feature_names"] = self.df.apply(decode_features_per_row, axis=1)
 
         logger.info("Feature names extracted for all ensembles.")
 
@@ -1649,14 +1658,16 @@ class GA_results_explorer:
         """
         # Extract feature names from the top runs
         feature_names = []
-        for index, row in top_runs_df.iterrows():
+        for _, row in top_runs_df.iterrows():
             feature_arrays = row["feature_arrays"]
+            # Load the specific original feature names for this run
+            run_original_feature_names = json.loads(row["original_feature_names"])
             for feature_array in feature_arrays:
                 feature_names.extend(
                     [
                         f
-                        for i, f in enumerate(self.original_feature_names)
-                        if feature_array[i] == 1
+                        for i, f in enumerate(run_original_feature_names)
+                        if i < len(feature_array) and feature_array[i] == 1
                     ]
                 )
 
@@ -1669,13 +1680,14 @@ class GA_results_explorer:
         cooccurrence_matrix = pd.DataFrame(0, index=top_features, columns=top_features)
 
         # Iterate over the top runs and update the co-occurrence matrix
-        for index, row in top_runs_df.iterrows():
+        for _, row in top_runs_df.iterrows():
             feature_arrays = row["feature_arrays"]
+            run_original_feature_names = json.loads(row["original_feature_names"])
             for feature_array in feature_arrays:
                 features = [
                     f
-                    for i, f in enumerate(self.original_feature_names)
-                    if feature_array[i] == 1
+                    for i, f in enumerate(run_original_feature_names)
+                    if i < len(feature_array) and feature_array[i] == 1
                 ]
                 for feature1 in features:
                     for feature2 in features:

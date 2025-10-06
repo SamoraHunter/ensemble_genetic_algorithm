@@ -1,5 +1,6 @@
 import os
 import time
+import json
 import logging
 import pathlib
 import traceback
@@ -106,13 +107,14 @@ class project_score_save_class:
             "valid",
             "generation_progress_list",
             "best_ensemble",
+            "original_feature_names",
         ]
 
         # column_list = column_list + ["BL_" + str(x) for x in range(0, 64)]
 
         df = pd.DataFrame(data=None, columns=column_list)
 
-        file_path = base_project_dir + "final_grid_score_log.csv"
+        file_path = os.path.join(base_project_dir, "final_grid_score_log.csv")
 
         # Ensure the base project directory exists before trying to write to it.
         pathlib.Path(base_project_dir).mkdir(parents=True, exist_ok=True)
@@ -138,6 +140,7 @@ class project_score_save_class:
         valid: bool = False,
         generation_progress_list: List = [],
         best_ensemble: str = "",
+        original_feature_names: List[str] = [],
     ):
         """Calculates metrics and appends a new result row to the log file.
 
@@ -161,6 +164,8 @@ class project_score_save_class:
                 (`y_test_orig`). Otherwise, it's on the test set (`y_test`).
             generation_progress_list: A list of fitness scores per generation (for GA).
             best_ensemble: A string representation of the final best ensemble.
+            original_feature_names: The list of original feature names for this
+                specific run.
         """
 
         if ml_grid_object.verbose >= 1:
@@ -262,6 +267,7 @@ class project_score_save_class:
                 "valid",
                 "generation_progress_list",
                 "best_ensemble",
+                "original_feature_names",
             ]
 
             # column_list = column_list + ["BL_" + str(x) for x in range(0, 64)]
@@ -339,6 +345,7 @@ class project_score_save_class:
             line["g"] = [ml_grid_object.g]
             line["generation_progress_list"] = [generation_progress_list]
             line["best_ensemble"] = [str(best_ensemble)]
+            line["original_feature_names"] = [json.dumps(original_feature_names)]
 
             if ml_grid_object.verbose >= 1:
                 logger.info("current_algorithm")
@@ -361,8 +368,9 @@ class project_score_save_class:
 
             logger.info(line)
 
+            log_file_path = os.path.join(ml_grid_object.base_project_dir, "final_grid_score_log.csv")
             line[column_list].to_csv(
-                ml_grid_object.base_project_dir + "final_grid_score_log.csv",
+                log_file_path,
                 mode="a",
                 header=False,
                 index=True,
