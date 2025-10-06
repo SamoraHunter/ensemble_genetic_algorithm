@@ -97,41 +97,68 @@ A numeric data matrix (Pandas dataframe) with a binary outcome variable with the
 
 ## Quickstart
 
-Here is a minimal example of how to run an experiment programmatically within a Python script or Jupyter notebook.
+You can run experiments either from the command line (recommended for most users) or programmatically within a script for development purposes.
+
+### Command-Line Usage
+
+The `main.py` script is the primary entry point for running experiments.
+
+1.  **Activate the virtual environment:**
+
+    ```bash
+    source ga_env/bin/activate
+    ```
+
+2.  **Run the experiment:**
+
+    -   To run with the default `config.yml`:
+        ```bash
+        python main.py
+        ```
+    -   To specify a different configuration file:
+        ```bash
+        python main.py --config path/to/your/config.yml
+        ```
+    -   To run, evaluate the best model, and generate all analysis plots:
+        ```bash
+        python main.py --config path/to/your/config.yml --evaluate --plot
+        ```
+
+### Programmatic Usage
+
+For development or debugging, you can still run the pipeline within a Python script or Jupyter notebook.
 
 ```python
-import os
-import time
+from tqdm import tqdm
+from ml_grid.pipeline import main_ga, data
 from ml_grid.util.global_params import global_parameters
 from ml_grid.util.grid_param_space_ga import Grid
-from ml_grid.pipeline import data_pipe_grid
-from ml_grid.ga_model_pipeline import main_ga
 
-# 1. Initialize global parameters. This will load from config.yml if it exists.
-# You can override specific parameters at runtime.
-global_params = global_parameters(
-    input_csv_path="path/to/your/data.csv",
-    n_iter=2, # Number of grid search iterations
-    testing=True, # Use a smaller test grid for speed
-    verbose=1
+# 1. Initialize parameters from a config file
+config_path = 'config.yml'
+global_params = global_parameters(config_path=config_path)
+
+# 2. Define the search space
+grid = Grid(
+    global_params=global_params,
+    sample_n=global_params.n_iter,
+    test_grid=global_params.testing,
+    config_path=config_path
 )
 
-# 2. Define the search space for the experiment.
-grid = Grid(sample_n=global_params.n_iter, test_grid=global_params.testing)
-
-# 3. Run the main experiment loop.
-for i in range(global_params.n_iter):
-    
-    # Get the next set of hyperparameters from the grid
+# 3. Run the main experiment loop
+for i in tqdm(range(global_params.n_iter)):
     local_param_dict = next(grid.settings_list_iterator)
-
-    # Create the ml_grid_object for this iteration
-    ml_grid_object = data_pipe_grid.pipe(
-        global_params, local_param_dict
+    ml_grid_object = data.pipe(
+        global_params=global_params,
+        file_name=global_params.input_csv_path,
+        local_param_dict=local_param_dict,
+        base_project_dir=global_params.base_project_dir,
+        param_space_index=i,
+        testing=global_params.testing,
+        drop_term_list=[],
     )
-
-    # Run the genetic algorithm with these settings
-    main_ga.run(ml_grid_object).execute()
+    main_ga.run(ml_grid_object, local_param_dict=local_param_dict, global_params=global_params).execute()
 ```
 
 ## Configuration
@@ -155,6 +182,7 @@ global_params:
   # --- Execution & Logging ---
   verbose: 2
   grid_n_jobs: 8
+  base_project_dir: "HFE_GA_experiments"
   store_base_learners: True
 
 ga_params:

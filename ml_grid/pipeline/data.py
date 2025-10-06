@@ -1,7 +1,9 @@
 from typing import List, Optional
 import logging
+import os
 import sklearn.feature_selection
 from ml_grid.model_classes_ga.logistic_regression_model import (
+    
     logisticRegressionModelGenerator,
 )
 from ml_grid.pipeline import read_in
@@ -152,6 +154,7 @@ class pipe:
 
     def __init__(
         self,
+        global_params: global_parameters,
         file_name: str,
         drop_term_list: List[str],
         local_param_dict: Dict,
@@ -167,6 +170,7 @@ class pipe:
         """Initializes and executes the data processing pipeline.
 
         Args:
+            global_params: An initialized global_parameters object.
             file_name: The path to the input data CSV file.
             drop_term_list: A list of substrings to identify columns for removal.
             local_param_dict: A dictionary of parameters for this specific run.
@@ -185,29 +189,34 @@ class pipe:
 
         self.multiprocessing_ensemble = multiprocessing_ensemble
 
-        self.base_project_dir = base_project_dir
+        # Ensure the base_project_dir is treated as a directory path
+        self.base_project_dir = os.path.join(base_project_dir, "")
+
+
 
         self.additional_naming = additional_naming
 
         self.local_param_dict = local_param_dict
 
-        self.global_params = global_parameters()
+        self.global_params = global_params
 
         self.verbose = self.global_params.verbose
 
         self.param_space_index = param_space_index
 
         self.project_score_save_object = project_score_save_class(
-            base_project_dir=base_project_dir
+            base_project_dir=self.base_project_dir
         )
 
         self.config_dict = config_dict
-        if self.config_dict == None:
+        if self.config_dict is None:
             self.config_dict = {
                 "use_stored_base_learners": False,
             }
             if self.verbose >= 1:
                 logger.info("Using default config_dict... %s", self.config_dict)
+        # Ensure modelFuncList is always populated from global_params
+        self.config_dict["modelFuncList"] = self.global_params.model_list
 
         if self.verbose >= 1:
             logger.info("Starting... %s", self.local_param_dict)
@@ -215,7 +224,7 @@ class pipe:
         self.logging_paths_obj = log_folder(
             local_param_dict=local_param_dict,
             additional_naming=additional_naming,
-            base_project_dir=base_project_dir,
+            base_project_dir=self.base_project_dir,
         )
         read_in_sample = True
 

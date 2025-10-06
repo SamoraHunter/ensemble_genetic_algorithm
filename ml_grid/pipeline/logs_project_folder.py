@@ -96,7 +96,8 @@ class log_folder:
 
         # Construct path robustly to avoid double slashes or missing components
         base_run_path = os.path.join(
-            self.base_project_dir, self.global_param_str + additional_naming
+            self.base_project_dir,
+            self.global_param_str + (additional_naming or ""),
         )
         full_log_path = os.path.join(base_run_path, "logs")
 

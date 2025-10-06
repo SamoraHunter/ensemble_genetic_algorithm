@@ -60,7 +60,8 @@ global_params:
 
 def test_grid_defaults():
     """Tests that the Grid class initializes with its default parameters."""
-    grid = Grid(config_path="non_existent_file.yml")
+    params = global_parameters(config_path="non_existent_file.yml")
+    grid = Grid(config_path="non_existent_file.yml", global_params=params)
     # Test a default ga_param
     assert grid.pop_params == [32, 64, 128]
     # Test a default grid_param
@@ -83,7 +84,8 @@ grid_params:
     config_file = tmp_path / "config.yml"
     config_file.write_text(config_content)
 
-    grid = Grid(config_path=str(config_file))
+    params = global_parameters(config_path=str(config_file))
+    grid = Grid(config_path=str(config_file), global_params=params)
 
     # Check ga_params override
     assert grid.pop_params == [50, 100]
@@ -109,7 +111,8 @@ ga_params:
     config_file.write_text(config_content)
 
     # The test_grid=True flag should have the final say on these specific ga_params
-    grid = Grid(config_path=str(config_file), test_grid=True)
+    params = global_parameters(config_path=str(config_file))
+    grid = Grid(config_path=str(config_file), test_grid=True, global_params=params)
 
     assert grid.pop_params == [8]
     assert grid.g_params == [4]

@@ -34,6 +34,8 @@ global_params:
   grid_n_jobs: 8
   # Whether to cache trained base learners to speed up subsequent runs
   store_base_learners: True
+  # The root directory for saving project outputs
+  base_project_dir: "HFE_GA_experiments/"
 ```
 
 ### 2. `ga_params`
@@ -61,24 +63,31 @@ grid_params:
 For quick tests or dynamic settings, you can override any parameter at runtime by passing it as a keyword argument to `global_parameters`. These arguments will take precedence over both the `config.yml` file and the hardcoded defaults.
 
 ```python
+from tqdm import tqdm
 from ml_grid.util.global_params import global_parameters
 from ml_grid.util.grid_param_space_ga import Grid
-from ml_grid.pipeline import data_pipe_grid
-from ml_grid.ga_model_pipeline import main_ga
+from ml_grid.pipeline import data, main_ga
 
 # This will load from config.yml first, then apply the overrides below
 global_params = global_parameters(
+    config_path='config.yml',
     input_csv_path="data/another_dataset.csv", # Override path from config
     n_iter=5,                                  # Override n_iter for a quick run
     verbose=3                                  # Override verbosity
 )
 
 # The main loop is then executed as shown in the Quickstart section
-grid = Grid(sample_n=global_params.n_iter, test_grid=global_params.testing)
-for i in range(global_params.n_iter):
+grid = Grid(global_params=global_params, config_path='config.yml')
+for i in tqdm(range(global_params.n_iter)):
     local_param_dict = next(grid.settings_list_iterator)
-    ml_grid_object = data_pipe_grid.pipe(global_params, local_param_dict)
-    main_ga.run(ml_grid_object).execute()
+    ml_grid_object = data.pipe(
+        global_params=global_params,
+        file_name=global_params.input_csv_path,
+        local_param_dict=local_param_dict,
+        base_project_dir=global_params.base_project_dir,
+        param_space_index=i,
+    )
+    main_ga.run(ml_grid_object, local_param_dict=local_param_dict, global_params=global_params).execute()
 ```
 
 This level of configuration gives you full control over the scope and depth of your hyperparameter search.

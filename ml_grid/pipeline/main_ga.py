@@ -99,15 +99,16 @@ class run:
     local_param_dict: Dict
     """A dictionary of local parameters for the current run."""
 
-    def __init__(self, ml_grid_object: Any, local_param_dict: Dict):
+    def __init__(self, ml_grid_object: Any, local_param_dict: Dict, global_params: global_parameters):
         """Initializes the Genetic Algorithm runner.
 
         Args:
             ml_grid_object: The main experiment object, containing data splits
                 and configurations.
             local_param_dict: A dictionary of local parameters for the current run.
+            global_params: An initialized global_parameters object.
         """
-        self.global_params = global_parameters()
+        self.global_params = global_params
 
         self.ml_grid_object = ml_grid_object
 
@@ -115,7 +116,7 @@ class run:
 
         self.error_raise = self.global_params.error_raise
 
-        ga_grid = Grid(test_grid=ml_grid_object.testing)
+        ga_grid = Grid(global_params=self.global_params, test_grid=ml_grid_object.testing)
 
         # pass in and get outside
         self.nb_params, self.pop_params, self.g_params = (
@@ -581,6 +582,7 @@ class run:
                         valid=True,
                         generation_progress_list=generation_progress_list,
                         best_ensemble=best_str_converted,
+                        original_feature_names=self.ml_grid_object.original_feature_names,
                     )
 
                 except Exception as e:
@@ -591,7 +593,7 @@ class run:
                 # Construct the base path for plots robustly
                 plot_base_path = os.path.join(
                     self.ml_grid_object.base_project_dir,
-                    self.global_param_str + additional_naming,
+                    self.global_param_str + (additional_naming or ""),
                 )
 
                 plot_generation_progress_fitness(
@@ -604,8 +606,8 @@ class run:
 
                 with open(
                     self.ml_grid_object.base_project_dir
-                    + self.global_param_str
-                    + self.additional_naming
+                    + (self.global_param_str or "")
+                    + (self.additional_naming or "")
                     + "best_pop="
                     + str(pop_val)
                     + "_g="

@@ -61,6 +61,9 @@ class global_parameters:
     log_store_dataframe_path: str
     """The base name for the log file that stores experiment results."""
 
+    base_project_dir: str
+    """The root directory for saving project outputs (logs, models, etc.)."""
+
     # --- Model & Training ---
     knn_n_jobs: int
     """Number of parallel jobs for KNN models. -1 means using all available processors."""
@@ -166,6 +169,8 @@ class global_parameters:
 
         self.column_sample_n = 30
 
+        self.base_project_dir = "HFE_GA_experiments"
+
         # Default list of model names
         default_model_names = [
             "logisticRegression", "perceptron", "extraTrees", "randomForest",
@@ -182,20 +187,22 @@ class global_parameters:
         user_config = load_config(config_path)
         if user_config:
             global_params_config = user_config.get("global_params", {})
-            for key, value in global_params_config.items():
-                if hasattr(self, key):
-                    setattr(self, key, value)
-                # Special handling for model_list to resolve strings to classes
-                elif key == "model_list":
-                    resolved_models = []
-                    for model_name in value:
-                        if model_name in self.MODEL_REGISTRY:
-                            resolved_models.append(self.MODEL_REGISTRY[model_name])
-                        else:
-                            logger.warning("Unknown model '%s' in config file.", model_name)
-                    self.model_list = resolved_models
-                else:
-                    logger.warning("Unknown global parameter '%s' in config file.", key)
+            if global_params_config:  # Check if the config section is not None
+                for key, value in global_params_config.items():
+                    # Special handling for model_list to resolve strings to classes
+                    if key == "model_list":
+                        resolved_models = []
+                        for model_name in value:
+                            if model_name in self.MODEL_REGISTRY:
+                                resolved_models.append(self.MODEL_REGISTRY[model_name])
+                            else:
+                                logger.warning("Unknown model '%s' in config file.", model_name)
+                        if resolved_models: # Only overwrite if we found valid models
+                            self.model_list = resolved_models
+                    elif hasattr(self, key):
+                        setattr(self, key, value)
+                    else:
+                        logger.warning("Unknown global parameter '%s' in config file.", key)
 
         # 3. Apply runtime keyword argument overrides
         for key, value in kwargs.items():

@@ -12,11 +12,11 @@
 global_params:
   # Path to the input dataset CSV file.
   # Default: "synthetic_data_for_testing.csv"
-  # input_csv_path: "path/to/your/data.csv"
+  input_csv_path: "synthetic_data_for_testing.csv"
 
   # The total number of grid search iterations to perform.
   # Default: 1
-  # n_iter: 50 # For a full experiment, a higher number is recommended.
+  n_iter: 1
 
   # If True, enables testing mode (e.g., smaller data samples).
   # Default: True
@@ -32,19 +32,19 @@ global_params:
 
   # List of base learner models to include in the search space.
   # Default: A list of all available models.
-  # model_list:
-  #   - "logisticRegression"
-  #   - "perceptron"
-  #   - "extraTrees"
-  #   - "randomForest"
-  #   - "kNearestNeighbors"
-  #   - "XGBoost"
-  #   - "DecisionTreeClassifier"
-  #   - "AdaBoostClassifier"
-  #   - "elasticNeuralNetwork"
-  #   - "GaussianNB"
-  #   - "QuadraticDiscriminantAnalysis"
-  #   - "SVC"
+  model_list:
+    - "logisticRegression"
+    - "perceptron"
+    - "extraTrees"
+    - "randomForest"
+    - "kNearestNeighbors"
+    - "XGBoost"
+    - "DecisionTreeClassifier"
+    - "AdaBoostClassifier"
+    - "elasticNeuralNetwork"
+    - "GaussianNB"
+    - "QuadraticDiscriminantAnalysis"
+    - "SVC"
   #   - "DummyModel" # For testing purposes
 
   # Verbosity level for console output (0-9).
@@ -84,9 +84,8 @@ global_params:
   # model_train_time_warning_threshold: 60
  
   # If True, saves trained base learners to disk. Can use a lot of space.
-  # Note: This is a global default. The `store_base_learners` setting
-  # in `grid_params` will override this for each individual grid search run.
-  # Default: False
+  # This is also configurable per-run in `grid_params`.
+  # The effective default for a grid search run is False.
   # store_base_learners: False
  
   # Number of generations without improvement before the GA stops early.
@@ -99,12 +98,11 @@ global_params:
  
   # The root directory for saving project outputs (logs, models, etc.).
   # Default: "HFE_GA_experiments"
-  # base_project_dir: "HFE_GA_experiments"
+  base_project_dir: "HFE_GA_experiments"
 
 # --- Genetic Algorithm Parameters ---
 # These control the evolution process itself (population size, generations, etc.).
 # Corresponds to attributes in `ml_grid.util.grid_param_space_ga.Grid`.
-# Note: These values are overridden if `global_params.testing` is set to `True`.
 ga_params:
   # List of possible values for the number of base learners in an ensemble.
   # Default: [4, 8, 16, 32, 64]
@@ -125,7 +123,7 @@ grid_params:
   # --- Ensemble & Preprocessing Parameters ---
   # Methods for weighting base learner predictions. Options: "ann", "de", "unweighted".
   # Default: ["ann", "de", "unweighted"]
-  # weighted: ["ann", "de", "unweighted"]
+  weighted: [ "unweighted"]
  
   # Whether to reuse stored base learners from previous runs.
   # Default: [False]
