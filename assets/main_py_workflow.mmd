@@ -1,0 +1,29 @@
+graph TD
+    A[Start: main.py] --> B{Parse CLI Args: --config, --plot, --evaluate}
+    B --> C[Load global_params from config.yml]
+    C --> D[Create Timestamped Experiment Directory]
+    D --> E[Setup Logger]
+    E --> F[Initialize Grid Search Space]
+    F --> G[Loop n_iter times]
+    
+    subgraph GridSearch["Grid Search Loop"]
+        H{Get next hyperparameter set}
+        I[data.pipe: Create ml_grid_object]
+        J[main_ga.run.execute: Run GA for one iteration]
+        H --> I
+        I --> J
+    end
+    
+    G --> H
+    J --> K{More iterations?}
+    K -->|Yes| H
+    K -->|No| L{--evaluate flag?}
+    
+    L -->|Yes| M[Evaluate Best Ensemble on Validation Set]
+    L -->|No| N{--plot flag?}
+    M --> N
+    
+    N -->|Yes| O[Initialize GA_results_explorer]
+    O --> P[Generate & Save All Plots]
+    P --> Q[End]
+    N -->|No| Q

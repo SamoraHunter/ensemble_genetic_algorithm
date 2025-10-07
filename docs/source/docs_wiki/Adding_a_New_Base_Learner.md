@@ -77,20 +77,28 @@ class SGDClassifierModelGenerator:
 
 ### Step 3: Integrate into the Experiment
 
-Now, you can use your new model generator in your experiment script (e.g., `notebooks/example_usage.ipynb`).
+Now, you can use your new model generator in your experiments. The framework automatically discovers model generators based on the names provided in your `config.yml`.
 
-1.  **Import your new class** at the top of the notebook with the other model imports:
-    ```python
-    from ml_grid.model_classes_ga.sgd_classifier_model import SGDClassifierModelGenerator
+1.  **Update `config.yml`**: Add the name of your new model to the `model_list` under `global_params`. The name should match the class name of your model generator.
+
+    ```yaml
+    # in config.yml
+    global_params:
+      model_list:
+        - "logisticRegression"
+        - "randomForest"
+        - "XGBoost"
+        - "SGDClassifierModelGenerator" # Add your new model's class name here
     ```
 
-2.  **Add the generator to `modelFuncList`**:
-    ```python
-    modelFuncList = [
-        logisticRegressionModelGenerator,
-        # ... other models
-        SGDClassifierModelGenerator, # Add your new model here
-    ]
-    ```
+That's it! When you run an experiment using `main.py`, the framework will now be able to select, tune, and include `SGDClassifier` in the ensembles it evolves. You can follow this same pattern to add any scikit-learn compatible classifier to the project.
 
-That's it! The genetic algorithm will now be able to select, tune, and include `SGDClassifier` in the ensembles it evolves. You can follow this same pattern to add any scikit-learn compatible classifier to the project.
+---
+
+## Creating Your Own Custom Classifiers
+
+Beyond using existing scikit-learn models, you can also create your own custom estimators from scratch. As long as your custom class adheres to the scikit-learn API (implementing `.fit()`, `.predict_proba()`, `get_params()`, and `set_params()`), it can be integrated into this framework using the same model generator pattern.
+
+This allows you to experiment with novel algorithms while still leveraging the power of the genetic algorithm for ensembling and hyperparameter tuning.
+
+For detailed instructions on how to develop your own scikit-learn compatible estimators, refer to the official scikit-learn developer's guide.

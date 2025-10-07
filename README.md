@@ -141,21 +141,19 @@ global_params = global_parameters(config_path=config_path)
 # 2. Define the search space
 grid = Grid(
     global_params=global_params,
-    sample_n=global_params.n_iter,
-    test_grid=global_params.testing,
     config_path=config_path
 )
 
 # 3. Run the main experiment loop
 for i in tqdm(range(global_params.n_iter)):
     local_param_dict = next(grid.settings_list_iterator)
+    # The data pipeline prepares the data for this specific iteration
     ml_grid_object = data.pipe(
         global_params=global_params,
         file_name=global_params.input_csv_path,
         local_param_dict=local_param_dict,
         base_project_dir=global_params.base_project_dir,
         param_space_index=i,
-        testing=global_params.testing,
         drop_term_list=[],
     )
     main_ga.run(ml_grid_object, local_param_dict=local_param_dict, global_params=global_params).execute()

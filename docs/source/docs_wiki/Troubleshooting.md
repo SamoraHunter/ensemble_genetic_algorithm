@@ -45,8 +45,8 @@ This happens because some models (like scikit-learn's `LogisticRegression` or `S
 
 **Solutions:**
 1.  **Perform Imputation**: Preprocess your dataset to impute (fill in) missing values before running the experiment.
-2.  **Adjust `percent_missing`**: In `grid_param_space_ga.py`, lower the `percent_missing` threshold (e.g., from `99.8` to `90.0`) to be more aggressive about removing columns that have any missing data.
-3.  **Prune `modelFuncList`**: Remove the specific model generator that is causing the error from the `model_class_list` in your experiment script.
+2.  **Adjust `percent_missing`**: In your `config.yml`, lower the `percent_missing` threshold under `grid_params` (e.g., from `99.8` to `90.0`) to be more aggressive about removing columns that have any missing data.
+3.  **Prune `model_list`**: In your `config.yml`, remove the model that is causing the error from the `model_list` under `global_params`.
 
 ---
 
@@ -54,23 +54,21 @@ This happens because some models (like scikit-learn's `LogisticRegression` or `S
 
 #### Problem: The experiment runs out of memory (`MemoryError`).
 
-**Note**: Most performance parameters are defined in `ml_grid/util/grid_param_space_ga.py` and can be overridden with a `config.yml` file.
-
 **Solutions:**
-1.  **Reduce Population Size**: The most effective solution is often to reduce the `pop_params` (population size) in your configuration.
-2.  **Reduce Data Size**: For testing, use a smaller `test_sample_n` or `column_sample_n` in the `ml_grid.pipeline.data.pipe` call.
-3.  **Disable Model Caching**: If `store_base_learners` is `True`, the run can consume a lot of disk space and memory. Set it to `False` if you are memory-constrained.
+1.  **Reduce Population Size**: In your `config.yml`, use smaller values for `pop_params` under the `ga_params` section.
+2.  **Reduce Data Size**: For testing, either use a smaller input CSV file or set `testing: True` in your `config.yml` under `global_params`. This uses a much smaller test grid.
+3.  **Disable Model Caching**: In your `config.yml`, set `store_base_learners: False` under `global_params`.
 
 #### Problem: The experiment is running very slowly.
 
 **Solutions:**
-1.  **Start Small**: For initial runs, set `n_iter` to a low number (e.g., 1-3) and use `testing=True` in your experiment script.
+1.  **Start Small**: For initial runs, set `n_iter` to a low number (e.g., 1-3) and `testing: True` in your `config.yml` under `global_params`.
 2.  **Use Model Caching**: For subsequent runs, use the model caching feature (`use_stored_base_learners=True`) to avoid retraining models. See Best Practices.
-3.  **Simplify Weighting**: The `ensemble_weighting_method` has a huge impact. Use `'unweighted'` for fast runs. `'de'` and `'ann'` are much slower.
+3.  **Simplify Weighting**: In your `config.yml`, limit the `weighted` list under `grid_params` to `["unweighted"]` for fast runs. `'de'` and `'ann'` are much slower.
 
 #### Problem: The genetic algorithm's fitness score is not improving (the convergence plot is flat).
 
 **Solutions:**
-1.  **Increase Mutation/Crossover**: The search might be stuck. Try increasing the `mutpb` (mutation rate) or `cxpb` (crossover rate) in `grid_param_space_ga.py` to encourage more exploration.
-2.  **Increase Population Size**: A larger population (`pop_params`) can introduce more diversity, helping the algorithm escape local optima.
-3.  **Check Model Suitability**: The base learners in your `model_class_list` may not be a good fit for your data. Try adding or swapping in different types of models.
+1.  **Increase Mutation/Crossover**: The search might be stuck. In your `config.yml`, try increasing the `mutpb` (mutation rate) or `cxpb` (crossover rate) under `grid_params` to encourage more exploration.
+2.  **Increase Population Size**: In `config.yml`, use larger values for `pop_params` under `ga_params` to introduce more diversity.
+3.  **Check Model Suitability**: The base learners in your `model_list` (in `config.yml`) may not be a good fit for your data. Try adding or swapping in different types of models.

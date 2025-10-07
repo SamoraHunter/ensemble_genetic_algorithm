@@ -12,7 +12,7 @@ The `Grid` class in `grid_param_space_ga.py` defines the search space for the ou
 
 ### Ensemble & Learner Parameters
 
--   `weighted` (or `ensemble_weighting_method`): The method used to combine predictions from base learners in an ensemble.
+-   `ensemble_weighting_method`: The method used to combine predictions from base learners in an ensemble. This is configured in `config.yml` under `grid_params` as `weighted`.
     -   `'unweighted'`: Simple averaging of predictions. Fast and simple.
     -   `'de'`: Uses **Differential Evolution** to find optimal linear weights for the base learners. More computationally expensive but can improve performance.
     -   `'ann'`: Trains a small **Artificial Neural Network** to learn a non-linear combination of predictions. The most expensive method, but potentially the most powerful.
@@ -61,7 +61,7 @@ These parameters, defined in the `grid` dictionary, control the core evolutionar
 
 ### Genetic Algorithm Structural Parameters
 
-These parameters are set in the `__init__` method of the `Grid` class and define the overall structure and duration of the GA run.
+These parameters are set in the `ga_params` section of your `config.yml` file and define the overall structure and duration of the GA run.
 
 -   `nb_params`: A list of integers defining the possible sizes of the ensembles (i.e., the number of base learners in an individual's chromosome).
 

@@ -77,7 +77,11 @@ global_params = global_parameters(
 )
 
 # The main loop is then executed as shown in the Quickstart section
-grid = Grid(global_params=global_params, config_path='config.yml')
+grid = Grid(
+    global_params=global_params,
+    config_path='config.yml'
+)
+
 for i in tqdm(range(global_params.n_iter)):
     local_param_dict = next(grid.settings_list_iterator)
     ml_grid_object = data.pipe(

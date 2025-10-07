@@ -5,6 +5,8 @@ This page provides an overview of the key files and directories within the **Ens
 ## Root Directory
 
 -   `README.md`: The main project README, providing a high-level overview, installation instructions, and usage examples.
+-   `main.py`: The primary command-line entry point for running experiments.
+-   `config.yml.example`: An example configuration file that users can copy to `config.yml` to customize their experiments.
 -   `CONTRIBUTING.md`: Guidelines for contributing to the project.
 -   `LICENSE`: The project's license (MIT License).
 -   `pyproject.toml`: Defines the project's build system, metadata, and dependencies. This is the central file for dependency management.

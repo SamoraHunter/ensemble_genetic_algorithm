@@ -15,25 +15,32 @@ This project provides a robust framework for evolving machine learning ensembles
 
 ## Getting Started
 
-To get started with the project, please refer to the Installation Guide.
+To get started with the project, please refer to the {doc}`Installation`.
 
 ## Documentation
 
 Explore the following wiki pages for detailed information:
 
--   Installation Guide: How to set up your development environment.
--   Usage Guide: Instructions on how to use the project, including configuration examples.
--   Project Dataset Requirements: Details on the expected input data format.
--   Project Structure: An overview of the project's main components and files.
--   FAQ / User Guide: Answers to common questions and user guidance.
--   Diagrams: Visual representations of the system architecture and data flow.
--   Technical Deep Dive: In-depth explanation of the underlying methodology and algorithms.
--   Contributing: Guidelines for contributing to the project.
+-   **Getting Started**
+    -   {doc}`Installation`: How to set up your development environment.
+    -   {doc}`Usage`: How to run experiments using `main.py` and `config.yml`.
+    -   {doc}`Data_Preparation_Guide`: The required format for your input data.
+-   **Core Concepts**
+    -   {doc}`Architectural_Overview`: A high-level look at the project's components.
+    -   {doc}`Genetic_Algorithm_Deep_Dive`: An explanation of the evolutionary process.
+    -   {doc}`Configuration_Guide`: A detailed guide to the `config.yml` file.
+    -   {doc}`Hyperparameter_Reference`: A reference for all configurable parameters.
+-   **Guides & Tutorials**
+    -   {doc}`Interpreting_Results`: How to understand the plots and outputs.
+    -   {doc}`Evaluating_Final_Models`: How to validate your final models on unseen data.
+    -   {doc}`Adding_a_New_Base_Learner`: How to extend the project with new models.
+    -   {doc}`Best_Practices`: Tips for running experiments effectively.
+-   **Reference**
+    -   {doc}`Troubleshooting`: Solutions for common errors.
+    -   {doc}`Project-Structure`: An overview of the repository's file layout.
 
 ## License
 
 This project is licensed under the MIT License.
 
 ---
-
-Thank you for your interest in the Ensemble Genetic Algorithm project!

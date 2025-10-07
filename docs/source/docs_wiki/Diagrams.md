@@ -4,23 +4,30 @@ This section contains visual representations of the genetic algorithm implementa
 
 ## Data Pipeline and Genetic Algorithm
 
+### `main.py` Command-Line Workflow
+
+!main.py Workflow
+
+-   **Source**: assets/main_py_workflow.mmd
+-   **Description**: Illustrates the end-to-end workflow when running an experiment from the command line using `main.py`, including the main grid search loop and optional evaluation and plotting steps.
+
 ### GA Example Usage, Data Grid and GA Grid Permutations, System Flow (`example_usage.ipynb`)
 
-!GA Data Diagram
+!GA System Flow
 
 -   **Source**: assets/example_usage_permutations.mmd
 -   **Description**: Illustrates the genetic algorithm search over grid parameters, as demonstrated in the example usage notebook.
 
 ### GA Data Flow
 
-!GA Data Diagram
+!GA Data Flow
 
 -   **Source**: assets/ga_data_diagram.mmd
 -   **Description**: Illustrates the flow of data through the genetic algorithm pipeline, from input to ensemble generation.
 
 ### Model Class Structure
 
-!Model Classes
+!Model Class Structure
 
 -   **Source**: assets/model_classes.mmd
 -   **Description**: Shows the inheritance hierarchy and relationships between the different model classes used in the project.
@@ -29,14 +36,14 @@ This section contains visual representations of the genetic algorithm implementa
 
 ### Weighting System
 
-!GA Weighting
+!GA Weighting System
 
 -   **Source**: assets/ga_weighting.mmd
 -   **Description**: Demonstrates the weighting mechanism applied to individual base learners within an ensemble.
 
 ### Parameter Space Grid
 
-!Grid Parameter Space GA
+!Grid Parameter Space
 
 -   **Source**: assets/grid_param_space_ga.mmd
 -   **Description**: Visualizes how the genetic algorithm explores the parameter space, including feature and hyperparameter grids.
@@ -45,21 +52,21 @@ This section contains visual representations of the genetic algorithm implementa
 
 ### SVC Model Generation
 
-<img src="https://github.com/SamoraHunter/ensemble_genetic_algorithm/raw/main/assets/svc_model_gen.svg" width="100" />
+!SVC Model Generation
 
 -   **Source**: assets/svc_model_gen.mmd
 -   **Description**: Flow diagram detailing the process for generating Support Vector Classifier (SVC) models as base learners.
 
 ### PyTorch Model Generation
 
-<img src="https://github.com/SamoraHunter/ensemble_genetic_algorithm/raw/main/assets/torch_model_gen.svg" width="150" />
+!PyTorch Model Generation
 
 -   **Source**: assets/torch_model_gen.mmd
 -   **Description**: Flow diagram illustrating the generation process for PyTorch neural network models, including aspects of neural architecture search.
 
 ### XGBoost Model Generation
 
-<img src="https://github.com/SamoraHunter/ensemble_genetic_algorithm/raw/main/assets/xgb_model_gen.svg" width="200" />
+!XGBoost Model Generation
 
 -   **Source**: assets/xgb_model_gen.mmd
 -   **Description**: Flow diagram outlining the generation process for XGBoost models.

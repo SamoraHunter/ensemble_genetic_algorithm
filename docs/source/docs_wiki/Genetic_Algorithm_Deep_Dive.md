@@ -35,7 +35,7 @@ The resulting score is the individual's fitness. Higher is better.
 To create the next generation, the algorithm selects "parents" from the current population. Individuals with higher fitness are more likely to be chosen. This project uses **Tournament Selection**:
 
 1.  A small, random subset of individuals is selected from the population (the size of this subset is the `tournament_size`).
-2.  The individual with the best fitness within that small group is chosen as a parent.
+2.  The individual with the best fitness within that small group is chosen as a parent. This is controlled by the `t_size` parameter in your configuration.
 3.  This process is repeated until enough parents are selected to create the next generation.
 
 ### 4. Crossover (Creating Offspring)
@@ -46,7 +46,7 @@ Crossover combines the genetic material of two parent ensembles to create one or
 2.  Two random points are selected along the length of the chromosomes (the lists).
 3.  The offspring is created by taking the segment of base learners from the first parent between the two points and filling the rest with base learners from the second parent.
 
-This allows beneficial combinations of base learners from different successful ensembles to be combined. The probability of crossover occurring is controlled by the `crossover_rate` (`cxpb`).
+This allows beneficial combinations of base learners from different successful ensembles to be combined. The probability of crossover occurring is controlled by the `cxpb` parameter.
 
 ### 5. Mutation (Introducing Variation)
 
@@ -54,7 +54,7 @@ Mutation introduces random changes into an individual's chromosome. This is cruc
 
 In this framework, mutation involves **swapping one base learner** in the ensemble with a brand new, randomly generated base learner from the initial pool.
 
-The probability of an individual undergoing mutation is controlled by the `mutation_rate` (`mutpb`).
+The probability of an individual undergoing mutation is controlled by the `mutpb` parameter.
 
 ### 6. The Full Cycle
 
@@ -62,12 +62,12 @@ The GA process is as follows:
 
 1.  **Initialization**: An initial population of random ensembles is created.
 2.  **Evaluation**: The fitness of every individual in the population is calculated.
-3.  **Loop (for `n_generations`)**:
+3.  **Loop (for a number of generations defined by `g_params`)**:
     a. **Selection**: Parents are selected from the current population using tournament selection.
     b. **Crossover**: Offspring are created by applying crossover to pairs of parents.
     c. **Mutation**: Some offspring undergo mutation.
     d. **Replacement**: The old population is replaced by the new generation of offspring.
     e. **Evaluation**: The fitness of the new individuals is calculated.
-4.  **Termination**: The loop stops after `n_generations` or if an early stopping criterion is met (e.g., no improvement in the best fitness for a certain number of generations).
+4.  **Termination**: The loop stops after the specified number of generations or if an early stopping criterion is met (e.g., no improvement in the best fitness for a certain number of generations).
 
 The best individual found throughout this entire process is the final, optimized ensemble for that experiment run.

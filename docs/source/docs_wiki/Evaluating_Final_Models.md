@@ -1,6 +1,6 @@
 # Evaluating Final Models with EnsembleEvaluator
 
-This guide explains how to use the `EnsembleEvaluator` class to perform a final, unbiased evaluation of the best ensembles discovered by the genetic algorithm.
+This guide explains how to perform a final, unbiased evaluation of the best ensembles discovered by the genetic algorithm.
 
 ---
 
@@ -18,9 +18,25 @@ This provides an unbiased assessment of generalization performance.
 
 ---
 
-## How it Works
+## Recommended Method: Using the `--evaluate` Flag
 
-The final cell in the `notebooks/example_usage.ipynb` notebook demonstrates the standard workflow.
+The simplest and recommended way to evaluate your best model is to use the `--evaluate` flag when running your experiment from the command line.
+
+```bash
+python main.py --config your_config.yml --evaluate
+```
+
+When the experiment completes, the script will automatically:
+1.  Identify the best-performing ensemble from the `final_grid_score_log.csv` based on the highest validation AUC.
+2.  Reconstruct this ensemble.
+3.  Evaluate it on the hold-out test set.
+4.  Print a classification report and confusion matrix to the log file for that run.
+
+This approach is fully automated and is the standard way to get a final performance score.
+
+## Alternative Method: Using `EnsembleEvaluator` in a Notebook
+
+For more granular control or custom analysis, you can use the `EnsembleEvaluator` class, as demonstrated in the `notebooks/example_usage.ipynb` notebook. This is useful for development or if you want to evaluate multiple models from the results log.
 
 ### 1. Initialization
 
@@ -77,6 +93,6 @@ By comparing these scores to the scores reported during the GA run, you can chec
 
 ---
 
-## Summary
+## Why This Step is Crucial
 
-The `EnsembleEvaluator` is a critical final step in the experimental pipeline. It ensures that the models you select are not just good at memorizing the training data but can generalize effectively to new, unseen examples, which is the ultimate goal of any predictive modeling task.
+The final evaluation step is critical. It ensures that the models you select are not just good at memorizing the training data but can generalize effectively to new, unseen examples, which is the ultimate goal of any predictive modeling task.
