@@ -43,10 +43,13 @@ class feature_selection_methods_class:
         self.X_test = ml_grid_object.X_test
 
         start_val = 2
-
-        self.feature_parameter_vector = np.linspace(
-            2, len(self.X_train.columns), int(len(self.X_train.columns) + 1 - start_val)
-        ).astype(int)
+        
+        if len(self.X_train.columns) < 2:
+            self.feature_parameter_vector = [len(self.X_train.columns)]
+        else:
+            self.feature_parameter_vector = np.linspace(
+                2, len(self.X_train.columns), int(len(self.X_train.columns) + 1 - start_val)
+            ).astype(int)
 
     def getNfeaturesANOVAF(self, n: int) -> List[str]:
         """Selects the top n features using the ANOVA F-test.

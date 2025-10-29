@@ -74,7 +74,7 @@ def handle_correlation_matrix(
             remaining_cols = df_numeric.columns[i * chunk_size :]
             
             # Calculate correlation for the current slice of the matrix
-            corr_matrix_chunk = df_numeric[remaining_cols].corr().abs()
+            corr_matrix_chunk = df_numeric[remaining_cols].corr(numeric_only=True).abs()
             
             # We only need to check correlations of the current chunk against all remaining columns
             # This is equivalent to the top-left block of the chunk's correlation matrix
