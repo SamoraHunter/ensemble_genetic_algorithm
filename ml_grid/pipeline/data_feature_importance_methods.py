@@ -52,7 +52,7 @@ class feature_importance_methods:
 
         if feature_method == "anova" or feature_method == None:
 
-            self.logger.info("feature_method ANOVA")
+            feature_importance_methods.logger.info("feature_method ANOVA")
 
             features = feature_methods.getNfeaturesANOVAF(
                 self, n=target_n_features, X_train=X_train, y_train=y_train
@@ -60,13 +60,13 @@ class feature_importance_methods:
 
         elif feature_method == "markov_blanket":
 
-            self.logger.info("feature method Markov")
+            feature_importance_methods.logger.info("feature method Markov")
 
             features = feature_methods.getNFeaturesMarkovBlanket(
                 self, n=target_n_features, X_train=X_train, y_train=y_train
             )
 
-        self.logger.info("target_n_features: %s", target_n_features)
+        feature_importance_methods.logger.info("target_n_features: %s", target_n_features)
 
         X_train = X_train[features]
 
