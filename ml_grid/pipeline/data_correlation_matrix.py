@@ -82,15 +82,11 @@ def handle_correlation_matrix(
 
             # Find highly correlated pairs
             for col1 in chunk_cols:
-                # Skip if this column is already marked to be dropped
-                if col1 in to_drop:
-                    continue
                 # Find correlations above the threshold, excluding self-correlation
                 correlated_series = sub_matrix.loc[col1][sub_matrix.loc[col1] > threshold]
                 for col2, _ in correlated_series.items():
-                    # Ensure we don't drop both columns in a pair.
-                    # If col2 is not already in to_drop, add it.
-                    if col1 != col2 and col2 not in to_drop:
+                    # If two columns are correlated, and we haven't already decided to drop col1, drop col2.
+                    if col1 != col2 and col1 not in to_drop:
                         to_drop.add(col2)
             pbar.update(len(chunk_cols))
 
