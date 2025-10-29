@@ -4,18 +4,10 @@ from ml_grid.ga_functions.ga_ann_weight_methods import get_y_pred_ann_torch_weig
 from ml_grid.ga_functions.ga_de_weight_method import (
     get_weighted_ensemble_prediction_de_y_pred_valid,
 )
-from ml_grid.ga_functions.ga_ensemble_weight_finder_de import (
-    super_ensemble_weight_finder_differential_evolution,
+from ml_grid.ga_functions.ga_ensemble_weight_finder_de import find_ensemble_weights_de
+from ml_grid.ga_functions.ga_unweighted import (
+    get_unweighted_ensemble_predictions,
 )
-
-# from ml_grid.ga_functions.ga_ensemble_weight_finder_de import (
-#     super_ensemble_weight_finder_differential_evolution,
-# )
-
-# from ml_grid.ga_functions.ga_ensemble_weight_finder_de import (
-#     super_ensemble_weight_finder_differential_evolution,
-# )
-from ml_grid.ga_functions.ga_unweighted import get_best_y_pred_unweighted
 
 from ml_grid.util.ensemble_diversity_methods import (
     apply_diversity_penalty,
@@ -92,10 +84,12 @@ def get_y_pred_resolver(
         if ml_grid_object.verbose >= 1:
             logger.info("Using unweighted ensemble prediction...")
         try:
-            y_pred = get_best_y_pred_unweighted(ensemble, ml_grid_object, valid=valid)
+            y_pred = get_unweighted_ensemble_predictions(
+                ensemble, ml_grid_object, valid=valid
+            )
         except Exception as e:
             logger.error(
-                "exception on y_pred = get_best_y_pred_unweighted(ensemble, ml_grid_object, valid=valid)"
+                "exception on y_pred = get_unweighted_ensemble_predictions(ensemble, ml_grid_object, valid=valid)"
             )
             logger.error(ensemble)
             logger.error("valid: %s", valid)
@@ -105,9 +99,7 @@ def get_y_pred_resolver(
             logger.info("Using DE weighted ensemble prediction...")
         y_pred = get_weighted_ensemble_prediction_de_y_pred_valid(
             ensemble,
-            super_ensemble_weight_finder_differential_evolution(
-                ensemble, ml_grid_object, valid=valid
-            ),
+            find_ensemble_weights_de(ensemble, ml_grid_object, valid=valid),
             ml_grid_object,
             valid=valid,
         )

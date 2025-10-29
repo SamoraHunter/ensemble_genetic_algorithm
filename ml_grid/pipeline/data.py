@@ -1,5 +1,6 @@
 from typing import List, Optional, Dict, Any
 import logging
+import numpy as np
 import os
 import random
 import pandas as pd
@@ -21,7 +22,7 @@ from ml_grid.pipeline.data_outcome_list import handle_outcome_list
 from ml_grid.pipeline.data_percent_missing import handle_percent_missing
 from ml_grid.pipeline.data_plot_split import plot_pie_chart_with_counts
 from ml_grid.pipeline.data_scale import data_scale_methods
-from ml_grid.pipeline.data_train_test_split import *
+from ml_grid.pipeline.data_train_test_split import get_data_split
 from ml_grid.pipeline.logs_project_folder import log_folder
 from ml_grid.util.global_params import global_parameters
 from ml_grid.util.project_score_save import project_score_save_class

@@ -49,12 +49,6 @@ try:
 except ImportError as e:
     logger.error("Error: Could not import required functions from 'ml_grid': %s", e)
 
-    # Define dummy functions to allow the script to be parsed.
-    def get_data_split(*args, **kwargs):
-        raise ImportError("ml_grid.pipeline.data_train_test_split not found.")
-
-    def get_y_pred_resolver_eval(*args, **kwargs):
-        raise ImportError("ml_grid.pipeline.evaluate_methods_ga not found.")
 
 
 # --- Helper Class to Mimic MLGridObject ---
