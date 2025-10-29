@@ -1,10 +1,33 @@
-import numpy as np
+"""Module for plotting the progress of the genetic algorithm's fitness."""
+
 import matplotlib.pyplot as plt
+import numpy as np
+from typing import List
 
 
 def plot_generation_progress_fitness(
-    generation_progress_list, pop_val, g_val, nb_val, file_path
-):
+    generation_progress_list: List[float],
+    pop_val: int,
+    g_val: int,
+    nb_val: int,
+    file_path: str,
+) -> None:
+    """Plots the fitness progress across generations and saves the plot.
+
+    This function creates a scatter plot of the fitness scores for each
+    generation and overlays a line of best fit to visualize the trend.
+    The plot is then saved to a file.
+
+    Args:
+        generation_progress_list: A list of fitness scores for each generation.
+        pop_val: The population size used in the genetic algorithm.
+        g_val: The current generation number.
+        nb_val: The number of neighbors considered.
+        file_path: The base path to save the plot to.
+
+    Returns:
+        None
+    """
     fig, ax = plt.subplots()
 
     # Convert x-axis to integers representing epochs
@@ -28,14 +51,9 @@ def plot_generation_progress_fitness(
     ax.legend()
 
     # Saving the figure
-    plt.savefig(
-        file_path
-        + "/logs/figures/best_pop={}_g={}_nb={}.png".format(pop_val, g_val, nb_val),
-        bbox_inches="tight",
+    save_path = (
+        f"{file_path}/logs/figures/best_pop={pop_val}_g={g_val}_nb={nb_val}.png"
     )
+    plt.savefig(save_path, bbox_inches="tight")
 
     plt.show()  # This shows the plot if you're running the script directly
-
-
-# Example usage:
-# plot_generation_progress_fitness(generation_progress_list, pop_val, g_val, nb_val, file_path)

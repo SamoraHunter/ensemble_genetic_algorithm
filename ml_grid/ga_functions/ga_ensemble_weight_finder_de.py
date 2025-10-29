@@ -1,18 +1,18 @@
+"""Finds optimal ensemble weights using Differential Evolution."""
+
 import time
-from ml_grid.ga_functions.ga_ann_util import normalize
-import numpy as np
-import pandas as pd
-import scipy
-from ml_grid.util.global_params import global_parameters
-from sklearn import metrics
-from numpy.linalg import norm
-from sklearn import metrics
 from typing import Any, List
+
+import numpy as np
+import scipy
+from sklearn import metrics
+
+from ml_grid.ga_functions.ga_ann_util import normalize
 
 round_v = np.vectorize(round)
 
 
-def get_weighted_ensemble_prediction_de_cython(
+def get_weighted_ensemble_prediction_de(
     weights: np.ndarray, prediction_matrix_raw: np.ndarray, y_test: np.ndarray
 ) -> float:
     """Computes weighted ensemble prediction and returns 1 - AUC score.
@@ -60,10 +60,7 @@ def get_weighted_ensemble_prediction_de_cython(
         raise e
 
 
-# Only get weights from xtrain/ytrain, never get weights from xtest y test. Use weights on x_validation yhat to compare to ytrue_valid
-def super_ensemble_weight_finder_differential_evolution(
-    best: List, ml_grid_object: Any, valid: bool = False
-) -> np.ndarray:
+def find_ensemble_weights_de(best: List, ml_grid_object: Any) -> np.ndarray:
     """Finds optimal ensemble weights using Differential Evolution.
 
     This function uses the Differential Evolution (DE) optimization algorithm
@@ -78,7 +75,6 @@ def super_ensemble_weight_finder_differential_evolution(
             metadata and pre-computed predictions at index 5.
         ml_grid_object: An object containing data splits (`y_test`) and
             configuration like `verbose`.
-        valid: Unused parameter, kept for compatibility. Defaults to False.
 
     Returns:
         The array of optimal weights for the ensemble models as determined
@@ -87,53 +83,39 @@ def super_ensemble_weight_finder_differential_evolution(
     Raises:
         Exception: If the Differential Evolution optimization fails, the exception is printed and re-raised.
     """
-    X_test_orig = ml_grid_object.X_test_orig
-    y_test_orig = ml_grid_object.y_test_orig
-    X_train = ml_grid_object.X_train
-    X_test = ml_grid_object.X_test
-    y_train = ml_grid_object.y_train
-    y_test = ml_grid_object.y_test
-
-    y_test = y_test.copy()  # WRITEABLE error fix?
-    if isinstance(y_test, pd.Series):
+    y_test = ml_grid_object.y_test.copy()  # WRITEABLE error fix?
+    if hasattr(y_test, "values"):
         y_test = y_test.values
-
-    # debug = ml_grid_object.debug  # set in data? ????
 
     debug = ml_grid_object.verbose > 11
 
     if debug:
-        print("super_ensemble_weight_finder_differential_evolution, best:")
+        print("find_ensemble_weights_de, best:")
         print(best)
 
     model_train_time_warning_threshold = 5
     # Get prediction matrix:
     prediction_array = []
     target_ensemble = best[0]
-    for i in range(0, len(target_ensemble)):
-        # For model i, predict it's x_test
-        # feature_columns = target_ensemble[i][2]
+    for i in range(len(target_ensemble)):
         y_pred = target_ensemble[i][5]
-        # print(y_pred.shape)
-
         prediction_array.append(y_pred)
 
-    prediction_matrix = np.matrix(prediction_array)
-    # print(prediction_matrix.shape)
-    prediction_matrix = prediction_matrix.astype(float)
+    prediction_matrix = np.matrix(prediction_array).astype(float)
     prediction_matrix_raw = prediction_matrix
-    y_pred_best = []
-    for i in range(0, len(prediction_array[0])):
-        y_pred_best.append(round(np.mean(prediction_matrix_raw[:, i])))
+    y_pred_best = [
+        round(np.mean(prediction_matrix_raw[:, i]))
+        for i in range(len(prediction_array[0]))
+    ]
     auc = metrics.roc_auc_score(y_test, y_pred_best)
     print("Unweighted ensemble AUC: ", auc)
 
-    bounds = [(0, 1) for x in range(0, len(best[0]))]
+    bounds = [(0, 1) for _ in range(len(best[0]))]
 
     start = time.time()
     try:
         de = scipy.optimize.differential_evolution(
-            get_weighted_ensemble_prediction_de_cython,
+            get_weighted_ensemble_prediction_de,
             bounds,
             args=((prediction_matrix_raw, y_test)),
             strategy="best1bin",
@@ -152,11 +134,9 @@ def super_ensemble_weight_finder_differential_evolution(
             workers=4,
             constraints=(),
             x0=None,
-            # integrality=None,
-            # vectorized=False
         )
     except Exception as e:
-        print("Failed on s e wf DE", e)
+        print("Failed on find_ensemble_weights_de", e)
         print(prediction_matrix_raw, y_test)
         raise e
 
@@ -174,5 +154,4 @@ def super_ensemble_weight_finder_differential_evolution(
             )
 
     print("best weighted score: ", score, "difference:", score - auc)
-    # print("best weights", optimal_weights, optimal_weights.shape)
     return optimal_weights

@@ -1,23 +1,22 @@
+"""
+Finds optimal ensemble weights using Differential Evolution for evaluation."""
+
 import time
-from ml_grid.ga_functions.ga_ann_util import BinaryClassification
 from typing import Any, List
-import scipy
+
 import numpy as np
-from ml_grid.pipeline.torch_binary_classification_method_ga import (
-    BinaryClassification,
-    TestData,
-)
-from sklearn import metrics
-import torch
-import numpy
 import pandas as pd
-from torch.utils.data import DataLoader
-from ml_grid.ga_functions.ga_ensemble_weight_finder_de import (
-    get_weighted_ensemble_prediction_de_cython,
-)
+import scipy
+import torch
+from sklearn import metrics
+
+from ml_grid.ga_functions.ga_ann_util import BinaryClassification
+from ml_grid.ga_functions.ga_ensemble_weight_finder_de import \
+    get_weighted_ensemble_prediction_de
+from ml_grid.pipeline.torch_binary_classification_method_ga import TestData
 
 
-def super_ensemble_weight_finder_differential_evolution_eval(
+def find_ensemble_weights_de_eval(
     best: List, ml_grid_object: Any, valid: bool = False
 ) -> np.ndarray:
     """Finds optimal ensemble weights using Differential Evolution for evaluation.
@@ -66,14 +65,13 @@ def super_ensemble_weight_finder_differential_evolution_eval(
         x_test = X_test.copy()
         y_test_target = y_test.copy()
 
-    y_test_target = y_test_target.copy()
     if isinstance(y_test_target, pd.Series):
         y_test_target = y_test_target.values
 
     debug = ml_grid_object.verbose > 11
 
     if debug:
-        print("super_ensemble_weight_finder_differential_evolution, best:")
+        print("find_ensemble_weights_de_eval, best:")
         print(best)
 
     model_train_time_warning_threshold = 5
@@ -82,7 +80,7 @@ def super_ensemble_weight_finder_differential_evolution_eval(
     prediction_array = []
     target_ensemble = best[0]
 
-    for i in range(0, len(target_ensemble)):
+    for i in range(len(target_ensemble)):
         feature_columns = list(target_ensemble[i][2])
 
         existing_columns = [
@@ -101,7 +99,7 @@ def super_ensemble_weight_finder_differential_evolution_eval(
 
         feature_columns = existing_columns.copy()
 
-        if type(target_ensemble[i][1]) is not BinaryClassification:
+        if not isinstance(target_ensemble[i][1], BinaryClassification):
             model = target_ensemble[i][1]
             if ml_grid_object.verbose >= 2:
                 print(f"Fitting model {i+1} for weight optimization")
@@ -123,7 +121,6 @@ def super_ensemble_weight_finder_differential_evolution_eval(
                 print(f"Handling torch model {i+1} for weight optimization")
 
             test_data = TestData(torch.FloatTensor(x_test[feature_columns].values))
-            test_loader = DataLoader(dataset=test_data, batch_size=1)
 
             device = torch.device("cpu")
             model = target_ensemble[i][1]
@@ -133,7 +130,7 @@ def super_ensemble_weight_finder_differential_evolution_eval(
             y_hat = torch.round(torch.sigmoid(y_hat)).cpu().detach().numpy()
             y_hat = y_hat.astype(int).flatten()
 
-            if numpy.isnan(y_hat).any():
+            if np.isnan(y_hat).any():
                 print(
                     f"Returning dummy random yhat vector for torch model {i+1}, nan found"
                 )
@@ -141,23 +138,23 @@ def super_ensemble_weight_finder_differential_evolution_eval(
 
             prediction_array.append(y_hat)
 
-    prediction_matrix = np.matrix(prediction_array)
-    prediction_matrix = prediction_matrix.astype(float)
+    prediction_matrix = np.matrix(prediction_array).astype(float)
     prediction_matrix_raw = prediction_matrix
 
     # Calculate unweighted ensemble performance
-    y_pred_best = []
-    for i in range(0, len(prediction_array[0])):
-        y_pred_best.append(round(np.mean(prediction_matrix_raw[:, i])))
+    y_pred_best = [
+        round(np.mean(prediction_matrix_raw[:, i]))
+        for i in range(len(prediction_array[0]))
+    ]
     auc = metrics.roc_auc_score(y_test_target, y_pred_best)
     print("Unweighted ensemble AUC: ", auc)
 
-    bounds = [(0, 1) for x in range(0, len(best[0]))]
+    bounds = [(0, 1) for _ in range(len(best[0]))]
 
     start = time.time()
     try:
         de = scipy.optimize.differential_evolution(
-            get_weighted_ensemble_prediction_de_cython,
+            get_weighted_ensemble_prediction_de,
             bounds,
             args=((prediction_matrix_raw, y_test_target)),
             strategy="best1bin",
@@ -176,11 +173,9 @@ def super_ensemble_weight_finder_differential_evolution_eval(
             workers=4,
             constraints=(),
             x0=None,
-            # integrality=None,
-            # vectorized=False
         )
     except Exception as e:
-        print("Failed on s e wf DE", e)
+        print("Failed on find_ensemble_weights_de_eval", e)
         print(prediction_matrix_raw, y_test_target)
         raise e
 
@@ -198,5 +193,4 @@ def super_ensemble_weight_finder_differential_evolution_eval(
             )
 
     print("best weighted score: ", score, "difference:", score - auc)
-    # print("best weights", optimal_weights, optimal_weights.shape)
     return optimal_weights

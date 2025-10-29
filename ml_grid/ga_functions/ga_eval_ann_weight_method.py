@@ -1,15 +1,22 @@
-from ml_grid.ga_functions.ga_ann_util import BinaryClassification, TestData, TrainData
-from ml_grid.ga_functions.ga_ann_weight_methods import train_ann_weight
-import torch
+"""Evaluate an ANN-weighted ensemble."""
+
+import time
 from typing import Any, List
-from torch.utils.data import DataLoader
+
 import numpy as np
+import torch
 from sklearn import metrics
 from sklearn.metrics import matthews_corrcoef
-import time
+
+from ml_grid.ga_functions.ga_ann_util import (
+    BinaryClassification,
+    TestData,
+    TrainData,
+)
+from ml_grid.ga_functions.ga_ann_weight_methods import train_ann_weight
 
 
-def get_y_pred_ann_torch_weighting_eval(
+def get_ann_weighted_ensemble_predictions_eval(
     best: List, ml_grid_object: Any, valid: bool = False
 ) -> np.ndarray:
     """
@@ -42,7 +49,7 @@ def get_y_pred_ann_torch_weighting_eval(
     """
 
     if ml_grid_object.verbose >= 11:
-        print("get_y_pred_ann_torch_weighting")
+        print("get_ann_weighted_ensemble_predictions_eval")
         print(best)
         print("len best", len(best))
 
@@ -53,7 +60,6 @@ def get_y_pred_ann_torch_weighting_eval(
     X_train = ml_grid_object.X_train
     X_test = ml_grid_object.X_test
 
-    model_train_time_warning_threshold = 15
     start = time.time()
 
     target_ensemble = best[0]
@@ -73,10 +79,10 @@ def get_y_pred_ann_torch_weighting_eval(
     # Always fit models and generate predictions for training the ANN weighting
     prediction_array = []
 
-    for i in range(0, len(target_ensemble)):
+    for i in range(len(target_ensemble)):
         feature_columns = list(target_ensemble[i][2])
 
-        if type(target_ensemble[i][1]) is not BinaryClassification:
+        if not isinstance(target_ensemble[i][1], BinaryClassification):
             model = target_ensemble[i][1]
             if ml_grid_object.verbose >= 2:
                 print(f"Fitting model {i+1}")
@@ -85,7 +91,6 @@ def get_y_pred_ann_torch_weighting_eval(
             prediction_array.append(model.predict(X_train[feature_columns]))
         else:
             test_data = TestData(torch.FloatTensor(X_train[feature_columns].values))
-            test_loader = DataLoader(dataset=test_data, batch_size=1)
 
             device = torch.device("cpu")
             model = target_ensemble[i][1]
@@ -97,15 +102,14 @@ def get_y_pred_ann_torch_weighting_eval(
             y_hat = y_hat.astype(int).flatten()
             prediction_array.append(y_hat)
 
-    prediction_matrix_X_train = np.matrix(prediction_array)
-    prediction_matrix_X_train = prediction_matrix_X_train.astype(float)
+    prediction_matrix_X_train = np.matrix(prediction_array).astype(float)
     prediction_matrix_raw_X_train = prediction_matrix_X_train
 
     X_prediction_matrix_raw_X_train = prediction_matrix_raw_X_train.T
 
     # Now generate predictions on the target dataset (test or validation)
     prediction_array = []
-    for i in range(0, len(target_ensemble)):
+    for i in range(len(target_ensemble)):
         feature_columns = list(target_ensemble[i][2])
 
         existing_columns = [
@@ -115,13 +119,12 @@ def get_y_pred_ann_torch_weighting_eval(
         ]
         feature_columns = existing_columns.copy()
 
-        if type(target_ensemble[i][1]) is not BinaryClassification:
+        if not isinstance(target_ensemble[i][1], BinaryClassification):
             prediction_array.append(
                 target_ensemble[i][1].predict(x_test[feature_columns])
             )
         else:
             test_data = TestData(torch.FloatTensor(x_test[feature_columns].values))
-            test_loader = DataLoader(dataset=test_data, batch_size=1)
 
             device = torch.device("cpu")
             model = target_ensemble[i][1]
@@ -133,8 +136,7 @@ def get_y_pred_ann_torch_weighting_eval(
             y_hat = y_hat.astype(int).flatten()
             prediction_array.append(y_hat)
 
-    prediction_matrix_X_test = np.matrix(prediction_array)
-    prediction_matrix_X_test = prediction_matrix_X_test.astype(float)
+    prediction_matrix_X_test = np.matrix(prediction_array).astype(float)
     prediction_matrix_raw_X_test = prediction_matrix_X_test
 
     prediction_matrix_raw_X_test = prediction_matrix_raw_X_test.T
@@ -145,9 +147,10 @@ def get_y_pred_ann_torch_weighting_eval(
         torch.FloatTensor(np.array(y_train)),
     )
 
-    y_pred_unweighted = []
-    for i in range(0, len(prediction_array[0])):
-        y_pred_unweighted.append(round(np.mean(prediction_matrix_raw_X_test.T[:, i])))
+    y_pred_unweighted = [
+        round(np.mean(prediction_matrix_raw_X_test.T[:, i]))
+        for i in range(len(prediction_array[0]))
+    ]
 
     auc = metrics.roc_auc_score(y_test_ann, y_pred_unweighted)
 
@@ -165,14 +168,9 @@ def get_y_pred_ann_torch_weighting_eval(
         random_y_pred_vector = (
             np.random.choice(
                 a=[False, True],
-                size=(
-                    len(
-                        y_test_ann,
-                    )
-                ),
+                size=(len(y_test_ann),),
             )
         ).astype(int)
-        y_pred = random_y_pred_vector
         y_pred_ensemble = random_y_pred_vector
 
     auc_score_weighted = metrics.roc_auc_score(y_test_ann, y_pred_ensemble)

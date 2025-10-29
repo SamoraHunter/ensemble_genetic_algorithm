@@ -1,12 +1,17 @@
-from ml_grid.ga_functions.ga_ann_util import BinaryClassification, TestData
-import torch
-from torch.utils.data import Dataset, DataLoader
+"""Evaluate an unweighted ensemble."""
+
 from typing import Any, List
+
 import numpy as np
+import torch
 from scipy import stats
 
+from ml_grid.ga_functions.ga_ann_util import BinaryClassification, TestData
 
-def get_best_y_pred_unweighted_eval(best: List, ml_grid_object: Any, valid: bool = False) -> List:
+
+def get_unweighted_ensemble_predictions_eval(
+    best: List, ml_grid_object: Any, valid: bool = False
+) -> List:
     """
     Generates unweighted ensemble predictions by majority vote for evaluation.
 
@@ -31,7 +36,7 @@ def get_best_y_pred_unweighted_eval(best: List, ml_grid_object: Any, valid: bool
     """
 
     if ml_grid_object.verbose >= 1:
-        print("get_best_y_pred_unweighted: best:")
+        print("get_unweighted_ensemble_predictions_eval: best:")
         print(best)
         print("len(best)")
         print(len(best))
@@ -40,7 +45,6 @@ def get_best_y_pred_unweighted_eval(best: List, ml_grid_object: Any, valid: bool
         print("Valid", valid)
 
     X_test_orig = ml_grid_object.X_test_orig
-    y_test_orig = ml_grid_object.y_test_orig
     X_train = ml_grid_object.X_train
     X_test = ml_grid_object.X_test
     y_train = ml_grid_object.y_train
@@ -48,7 +52,6 @@ def get_best_y_pred_unweighted_eval(best: List, ml_grid_object: Any, valid: bool
     # Choose prediction target based on valid parameter
     if valid:
         x_test = X_test_orig.copy()
-        y_test = y_test_orig.copy()
         if ml_grid_object.verbose >= 1:
             print("Predicting on validation set...")
     else:
@@ -60,10 +63,10 @@ def get_best_y_pred_unweighted_eval(best: List, ml_grid_object: Any, valid: bool
     target_ensemble = best[0]
 
     # Always fit models and make predictions
-    for i in range(0, len(target_ensemble)):
+    for i in range(len(target_ensemble)):
         feature_columns = list(target_ensemble[i][2])
 
-        if type(target_ensemble[i][1]) is not BinaryClassification:
+        if not isinstance(target_ensemble[i][1], BinaryClassification):
             model = target_ensemble[i][1]
             if ml_grid_object.verbose >= 2:
                 print(f"Fitting model {i+1}")
@@ -74,7 +77,6 @@ def get_best_y_pred_unweighted_eval(best: List, ml_grid_object: Any, valid: bool
         else:
             # Handle BinaryClassification (PyTorch) models
             test_data = TestData(torch.FloatTensor(x_test[feature_columns].values))
-            test_loader = DataLoader(dataset=test_data, batch_size=1)
 
             device = torch.device("cpu")
             model = target_ensemble[i][1]
@@ -90,15 +92,17 @@ def get_best_y_pred_unweighted_eval(best: List, ml_grid_object: Any, valid: bool
     prediction_matrix = np.matrix(prediction_array)
 
     y_pred_best = []
-    for i in range(0, len(prediction_array[0])):
+    for i in range(len(prediction_array[0])):
         try:
+            # Scipy v1.9.0 and later
             y_pred_best.append(
                 stats.mode(
                     np.matrix(prediction_array)[:, i].astype(int), keepdims=True
                 )[0][0][0]
             )
-        except:
+        except TypeError:
+            # Scipy v1.8.0 and earlier
             y_pred_best.append(
-                stats.mode(np.matrix(prediction_array)[:, i].astype(int))[0][0][0]
+                stats.mode(np.matrix(prediction_array)[:, i].astype(int))[0][0]
             )
     return y_pred_best

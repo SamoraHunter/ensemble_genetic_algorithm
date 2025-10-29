@@ -1,10 +1,9 @@
+"""Method for generating weighted ensemble predictions using differential evolution."""
+
 import numpy as np
 import torch
 from typing import Any, List
-import numpy
-from torch.utils.data import Dataset, DataLoader
-from numpy.linalg import norm
-import torch.nn as nn
+
 from ml_grid.ga_functions.ga_ann_util import BinaryClassification, TestData, normalize
 
 
@@ -38,7 +37,6 @@ def get_weighted_ensemble_prediction_de_y_pred_valid(
     round_v = np.vectorize(round)
 
     X_test_orig = ml_grid_object.X_test_orig
-    y_test_orig = ml_grid_object.y_test_orig
     X_train = ml_grid_object.X_train
     X_test = ml_grid_object.X_test
     y_train = ml_grid_object.y_train
@@ -48,7 +46,6 @@ def get_weighted_ensemble_prediction_de_y_pred_valid(
         if ml_grid_object.verbose >= 1:
             print("Evaluating weighted ensemble on validation set")
         x_test = X_test_orig.copy()
-        y_test = y_test_orig.copy()
 
         prediction_array = []
 
@@ -57,7 +54,7 @@ def get_weighted_ensemble_prediction_de_y_pred_valid(
 
             model = target_ensemble[i][1]
 
-            if type(target_ensemble[i][1]) is not BinaryClassification:
+            if not isinstance(model, BinaryClassification):
                 if ml_grid_object.verbose >= 2:
                     print(f"Fitting model {i+1}")
 
@@ -75,18 +72,12 @@ def get_weighted_ensemble_prediction_de_y_pred_valid(
                         type(y_train),
                         type(feature_columns),
                     )
-                    print(
-                        "Warning: The following columns do not exist in feature_columns:"
-                    )
-                    print("\n".join(missing_columns))
-                    print(print(len(missing_columns), len(feature_columns)))
 
                 prediction_array.append(model.predict(x_test[feature_columns]))
             else:
                 if ml_grid_object.verbose >= 2:
                     print(f"Handling torch model prediction for model {i+1}")
                 test_data = TestData(torch.FloatTensor(x_test[feature_columns].values))
-                test_loader = DataLoader(dataset=test_data, batch_size=1)
 
                 device = torch.device("cpu")
                 model.to(device)
@@ -96,7 +87,7 @@ def get_weighted_ensemble_prediction_de_y_pred_valid(
 
                 y_hat = y_hat.astype(int).flatten()
 
-                if numpy.isnan(y_hat).any():
+                if np.isnan(y_hat).any():
                     print(
                         "Returning dummy random yhat vector for torch pred, nan found"
                     )
@@ -111,13 +102,11 @@ def get_weighted_ensemble_prediction_de_y_pred_valid(
 
     prediction_matrix = np.matrix(prediction_array)
     prediction_matrix = prediction_matrix.astype(float)
-    prediction_matrix_raw = prediction_matrix
 
-    clean_prediction_matrix = prediction_matrix_raw.copy()
     weights = normalize(weights)
 
     weighted_prediction_matrix_array = (
-        np.array(clean_prediction_matrix) * weights[:, None]
+        np.array(prediction_matrix) * weights[:, None]
     )
     collapsed_weighted_prediction_matrix_array = weighted_prediction_matrix_array.sum(
         axis=0
@@ -125,6 +114,6 @@ def get_weighted_ensemble_prediction_de_y_pred_valid(
 
     y_pred_weighted = round_v(collapsed_weighted_prediction_matrix_array)
 
-    torch.cuda.empty_cache()  # exp
+    torch.cuda.empty_cache()
 
     return y_pred_weighted

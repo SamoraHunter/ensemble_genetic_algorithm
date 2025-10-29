@@ -1,29 +1,18 @@
+"""Methods for training an Artificial Neural Network (ANN) to determine ensemble weights."""
+
 import itertools
 import random
 import time
-from tqdm import tqdm
-import torch
 from typing import Any, List
-from torch.utils.data import Dataset, DataLoader
+
 import numpy as np
+import torch
 import torch.nn as nn
-
-from sklearn import metrics
-
-from sklearn.metrics import (
-    accuracy_score,
-    classification_report,
-    confusion_matrix,
-    f1_score,
-    matthews_corrcoef,
-    mean_squared_error,
-    precision_recall_curve,
-    r2_score,
-    roc_auc_score,
-    roc_curve,
-)
-
 import torch.optim as optim
+from sklearn import metrics
+from sklearn.metrics import matthews_corrcoef
+from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from ml_grid.ga_functions.ga_ann_util import (
     BinaryClassification,
@@ -81,7 +70,6 @@ def get_y_pred_ann_torch_weighting(
 
     y_test_ann = y_test.copy()
 
-    model_train_time_warning_threshold = 15
     start = time.time()
 
     target_ensemble = best[0]
@@ -96,7 +84,7 @@ def get_y_pred_ann_torch_weighting(
         for i in range(0, len(target_ensemble)):
             feature_columns = list(target_ensemble[i][2])
 
-            if type(target_ensemble[i][1]) is not BinaryClassification:
+            if not isinstance(target_ensemble[i][1], BinaryClassification):
                 model = target_ensemble[i][1]
                 if ml_grid_object.verbose >= 2:
                     print(f"Fitting model {i+1}")
@@ -105,8 +93,7 @@ def get_y_pred_ann_torch_weighting(
                 prediction_array.append(model.predict(X_train[feature_columns]))
             else:
                 test_data = TestData(torch.FloatTensor(X_train[feature_columns].values))
-                test_loader = DataLoader(dataset=test_data, batch_size=1)
-
+                
                 device = torch.device("cpu")
                 model = target_ensemble[i][1]
                 model.to(device)
@@ -126,13 +113,12 @@ def get_y_pred_ann_torch_weighting(
         prediction_array = []
         for i in range(0, len(target_ensemble)):
             feature_columns = list(target_ensemble[i][2])
-            if type(target_ensemble[i][1]) is not BinaryClassification:
+            if not isinstance(target_ensemble[i][1], BinaryClassification):
                 prediction_array.append(
                     target_ensemble[i][1].predict(x_test[feature_columns])
                 )
             else:
                 test_data = TestData(torch.FloatTensor(x_test[feature_columns].values))
-                test_loader = DataLoader(dataset=test_data, batch_size=1)
 
                 device = torch.device("cpu")
                 model = target_ensemble[i][1]
@@ -249,26 +235,20 @@ def train_ann_weight(
     """
     try:
         free_gpu = str(get_free_gpu())
-    except:
+    except Exception:
         free_gpu = "-1"
 
     # Initialise global parameter space----------------------------------------------------------------
 
     parameter_space = {
         "column_length": [input_shape],
-        #'epochs': [50, 200],
-        "hidden_layer_size": [
-            hidden_layer_size
-        ],  # ,int(X_train.shape[0]/100), int(X_train.shape[0]/200)],
-        #'learning_rate': lr_space,
-        #'learning_rate': [0.1, 0.001, 0.0005, 0.0001],
+        "hidden_layer_size": [hidden_layer_size],
         "deep_layers_1": [2],
         "dropout_val": [0.001],
     }
 
     additional_grid = {
         "epochs": [20],
-        #'epochs':[100],
         "learning_rate": [0.0001],
     }
     size_test = []
@@ -297,7 +277,6 @@ def train_ann_weight(
         batch_size=sample_parameter_space["hidden_layer_size"],
         shuffle=True,
     )
-    test_loader = DataLoader(dataset=test_data, batch_size=1)
 
     # fit model with random sample of global parameter space
     model = BinaryClassification(**sample_parameter_space)
@@ -327,19 +306,9 @@ def train_ann_weight(
             epoch_loss += loss.item()
             epoch_acc += acc.item()
 
-    print(
-        f"Epoch {e+0:03}: | Loss: {epoch_loss/len(train_loader):.5f} | Acc: {epoch_acc/len(train_loader):.3f} "  # | AUC: {torchmetrics.functional.auc(y_batch, y_pred, reorder=True)
-    )
-
-    para_str = (
-        str(settings)
-        .replace("'", "_")
-        .replace(":", "_")
-        .replace(",", "_")
-        .replace("{", "_")
-        .replace("}", "_")
-        .replace(" ", "_")
-    ).replace("__", "_")
+        print(
+            f"Epoch {e:03}: | Loss: {epoch_loss/len(train_loader):.5f} | Acc: {epoch_acc/len(train_loader):.3f}"
+        )
 
     y_pred_ensemble = model(test_data.X_data.to(device))
 

@@ -1,3 +1,5 @@
+"""Utility functions for PyTorch-based neural networks in the genetic algorithm."""
+
 from io import StringIO
 import subprocess
 from typing import Any, Optional, Tuple
@@ -10,28 +12,28 @@ import numpy as np
 
 
 class BinaryClassification(nn.Module):
-    """
-    A PyTorch neural network module for binary classification tasks with customizable depth and regularization.
-
-    Args:
-        column_length: Number of input features.
-        deep_layers_1: Number of additional fully connected hidden layers
-            after the initial two layers.
-        hidden_layer_size: Number of neurons in each hidden layer.
-        dropout_val: Dropout probability for regularization.
+    """A PyTorch neural network for binary classification.
 
     Attributes:
         layer_1: First fully connected layer.
         layer_2: Second fully connected layer.
-        deep_layers: Sequence of additional fully connected layers.
-        layer_out: Output layer producing a single value.
+        deep_layers: Additional hidden layers.
+        layer_out: Output layer.
         relu: ReLU activation function.
-        dropout: Dropout layer for regularization.
-        batchnorm1: Batch normalization after the first layer.
-        batchnorm2: Batch normalization after the deep layers.
+        dropout: Dropout layer.
+        batchnorm1: Batch normalization for the first layer.
+        batchnorm2: Batch normalization for the second set of layers.
     """
 
     def __init__(self, column_length: int, deep_layers_1: int, hidden_layer_size: int, dropout_val: float):
+        """Initializes the BinaryClassification model.
+
+        Args:
+            column_length: The number of input features.
+            deep_layers_1: The number of additional deep layers.
+            hidden_layer_size: The size of the hidden layers.
+            dropout_val: The dropout probability.
+        """
         super(BinaryClassification, self).__init__()
         self.layer_1: nn.Linear = nn.Linear(column_length, hidden_layer_size)
         self.layer_2: nn.Linear = nn.Linear(hidden_layer_size, hidden_layer_size)
@@ -52,10 +54,10 @@ class BinaryClassification(nn.Module):
         """Forward pass through the network.
 
         Args:
-            inputs: Input tensor of shape (batch_size, column_length).
+            inputs: The input tensor.
 
         Returns:
-            Output tensor of shape (batch_size, 1).
+            The output tensor.
         """
         x = self.relu(self.layer_1(inputs))
         x = self.batchnorm1(x)
@@ -69,11 +71,11 @@ class BinaryClassification(nn.Module):
 
 
 def binary_acc(y_pred: torch.Tensor, y_test: torch.Tensor) -> torch.Tensor:
-    """Calculates binary classification accuracy.
+    """Calculates the accuracy for binary classification.
 
     Args:
-        y_pred: The predicted values from the model.
-        y_test: The ground truth labels.
+        y_pred: The predicted values.
+        y_test: The true values.
 
     Returns:
         The accuracy as a percentage.
@@ -90,67 +92,55 @@ def binary_acc(y_pred: torch.Tensor, y_test: torch.Tensor) -> torch.Tensor:
 
 
 class TrainData(Dataset):
-    """
-    A custom PyTorch Dataset for handling training data.
-
-    Args:
-        X_data: Input features for the dataset.
-        y_data: Target labels corresponding to the input features.
-    
-    Attributes:
-        X_data (torch.Tensor): Input features for the dataset.
-        y_data (torch.Tensor): Target labels corresponding to the input features.
-    """
+    """Custom PyTorch Dataset for training data."""
 
     def __init__(self, X_data: torch.Tensor, y_data: torch.Tensor):
+        """Initializes the training dataset.
+
+        Args:
+            X_data: The input features.
+            y_data: The target labels.
+        """
         self.X_data = X_data
         self.y_data = y_data
 
     def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Returns a single sample of the data."""
         return self.X_data[index], self.y_data[index]
 
     def __len__(self) -> int:
+        """Returns the total number of samples."""
         return len(self.X_data)
 
 
-## test data
 class TestData(Dataset):
-    """
-    A custom Dataset class for handling test data in PyTorch.
-
-    Args:
-        X_data: The input data to be wrapped by the dataset.
-    
-    Attributes:
-        X_data (torch.Tensor): The input data.
-    """
+    """Custom PyTorch Dataset for test data."""
 
     def __init__(self, X_data: torch.Tensor):
+        """Initializes the test dataset.
+
+        Args:
+            X_data: The input features.
+        """
         self.X_data = X_data
 
     def __getitem__(self, index: int) -> torch.Tensor:
+        """Returns a single sample of the data."""
         return self.X_data[index]
 
     def __len__(self) -> int:
+        """Returns the total number of samples."""
         return len(self.X_data)
 
 
 def get_free_gpu(ml_grid_object: Optional[Any] = None) -> int:
-    """
-    Returns the index of the GPU with the most free memory.
-
-    This function queries the available GPUs using `nvidia-smi` and returns
-    the index of the GPU with the highest amount of free memory. If an
-    `ml_grid_object` is provided and has a `verbose` attribute, the function
-    will print additional information if verbosity is set to 6 or higher.
+    """Gets the index of the GPU with the most free memory.
 
     Args:
-        ml_grid_object: An object with a `verbose` attribute to control
-            verbosity. Defaults to None.
+        ml_grid_object: Optional ml_grid object for verbose output.
 
     Returns:
-        The index of the GPU with the most free memory, or -1 if an error
-        occurs or no GPU is available.
+        The index of the GPU with the most free memory, or -1 if an error occurs.
     """
     verbosity = 0
     if ml_grid_object is not None:
@@ -165,36 +155,26 @@ def get_free_gpu(ml_grid_object: Optional[Any] = None) -> int:
             names=["memory.used", "memory.free"],
             skiprows=1,
         )
-        # print('GPU usage:\n{}'.format(gpu_df))
         gpu_df["memory.free"] = gpu_df["memory.free"].map(lambda x: x.rstrip(" [MiB]"))
         idx = gpu_df["memory.free"].astype(int).idxmax()
 
         if verbosity >= 6:
             print(
-                "Returning GPU{} with {} free MiB".format(
-                    idx, gpu_df.iloc[idx]["memory.free"]
-                )
+                f"Returning GPU{idx} with {gpu_df.iloc[idx]['memory.free']} free MiB"
             )
         return int(idx)
-    except Exception as e:
-        # print("Error:", e)
+    except Exception:
         return -1
 
 
 def normalize(weights: np.ndarray) -> np.ndarray:
-    """
-    Normalizes a vector of weights using the L1 norm (sum of absolute values).
-
-    If the input vector consists entirely of zeros, it is returned unchanged.
-    Otherwise, each element is divided by the L1 norm so that the sum of the
-    absolute values equals 1.
+    """Normalizes a numpy array.
 
     Args:
-        weights: The vector of weights to normalize.
+        weights: The array to normalize.
 
     Returns:
-        The normalized weight vector with L1 norm equal to 1, or the
-        original vector if all elements are zero.
+        The normalized array.
     """
     # calculate l1 vector norm
     result = norm(weights, 1)
