@@ -345,7 +345,9 @@ class pipe:
         )
 
         self._log_feature_transformation(
-            "Feature Selection (Toggles)",
+            "Feature Selection (Toggles)", # This step's features_after count is based on pertubation_columns
+            # The drop_list here is the one returned by get_pertubation_columns, which is used to filter pertubation_columns
+            # So, features_after should reflect the size of pertubation_columns
             len(self.all_df_columns),
             len(self.pertubation_columns),
             "Selected columns based on feature toggles in config."
@@ -355,12 +357,21 @@ class pipe:
         difference_list = list(set(self.df.columns) - set(self.pertubation_columns))
         logger.info("Omitting %s columns based on feature toggles...", len(difference_list))
         logger.debug("Sample of omitted columns: %s...", difference_list[0:5])
+        
+        # Initialize self.drop_list with unique columns identified so far
+        # self.drop_list from get_pertubation_columns contains columns matching drop_term_list
+        self.drop_list = list(set(self.drop_list))
 
+        # Apply correlation matrix filtering and add to drop_list
         # Apply correlation matrix filtering
         features_before = len(self.pertubation_columns)
-        self.drop_list = handle_correlation_matrix(
-            local_param_dict=self.local_param_dict, drop_list=self.drop_list, df=self.df
+        # handle_correlation_matrix returns a list of columns to drop due to correlation.
+        # It does not modify the passed drop_list.
+        correlated_drops = handle_correlation_matrix(
+            local_param_dict=self.local_param_dict, drop_list=[], df=self.df # Pass empty list as it's not used for filtering
         )
+        self.drop_list.extend(correlated_drops)
+        self.drop_list = list(set(self.drop_list)) # Ensure uniqueness after adding correlated drops
         features_after = len([col for col in self.pertubation_columns if col not in self.drop_list])
         self._log_feature_transformation(
             "Drop Correlated",
@@ -368,14 +379,18 @@ class pipe:
             features_after,
             f"Dropped columns with correlation > {self.local_param_dict.get('corr', 0.95)}"
         )
-
+        
+        # Apply percent missing filtering and add to drop_list
         # Apply percent missing filtering
         features_before = features_after
-        self.drop_list = handle_percent_missing(
+        # handle_percent_missing modifies the passed drop_list in place and returns it.
+        # So, we reassign self.drop_list to capture any new unique drops.
+        self.drop_list = handle_percent_missing( # This will extend self.drop_list and return it
             local_param_dict=self.local_param_dict,
             all_df_columns=self.all_df_columns,
-            drop_list=self.drop_list,
+            drop_list=self.drop_list, # Pass the current comprehensive self.drop_list
         )
+        self.drop_list = list(set(self.drop_list)) # Ensure uniqueness
         features_after = len([col for col in self.pertubation_columns if col not in self.drop_list])
         self._log_feature_transformation(
             "Drop Missing",
@@ -383,12 +398,15 @@ class pipe:
             features_after,
             f"Dropped columns with > {self.local_param_dict.get('percent_missing', 100)}% missing"
         )
-
+        
+        # Remove other outcome variables and add to drop_list
         # Remove other outcome variables
         features_before = features_after
-        self.drop_list = handle_outcome_list(
+        # handle_outcome_list modifies the passed drop_list in place and returns it.
+        self.drop_list = handle_outcome_list( # This will extend self.drop_list and return it
             drop_list=self.drop_list, outcome_variable=self.outcome_variable
         )
+        self.drop_list = list(set(self.drop_list)) # Ensure uniqueness
         features_after = len([col for col in self.pertubation_columns if col not in self.drop_list])
         self._log_feature_transformation(
             "Drop Other Outcomes",
@@ -396,12 +414,15 @@ class pipe:
             features_after,
             "Removed other potential outcome variables from feature set."
         )
-
+        
+        # Remove constant columns and add to drop_list
         # Remove constant columns
         features_before = features_after
-        self.drop_list = remove_constant_columns(
+        # remove_constant_columns modifies the passed drop_list in place and returns it.
+        self.drop_list = remove_constant_columns( # This will extend self.drop_list and return it
             X=self.df, drop_list=self.drop_list, verbose=self.verbose
         )
+        self.drop_list = list(set(self.drop_list)) # Ensure uniqueness
         self._log_feature_transformation(
             "Drop Constants",
             features_before,
@@ -422,7 +443,7 @@ class pipe:
             numeric_cols = self.df.select_dtypes(include=np.number).columns.tolist()
             potential_features = [
                 c
-                for c in self.original_feature_names
+                for c in self.original_feature_names # Iterate over all original features
                 if c in numeric_cols and c != self.outcome_variable and c not in self.drop_list
             ]
             
