@@ -49,12 +49,6 @@ def store_model(
 
     model_store_path = ml_grid_object.logging_paths_obj.model_store_path
 
-    global_param_str = ml_grid_object.logging_paths_obj.global_param_str
-
-    additional_naming = ml_grid_object.logging_paths_obj.additional_naming
-
-    global_param_dict = ml_grid_object.global_params
-
     log_folder_path = ml_grid_object.logging_paths_obj.log_folder_path
 
     if ml_grid_object.verbose >= 1:
@@ -142,12 +136,6 @@ def get_stored_model(ml_grid_object: Any) -> Tuple:
     """
     model_store_path = ml_grid_object.logging_paths_obj.model_store_path
 
-    global_param_str = ml_grid_object.logging_paths_obj.global_param_str
-
-    additional_naming = ml_grid_object.logging_paths_obj.additional_naming
-
-    global_param_dict = ml_grid_object.global_params
-
     log_folder_path = ml_grid_object.logging_paths_obj.log_folder_path
 
     modelFuncList = ml_grid_object.config_dict.modelFuncList
@@ -160,9 +148,7 @@ def get_stored_model(ml_grid_object: Any) -> Tuple:
     try:
         model_key = str(random.choice(model_key_list))
 
-        logger.info(
-            "Returning stored model at index %s/%s", model_key, len(model_key_list)
-        )
+        logger.info("Returning stored model at index %s/%s", model_key, len(model_key_list))
 
         if model_store_data["models"].get(model_key)["model_type"] == "sklearn":
             model = eval(model_store_data["models"].get(model_key)["model"])
@@ -186,9 +172,7 @@ def get_stored_model(ml_grid_object: Any) -> Tuple:
             np.array(model_store_data["models"].get(model_key)["y_pred"]),
         )
     except Exception as e:
-        logger.error(
-            "Failed inside getting stored model, returning random new model: %s", e
-        )
+        logger.error("Failed inside getting stored model, returning random new model: %s", e)
         index = random.randint(0, len(modelFuncList) - 1)
 
         return modelFuncList[index](ml_grid_object, ml_grid_object.local_param_dict)

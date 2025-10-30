@@ -21,9 +21,7 @@ class ClippedSVC(BaseEstimator, ClassifierMixin):
         kwargs["probability"] = True
         self.svc = SVC(**kwargs)
 
-    def fit(
-        self, X: np.ndarray, y: np.ndarray, sample_weight: Any = None
-    ) -> "ClippedSVC":
+    def fit(self, X: np.ndarray, y: np.ndarray, sample_weight: Any = None) -> "ClippedSVC":
         self.svc.fit(X, y, sample_weight=sample_weight)
         self.classes_ = self.svc.classes_
         return self
@@ -36,7 +34,6 @@ class ClippedSVC(BaseEstimator, ClassifierMixin):
         # We return the probability of the positive class to satisfy log_loss.
         # This is a workaround for the PyImpetus library's behavior.
         return self.predict_proba(X)[:, 1]
-
 
 class feature_methods:
     def __init__(self):
@@ -127,7 +124,7 @@ class feature_methods:
             verbose=2,
         )
 
-        df_train_transformed = model.fit_transform(X_train, y_train)
+        model.fit_transform(X_train, y_train)
 
         feature_names = model.MB[:n]
 

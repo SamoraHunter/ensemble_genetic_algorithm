@@ -21,7 +21,7 @@ def correlation_coefficient(col1: pd.Series, col2: pd.Series) -> float:
 
 
 def handle_correlation_matrix(
-    local_param_dict: Dict, drop_list: List, df: pd.DataFrame, chunk_size: int = 50
+    local_param_dict: Dict, df: pd.DataFrame, chunk_size: int = 50
 ) -> List[str]:
     """Identifies highly correlated column pairs and adds them to a drop list.
 
@@ -33,8 +33,6 @@ def handle_correlation_matrix(
     Args:
         local_param_dict: A dictionary containing local parameters, including
             the 'corr' threshold.
-        drop_list: A list to which one column from each highly correlated pair
-            will be appended.
         df: The input DataFrame to analyze.
         chunk_size: The number of columns to process in each chunk.
             Defaults to 50.
@@ -60,11 +58,11 @@ def handle_correlation_matrix(
 
     n_cols = len(df_numeric.columns)
     to_drop = set()
-    processed_cols = set()
 
     # Split columns into chunks for memory efficiency
     column_chunks = [
-        df_numeric.columns[i : i + chunk_size] for i in range(0, n_cols, chunk_size)
+        df_numeric.columns[i : i + chunk_size]
+        for i in range(0, n_cols, chunk_size)
     ]
 
     with tqdm(total=n_cols, desc="Calculating Correlations") as pbar:
@@ -82,9 +80,7 @@ def handle_correlation_matrix(
             # Find highly correlated pairs
             for col1 in chunk_cols:
                 # Find correlations above the threshold, excluding self-correlation
-                correlated_series = sub_matrix.loc[col1][
-                    sub_matrix.loc[col1] > threshold
-                ]
+                correlated_series = sub_matrix.loc[col1][sub_matrix.loc[col1] > threshold]
                 for col2, _ in correlated_series.items():
                     # If two columns are correlated, and we haven't already decided to drop col1, drop col2.
                     if col1 != col2 and col1 not in to_drop:

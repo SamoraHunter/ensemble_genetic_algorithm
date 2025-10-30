@@ -190,12 +190,7 @@ class run:
                             is False
                         ):
                             logger.warning("What is this?")
-                            logger.warning(
-                                "%s, %s %s",
-                                elem.method_name,
-                                param,
-                                type(elem.parameter_space.get(param)),
-                            )
+                            logger.warning("%s, %s %s", elem.method_name, param, type(elem.parameter_space.get(param)))
 
                 except Exception:
                     # logger.debug(e)
@@ -259,12 +254,12 @@ class run:
             if __name__ == "__main__":
                 from multiprocessing import Pool
 
-                pool = Pool(8)
-                results = pool.map(multi_run_wrapper, self.arg_list)
-                # print(results)
+                with Pool(8) as pool:
+                    pool.map(multi_run_wrapper, self.arg_list)
+
                 pool.close()  # exp
 
-        elif self.multiprocess == False:
+        elif not self.multiprocess:
             for k in range(0, len(self.arg_list)):
                 try:
                     logger.info("grid searching...")
@@ -285,9 +280,7 @@ class run:
                             "error thrown in grid_search_crossvalidate on model class list"
                         )
 
-        logger.info(
-            "Model error list: nb. errors returned from func: %s", self.model_error_list
-        )
+        logger.info("Model error list: nb. errors returned from func: %s", self.model_error_list)
         logger.info(self.model_error_list)
 
         return self.model_error_list

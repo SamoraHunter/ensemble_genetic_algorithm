@@ -70,12 +70,8 @@ def DecisionTreeClassifierModelGenerator(
     param_dict = ParamSpace(size=local_param_dict.get("param_space_size")).param_dict
 
     log_small = param_dict["log_small"]
-    bool_param = param_dict["bool_param"]
-    log_large = param_dict["log_large"]
     log_large_long = param_dict["log_large_long"]
-    log_med_long = param_dict["log_med_long"]
     log_med = param_dict["log_med"]
-    log_zero_one = param_dict["log_zero_one"]
     lin_zero_one = param_dict["lin_zero_one"]
 
     # Initialise global parameter space----------------------------------------------------------------
@@ -102,7 +98,7 @@ def DecisionTreeClassifierModelGenerator(
         sample_parameter_space[key] = random.choice(parameter_space.get(key))
 
     if sample_parameter_space.get("min_samples_split") == 0.0:
-        sample_parameter_space["min_samples_split"] = 0.001
+        sample_parameter_space["min_samples_split"] = 0.001  # type: ignore
     # fit model with random sample of global parameter space
     sample_parameter_space = validate_max_leaf_nodes(sample_parameter_space)
     logger.debug(sample_parameter_space)

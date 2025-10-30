@@ -50,8 +50,8 @@ def elasticNeuralNetworkModelGenerator(
             - y_pred (np.ndarray): The model's predictions on the test set.
     """
     from ml_grid.util.global_params import global_parameters
-
     global_parameter_val = global_parameters()
+
 
     verbose = global_parameter_val.verbose
     store_base_learners = ml_grid_object.global_params.store_base_learners
@@ -73,11 +73,6 @@ def elasticNeuralNetworkModelGenerator(
     )
     max_iter_n = random.choice([5, 7, 10, 12, 15, 20, 25, 50, 75])
     l1_ratio_n = random.choice([0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1])
-    loss_n = random.choice(["log"])
-    penalty_n = random.choice(["elasticnet"])
-    class_weight_n = random.choice(["balanced"])
-    shuffle_n = random.choice([True])
-
     # warm_start = True
     model = OneVsRestClassifier(
         ElasticNet(
@@ -89,7 +84,6 @@ def elasticNeuralNetworkModelGenerator(
 
     # Fit model-------------------------------------------------------------------------------------
     model.fit(X_train, y_train)
-    y_train_hat = model.predict(X_train)
     score = model.score(X_test, y_test)
     logger.debug(f"ElasticNet score: {score}")
     y_pred = model.predict(X_test)

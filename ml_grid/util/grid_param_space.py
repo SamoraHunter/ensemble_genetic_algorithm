@@ -15,7 +15,7 @@ class Grid:
 
         self.verbose = self.global_params.verbose
 
-        if sample_n == None:
+        if sample_n is None:
             self.sample_n = 1000
         else:
             self.sample_n = sample_n

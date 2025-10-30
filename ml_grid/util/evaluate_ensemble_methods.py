@@ -15,7 +15,7 @@ try:
 except ImportError as e:
     logger.error("Error: Could not import required functions from 'ml_grid': %s", e)
 
-from ml_grid.pipeline.evaluate_methods_y_pred_resolver import (
+from ml_grid.pipeline.evaluate_methods_y_pred_resolver import (  # noqa: E402
     get_y_pred_resolver_eval,
 )
 
@@ -97,7 +97,9 @@ class EnsembleEvaluator:
         self.original_feature_names = None
         self._load_and_split_data(input_csv_path, outcome_variable)
 
-    def _load_and_split_data(self, input_csv_path: str, outcome_variable: str) -> None:
+    def _load_and_split_data(
+        self, input_csv_path: str, outcome_variable: str
+    ) -> None:
         """Loads data from a CSV and splits it into train, test, and validation sets."""
         if self.debug:
             logger.debug("Loading data from: %s", input_csv_path)
@@ -175,9 +177,7 @@ class EnsembleEvaluator:
         for ensemble in ensembles:
             if not isinstance(ensemble, (list, tuple)):
                 if debug:
-                    logger.debug(
-                        "[DEBUG] Skipping non-list/tuple ensemble: %s", ensemble
-                    )
+                    logger.debug("[DEBUG] Skipping non-list/tuple ensemble: %s", ensemble)
                 continue
             processed_ensemble = []
             for model_tuple in ensemble:
@@ -224,6 +224,7 @@ class EnsembleEvaluator:
             ensemble and weighting method.
         """
         import pandas as pd
+
 
         if ensemble_indices is None:
             # Default: pick the row with the highest auc_score

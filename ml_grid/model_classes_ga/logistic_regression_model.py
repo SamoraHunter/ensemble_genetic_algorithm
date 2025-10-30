@@ -48,8 +48,8 @@ def logisticRegressionModelGenerator(
             - y_pred (np.ndarray): The model's predictions on the test set.
     """
     from ml_grid.util.global_params import global_parameters
-
     global_parameter_val = global_parameters()
+
 
     verbose = global_parameter_val.verbose
 
@@ -77,7 +77,6 @@ def logisticRegressionModelGenerator(
 
     # Fit model---------------------------------------------------------------------
     model.fit(X_train, y_train)
-    y_train_hat = model.predict(X_train)
     score = model.score(X_test, y_test)
     logger.debug(f"LogisticRegression score: {score}")
     y_pred = model.predict(X_test)

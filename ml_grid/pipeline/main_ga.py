@@ -1,4 +1,3 @@
-import datetime
 import gc
 import itertools
 import logging
@@ -92,12 +91,7 @@ class run:
     local_param_dict: Dict
     """A dictionary of local parameters for the current run."""
 
-    def __init__(
-        self,
-        ml_grid_object: Any,
-        local_param_dict: Dict,
-        global_params: global_parameters,
-    ):
+    def __init__(self, ml_grid_object: Any, local_param_dict: Dict, global_params: global_parameters):
         """Initializes the Genetic Algorithm runner.
 
         Args:
@@ -114,9 +108,7 @@ class run:
 
         self.error_raise = self.global_params.error_raise
 
-        ga_grid = Grid(
-            global_params=self.global_params, test_grid=ml_grid_object.testing
-        )
+        ga_grid = Grid(global_params=self.global_params, test_grid=ml_grid_object.testing)
 
         # pass in and get outside
         self.nb_params, self.pop_params, self.g_params = (
@@ -166,23 +158,14 @@ class run:
         self.X_test_orig = self.ml_grid_object.X_test_orig
         self.y_test_orig = self.ml_grid_object.y_test_orig
 
-        gen_eval_score_threshold_early_stopping = 5
-
         if __name__ == "__main__":
             grid = [self.nb_params, self.pop_params, self.g_params]  # type: ignore
             param_grid = list(itertools.product(*grid))
             logger.debug(param_grid)
             for elem in param_grid:
                 logger.debug("%s %s model generation space", elem, elem[0] * elem[1])
-                logger.debug(
-                    "%s %s individual evaluation space", elem, elem[0] * elem[2]
-                )
+                logger.debug("%s %s individual evaluation space", elem, elem[0] * elem[2])
             logger.debug(len(param_grid))
-
-            prediction_array = None
-
-            date = datetime.datetime.now().strftime("%Y_%m_%d-%I:%M:%S_%p")
-            log_folder_path = f"log_{date}.txt"
 
             if self.verbose >= 2:
                 logger.info(f"{len(self.model_class_list)} models loaded")
@@ -221,25 +204,12 @@ class run:
         """
         logger.info("Executing GA runs...")
         self.model_error_list = []
-
-        global_param_str = self.ml_grid_object.logging_paths_obj.global_param_str
-
         additional_naming = self.ml_grid_object.logging_paths_obj.additional_naming
-
-        global_param_dict = self.ml_grid_object.global_params
-
-        log_folder_path = self.ml_grid_object.logging_paths_obj.log_folder_path
-
         local_param_dict = self.ml_grid_object.local_param_dict
 
         grid = [self.nb_params, self.pop_params, self.g_params]
 
         param_grid = list(itertools.product(*grid))
-        logger.debug(param_grid)
-        logger.debug(len(param_grid))
-
-        prediction_array = None
-
         # date = datetime.datetime.now().strftime("%Y_%m_%d-%I:%M:%S_%p")
         # log_folder_path = f'log_{date}.txt'
 
@@ -259,10 +229,7 @@ class run:
                     logger.warning("failed to clear output before run: %s", e)
 
                 logger.info(
-                    "Evolving ensemble: nb_val: %s, pop_val: %s, g_val: %s, ...",
-                    nb_val,
-                    pop_val,
-                    g_val,
+                    "Evolving ensemble: nb_val: %s, pop_val: %s, g_val: %s, ...", nb_val, pop_val, g_val
                 )
 
                 generation_progress_list = []
@@ -359,7 +326,7 @@ class run:
 
                 highest_scoring_ensemble = (0, None)
 
-                while g < g_val and gen_eval_score < 0.999 and stop_early == False:
+                while g < g_val and gen_eval_score < 0.999 and not stop_early:
 
                     if self.ml_grid_object.verbose < 9 and g % 2 == 0:
                         clear_output(wait=False)
@@ -402,9 +369,7 @@ class run:
                     for ind, fit in zip(invalid_ind, fitnesses):
                         ind.fitness.values = fit
                     pop[:] = offspring
-                    logger.info(
-                        "Gather all the fitnesses in one list and print the stats"
-                    )
+                    logger.info("Gather all the fitnesses in one list and print the stats")
                     # Gather all the fitnesses in one list and print the stats
                     fits = [ind.fitness.values[0] for ind in pop]
                     length = len(pop)
@@ -431,9 +396,7 @@ class run:
                     try:
                         gen_eval_score = metrics.roc_auc_score(self.y_test, y_pred)
                     except ValueError:
-                        gen_eval_score = (
-                            0.5  # Assign random chance score if AUC is not defined
-                        )
+                        gen_eval_score = 0.5  # Assign random chance score if AUC is not defined
                     logger.info("gen_eval_score == %s Generation %s", gen_eval_score, g)
                     generation_progress_list.append(gen_eval_score)
 
@@ -441,9 +404,7 @@ class run:
                         gen_eval_score_counter = gen_eval_score_counter + 1
                         if self.verbose >= 1:
                             logger.info(
-                                "gen_eval_score_counter %s, highest so far: %s",
-                                gen_eval_score_counter,
-                                highest_scoring_ensemble[0],
+                                "gen_eval_score_counter %s, highest so far: %s", gen_eval_score_counter, highest_scoring_ensemble[0]
                             )
 
                         if (
@@ -454,15 +415,7 @@ class run:
                     elif gen_eval_score > highest_scoring_ensemble[0]:
                         if self.verbose >= 1:
                             logger.info(
-                                "gen_eval_score gain: %s rate: %s ETA: %s",
-                                gen_eval_score - gen_eval_score_previous,
-                                (highest_scoring_ensemble[0] - 0.5) / g,
-                                round(
-                                    (
-                                        (1 - highest_scoring_ensemble[0])
-                                        / (gen_eval_score_gain + 1.00000000e-99)
-                                    )
-                                ),
+                                "gen_eval_score gain: %s rate: %s ETA: %s", gen_eval_score-gen_eval_score_previous, (highest_scoring_ensemble[0]-0.5)/g, round(((1-highest_scoring_ensemble[0])/(gen_eval_score_gain+1.00000000e-99)))
                             )
                         gen_eval_score_gain = gen_eval_score_gain + (
                             gen_eval_score - gen_eval_score_previous
@@ -484,9 +437,7 @@ class run:
                     logger.info("\n")
                     logger.info("Best Ensemble Model: ")
                     for i in range(0, len(best[0])):
-                        logger.info(
-                            "%s n features: %s", best[0][i][1], len(best[0][i][2])
-                        )
+                        logger.info("%s n features: %s", best[0][i][1], len(best[0][i][2]))
 
                 if self.verbose >= 1:
                     logger.info(
@@ -516,18 +467,14 @@ class run:
                             + "_nb="
                             + str(nb_val),
                         )
-                        logger.info(
-                            "nb_val: %s, pop_val: %s, g_val: %s", nb_val, pop_val, g_val
-                        )
+                        logger.info("nb_val: %s, pop_val: %s, g_val: %s", nb_val, pop_val, g_val)
                         try:
-                            final_auc = metrics.roc_auc_score(
-                                self.y_test_orig, best_pred_orig
+                            final_auc = metrics.roc_auc_score(self.y_test_orig, best_pred_orig)
+                            logger.info(
+                                "AUC: %s, g: %s", final_auc, g
                             )
-                            logger.info("AUC: %s, g: %s", final_auc, g)
                         except ValueError:
-                            logger.warning(
-                                "AUC: undefined (only one class in y_true), g: %s", g
-                            )
+                            logger.warning("AUC: undefined (only one class in y_true), g: %s", g)
                 except Exception as e:
                     logger.error("Failed to get best y pred and plot auc")
                     logger.error(e)
@@ -543,10 +490,6 @@ class run:
                 #           "AUC: ", metrics.roc_auc_score(best_pred_orig, best_pred_orig), "Run Time (min): ", round((end - start)/60, 3), "g:", g]]))
                 #     myfile.write('\n')
                 #     myfile.close()
-                date = datetime.datetime.now().strftime("%Y_%m_%d-%I:%M:%S_%p")
-
-                # with open(f'{self.global_param_str+self.additional_naming}/results_master_lists/master_result_list_{date}.pkl', 'wb') as f:
-                #     pickle.dump(master_result_list, f)
 
                 try:
                     scores = metrics.roc_auc_score(self.y_test_orig, best_pred_orig)
@@ -657,8 +600,6 @@ class run:
                 )
 
             except Exception as Argument:
-                date = datetime.datetime.now().strftime("%Y_%m_%d-%I:%M:%S_%p")
-
                 try:
                     str_to_write = os.path.join(
                         f"{self.ml_grid_object.base_project_dir+self.global_param_str + additional_naming}/logs/",

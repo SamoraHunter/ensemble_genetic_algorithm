@@ -48,8 +48,8 @@ def MLPClassifier_ModelGenerator(
             - y_pred (np.ndarray): The model's predictions on the test set.
     """
     from ml_grid.util.global_params import global_parameters
-
     global_parameter_val = global_parameters()
+
 
     verbose = global_parameter_val.verbose
     store_base_learners = ml_grid_object.global_params.store_base_learners
@@ -69,11 +69,7 @@ def MLPClassifier_ModelGenerator(
 
     log_small = param_dict["log_small"]
     bool_param = param_dict["bool_param"]
-    log_large = param_dict["log_large"]
     log_large_long = param_dict["log_large_long"]
-    log_med_long = param_dict["log_med_long"]
-    log_med = param_dict["log_med"]
-    log_zero_one = param_dict["log_zero_one"]
     lin_zero_one = param_dict["lin_zero_one"]
 
     # Initialise global parameter space----------------------------------------------------------------

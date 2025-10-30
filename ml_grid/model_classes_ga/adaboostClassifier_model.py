@@ -9,12 +9,12 @@ from sklearn.ensemble import AdaBoostClassifier
 from sklearn.metrics import matthews_corrcoef
 
 from ml_grid.util.debug_methods_ga import debug_base_learner
-
-logger = logging.getLogger("ensemble_ga")
-
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
 from ml_grid.util.model_methods_ga import store_model
 from ml_grid.util.param_space import ParamSpace
+
+logger = logging.getLogger("ensemble_ga")
+
 
 
 def AdaBoostClassifierModelGenerator(
@@ -74,13 +74,7 @@ def AdaBoostClassifierModelGenerator(
     param_dict = ParamSpace(size=local_param_dict.get("param_space_size")).param_dict
 
     log_small = param_dict["log_small"]
-    bool_param = param_dict["bool_param"]
-    log_large = param_dict["log_large"]
     log_large_long = param_dict["log_large_long"]
-    log_med_long = param_dict["log_med_long"]
-    log_med = param_dict["log_med"]
-    log_zero_one = param_dict["log_zero_one"]
-    lin_zero_one = param_dict["lin_zero_one"]
 
     # Initialise global parameter space----------------------------------------------------------------
     parameter_space = {

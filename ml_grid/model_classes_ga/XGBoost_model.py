@@ -50,8 +50,8 @@ def XGBoostModelGenerator(
             - y_pred (np.ndarray): The model's predictions on the test set.
     """
     from ml_grid.util.global_params import global_parameters
-
     global_parameter_val = global_parameters()
+
 
     verbose = global_parameter_val.verbose
     store_base_learners = ml_grid_object.global_params.store_base_learners
@@ -70,7 +70,6 @@ def XGBoostModelGenerator(
     # Initialise parameter space-----------------------------------------------------------------
     gamma_n = random.choice([0.01, 0.1, 1, 3, 5, 7, 9, 10, 15])
     reg_alpha_n = random.choice([0, 0.001, 0.005, 0.01, 0.1, 1, 3, 5])
-    reg_gamma_n = random.choice([0, 0.001, 0.005, 0.01, 0.1, 1, 3, 5])
     learning_rate_n = random.choice(
         [0.5, 0.1, 0.09, 0.08, 0.07, 0.06, 0.05, 0.04, 0.03, 0.02, 0.01]
     )
@@ -116,7 +115,7 @@ def XGBoostModelGenerator(
     )
     try:
         gpu_id_n = get_free_gpu(ml_grid_object)
-    except:
+    except Exception:
         gpu_id_n = "-1"
         pass
 

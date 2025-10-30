@@ -4,8 +4,8 @@ import time
 from typing import Any, Dict, List, Tuple
 
 import numpy as np
+from sklearn import metrics
 from sklearn.ensemble import ExtraTreesClassifier
-from sklearn.metrics import matthews_corrcoef, roc_auc_score
 
 from ml_grid.util.debug_methods_ga import debug_base_learner
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
@@ -65,8 +65,6 @@ def extraTreesModelGenerator(
     ).get_featured_selected_training_data(method="anova")
 
     # Initialise parameter space-----------------------------------------------------------------
-    seed = 7
-    num_trees = 30
     max_features_n = random.choice(list(np.arange(0.05, 0.2, 0.001)))
     min_samples_leaf_n = random.choice([2, 5, 8, 10, 15, 20, 25, 40, 50])
     n_estimators_n = random.choice(
@@ -117,13 +115,10 @@ def extraTreesModelGenerator(
 
     # Fit model-------------------------------------------------------------------------------------
     model.fit(X_train, y_train)
-    y_train_hat = model.predict(X_train)
-    score = model.score(X_test, y_test)
-    logger.debug(f"ExtraTreesClassifier score: {score}")
     y_pred = model.predict(X_test)
-    mccscore = matthews_corrcoef(y_test, y_pred)
+    mccscore = metrics.matthews_corrcoef(y_test, y_pred)
 
-    auc_score = round(roc_auc_score(y_test, y_pred), 4)
+    auc_score = round(metrics.roc_auc_score(y_test, y_pred), 4)
     end = time.time()
     model_train_time = int(end - start)
 

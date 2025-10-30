@@ -111,9 +111,8 @@ class feature_selection_methods_class:
         """
         try:
             X = X.drop("index", axis=1)
-        except:
+        except Exception:
             pass
-        independentVariables = X
         self.X_train = X
         self.y_train = y
         forest = RandomForestClassifier(random_state=1)
@@ -145,9 +144,9 @@ class feature_selection_methods_class:
         """
         try:
             X = X.drop("index", axis=1)
-        except:
+        except Exception:  # E722
             pass
-        try:
+        try: # noqa: E722
             model = XGBClassifier()
             model.fit(X, y)
             importances = model.feature_importances_
@@ -185,13 +184,12 @@ class feature_selection_methods_class:
         Returns:
             A list of the names of the top n features.
         """
-        independentVariables = X
 
         self.X_train = X
         self.y_train = y
         try:
             X = X.drop("index", axis=1)
-        except:
+        except Exception:
             X = X
         forest = ExtraTreesClassifier(random_state=1)
         forest.fit(self.X_train, self.y_train)

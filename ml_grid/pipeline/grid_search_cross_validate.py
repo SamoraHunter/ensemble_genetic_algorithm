@@ -1,12 +1,14 @@
 import logging
 import time
+import warnings
 from typing import Any, Dict
 
 import keras
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 from scikeras.wrappers import KerasClassifier
-from sklearn.metrics import *
+from sklearn.exceptions import ConvergenceWarning
 from sklearn.model_selection import (
     GridSearchCV,
     ParameterGrid,
@@ -21,14 +23,6 @@ from ml_grid.util.global_params import global_parameters
 from ml_grid.util.project_score_save import project_score_save_class
 
 logger = logging.getLogger("ensemble_ga")
-
-
-import warnings
-
-import tensorflow as tf
-
-# from sklearn.utils.testing import ignore_warnings
-from sklearn.exceptions import ConvergenceWarning
 
 
 class grid_search_crossvalidate:
@@ -197,7 +191,7 @@ class grid_search_crossvalidate:
         pg = len(pg)
 
         if (random_grid_search and n_iter_v > 100000) or (
-            random_grid_search == False and pg > 100000
+            not random_grid_search and pg > 100000
         ):
             logger.error("grid too large %s %s", str(pg), str(n_iter_v))
             raise Exception("grid too large", str(pg))
@@ -242,7 +236,6 @@ class grid_search_crossvalidate:
             pre_dispatch=80,  # exp,
             error_score=np.nan,
         )
-        current_algorithm_scores = scores
         #     scores_tuple_list.append((method_name, current_algorithm_scores, grid))
 
         if self.global_parameters.verbose >= 4:

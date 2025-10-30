@@ -13,7 +13,6 @@ from ml_grid.util.get_feature_selection_class_ga import feature_selection_method
 
 logger = logging.getLogger("ensemble_ga")
 
-
 def perceptronModelGen_dummy(
     ml_grid_object: Any, local_param_dict: Dict
 ) -> Tuple[float, Perceptron, List[str], int, float, np.ndarray]:
@@ -47,13 +46,6 @@ def perceptronModelGen_dummy(
             - y_pred (np.ndarray): The model's predictions on the test set.
     """
 
-    from ml_grid.util.global_params import global_parameters
-
-    global_parameter_val = global_parameters()
-
-    verbose = global_parameter_val.verbose
-    store_base_learners = ml_grid_object.global_params.store_base_learners
-    # scale = ml_grid_object.scale
 
     X_train = ml_grid_object.X_train
     X_test = ml_grid_object.X_test

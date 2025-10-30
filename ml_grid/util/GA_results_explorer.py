@@ -492,7 +492,7 @@ class GA_results_explorer:
         plt.figure(figsize=(14, 16))
 
         # Create the bar plot, using 'hue' to color-code the bars by 'Type'
-        barplot = sns.barplot(
+        sns.barplot(
             x="F-statistic",
             y="Parameter",
             hue="Type",
@@ -688,7 +688,7 @@ class GA_results_explorer:
         plt.style.use("seaborn-v0_8-whitegrid")
         plt.figure(figsize=(12, max(8, len(results_df) * 0.4)))  # Dynamic height
 
-        barplot = sns.barplot(
+        sns.barplot(
             x="F-statistic", y="Feature", data=results_df, palette="crest", orient="h"
         )
 
@@ -824,7 +824,7 @@ class GA_results_explorer:
         plt.style.use("seaborn-v0_8-whitegrid")
         plt.figure(figsize=(12, max(8, len(results_df) * 0.4)))  # Dynamic height
 
-        barplot = sns.barplot(
+        sns.barplot(
             x="F-statistic", y="Feature", data=results_df, palette="rocket", orient="h"
         )
 
@@ -1240,7 +1240,7 @@ class GA_results_explorer:
                 try:
                     # Safely evaluate the string representation of the list
                     return ast.literal_eval(data)
-                except (ValueError, SyntaxError):
+                except (ValueError, SyntaxError):  # E722
                     return None  # Return None if parsing fails
             return None
 

@@ -63,8 +63,8 @@ class EnsembleDiversityMeasurer:
             distance_vector = scipy.spatial.distance.pdist(
                 all_y_pred_arrays, metric="jaccard"
             )
-            return np.mean(distance_vector)
-        except:
+            return np.mean(distance_vector) # type: ignore
+        except Exception:
             return 0.0
 
     def measure_hamming_diversity(self, ensemble: List[Any]) -> float:
@@ -95,8 +95,8 @@ class EnsembleDiversityMeasurer:
             distance_vector = scipy.spatial.distance.pdist(
                 all_y_pred_arrays, metric="hamming"
             )
-            return np.mean(distance_vector)
-        except:
+            return np.mean(distance_vector) # type: ignore
+        except Exception:
             return 0.0
 
     def measure_disagreement_diversity(self, ensemble: List[Any]) -> float:
@@ -129,8 +129,8 @@ class EnsembleDiversityMeasurer:
 
             # Maximum possible disagreement for binary is 0.25
             max_disagreement = 0.25
-            return np.mean(disagreements) / max_disagreement
-        except:
+            return np.mean(disagreements) / max_disagreement # type: ignore
+        except Exception:
             return 0.0
 
     def measure_q_statistic_diversity(self, ensemble: List[Any]) -> float:
@@ -175,8 +175,8 @@ class EnsembleDiversityMeasurer:
             if not q_statistics:
                 return 0.0
 
-            return 1 - np.mean(q_statistics)
-        except:
+            return 1 - np.mean(q_statistics) # type: ignore
+        except Exception:
             return 0.0
 
     def measure_kappa_diversity(self, ensemble: List[Any]) -> float:
@@ -227,8 +227,8 @@ class EnsembleDiversityMeasurer:
             if not kappa_values:
                 return 0.0
 
-            return 1 - np.mean(kappa_values)
-        except:
+            return 1 - np.mean(kappa_values) # type: ignore
+        except Exception:
             return 0.0
 
     def measure_binary_vector_diversity(self, ensemble: List[Any]) -> float:

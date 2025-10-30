@@ -83,7 +83,6 @@ def perceptronModelGenerator(
 
     # Train the perceptron--------------------------------------------------------------------
     model.fit(X_train_std, y_train)
-    y_train_hat = model.predict(X_train_std)  # predict
     y_pred = model.predict(X_test_std)
     mccscore = matthews_corrcoef(y_test, y_pred)
     try:

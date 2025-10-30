@@ -1,5 +1,4 @@
 import pandas as pd
-from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler
 
 
@@ -26,17 +25,8 @@ class data_scale_methods:
         col_names = X.columns
         original_index = X.index
 
-        scaler = ColumnTransformer(
-            transformers=[
-                (
-                    "standard_scaler",
-                    StandardScaler(),
-                    col_names,
-                )
-            ],
-            remainder="passthrough",
-        )
-        X_scaled_np = scaler.fit_transform(X)
+        scaler = StandardScaler()
+        X_scaled_np = scaler.fit_transform(X.values)
 
         X = pd.DataFrame(X_scaled_np, columns=col_names, index=original_index)
 

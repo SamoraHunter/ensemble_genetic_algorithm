@@ -307,64 +307,64 @@ def get_pertubation_columns(
 
     pertubation_columns = []
 
-    if local_param_dict.get("data").get("age") == True:
+    if local_param_dict.get("data", {}).get("age"):
         if "age" in all_df_columns:
             pertubation_columns.append("age")
 
-    if local_param_dict.get("data").get("sex") == True:
+    if local_param_dict.get("data", {}).get("sex"):
         # Find columns containing 'male' instead of hardcoding
         male_cols = [col for col in all_df_columns if "male" in col.lower()]
         pertubation_columns.extend(male_cols)
 
-    if local_param_dict.get("data").get("bmi") == True:
+    if local_param_dict.get("data", {}).get("bmi"):
         pertubation_columns.extend(bmi_list)
 
-    if local_param_dict.get("data").get("ethnicity") == True:
+    if local_param_dict.get("data", {}).get("ethnicity"):
         pertubation_columns.extend(ethnicity_list)
 
-    if local_param_dict.get("data").get("bloods") == True:
+    if local_param_dict.get("data", {}).get("bloods"):
         pertubation_columns.extend(bloods_list)
 
-    if local_param_dict.get("data").get("diagnostic_order") == True:
+    if local_param_dict.get("data", {}).get("diagnostic_order"):
         pertubation_columns.extend(diagnostic_order_list)
 
-    if local_param_dict.get("data").get("drug_order") == True:
+    if local_param_dict.get("data", {}).get("drug_order"):
         pertubation_columns.extend(drug_order_list)
 
-    if local_param_dict.get("data").get("annotation_n") == True:
+    if local_param_dict.get("data", {}).get("annotation_n"):
         pertubation_columns.extend(annotation_count_list)
 
-    if local_param_dict.get("data").get("meta_sp_annotation_n") == True:
+    if local_param_dict.get("data", {}).get("meta_sp_annotation_n"):
         pertubation_columns.extend(meta_sp_annotation_count_list)
 
-    if local_param_dict.get("data").get("annotation_mrc_n") == True:
+    if local_param_dict.get("data", {}).get("annotation_mrc_n"):
         pertubation_columns.extend(annotation_mrc_count_list)
 
-    if local_param_dict.get("data").get("meta_sp_annotation_mrc_n") == True:
+    if local_param_dict.get("data", {}).get("meta_sp_annotation_mrc_n"):
         pertubation_columns.extend(meta_sp_annotation_mrc_count_list)
 
-    if local_param_dict.get("data").get("core_02") == True:
+    if local_param_dict.get("data", {}).get("core_02"):
         pertubation_columns.extend(core_02_list)
 
-    if local_param_dict.get("data").get("bed") == True:
+    if local_param_dict.get("data", {}).get("bed"):
         pertubation_columns.extend(bed_list)
 
-    if local_param_dict.get("data").get("vte_status") == True:
+    if local_param_dict.get("data", {}).get("vte_status"):
         pertubation_columns.extend(vte_status_list)
 
-    if local_param_dict.get("data").get("hosp_site") == True:
+    if local_param_dict.get("data", {}).get("hosp_site"):
         pertubation_columns.extend(hosp_site_list)
 
-    if local_param_dict.get("data").get("core_resus") == True:
+    if local_param_dict.get("data", {}).get("core_resus"):
         pertubation_columns.extend(core_resus_list)
 
-    if local_param_dict.get("data").get("news") == True:
+    if local_param_dict.get("data", {}).get("news"):
         pertubation_columns.extend(news_list)
 
-    if local_param_dict.get("data").get("date_time_stamp") == True:
+    if local_param_dict.get("data", {}).get("date_time_stamp"):
         pertubation_columns.extend(date_time_stamp_list)
 
-    if local_param_dict.get("data").get("appointments") == True:
+    if local_param_dict.get("data", {}).get("appointments"):
         pertubation_columns.extend(appointments_list)
 
     logger.info(

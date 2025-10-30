@@ -27,7 +27,6 @@ from ml_grid.util.validate_param_methods import hidden_layer_size
 
 logger = logging.getLogger("ensemble_ga")
 
-
 def predict_with_fallback(
     model: nn.Module, X_batch: torch.Tensor, y_batch: torch.Tensor
 ) -> torch.Tensor:
@@ -99,8 +98,8 @@ def Pytorch_binary_class_ModelGenerator(
 
     """
     from ml_grid.util.global_params import global_parameters
-
     global_parameter_val = global_parameters()
+
 
     verbose = global_parameter_val.verbose
     store_base_learners = ml_grid_object.global_params.store_base_learners
@@ -234,19 +233,7 @@ def Pytorch_binary_class_ModelGenerator(
             epoch_loss += loss.item()
             epoch_acc += acc.item()
     if ml_grid_object.verbose > 2:
-        logger.info(
-            f"Epoch {e+0:03}: | Loss: {epoch_loss/len(train_loader):.5f} | Acc: {epoch_acc/len(train_loader):.3f}"
-        )
-
-    para_str = (
-        str(settings)
-        .replace("'", "_")
-        .replace(":", "_")
-        .replace(",", "_")
-        .replace("{", "_")
-        .replace("}", "_")
-        .replace(" ", "_")
-    ).replace("__", "_")
+        logger.info(f"Epoch {e+0:03}: | Loss: {epoch_loss/len(train_loader):.5f} | Acc: {epoch_acc/len(train_loader):.3f}")
 
     try:
         y_pred = model(test_data.X_data.to(device))

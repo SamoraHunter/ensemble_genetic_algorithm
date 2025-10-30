@@ -57,7 +57,7 @@ def get_y_pred_resolver_eval(
         logger.info("y_test_orig shape: %s", y_test_orig.shape)
 
     if (
-        local_param_dict.get("weighted") == None
+        local_param_dict.get("weighted") is None
         or local_param_dict.get("weighted") == "unweighted"
     ):
         if ml_grid_object.verbose >= 1:

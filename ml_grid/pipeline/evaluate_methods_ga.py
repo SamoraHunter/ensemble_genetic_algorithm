@@ -4,6 +4,7 @@ from typing import Any, List, Tuple, Union
 import numpy as np
 import pandas as pd
 import scipy
+from numpy.linalg import norm
 from sklearn import metrics
 
 from ml_grid.ga_functions.ga_ann_weight_methods import get_y_pred_ann_torch_weighting
@@ -21,7 +22,6 @@ from ml_grid.util.ensemble_diversity_methods import (
 from ml_grid.util.global_params import global_parameters
 
 logger = logging.getLogger("ensemble_ga")
-
 
 def get_y_pred_resolver(
     ensemble: List, ml_grid_object: Any, valid: bool = False
@@ -69,7 +69,7 @@ def get_y_pred_resolver(
         logger.info("y_test_orig shape: %s", y_test_orig.shape)
 
     if (
-        local_param_dict.get("weighted") == None
+        local_param_dict.get("weighted") is None
         or local_param_dict.get("weighted") == "unweighted"
     ):
         if ml_grid_object.verbose >= 1:
@@ -150,10 +150,6 @@ def evaluate_weighted_ensemble_auc(
     original_feature_names = ml_grid_object.original_feature_names
 
     log_store_dataframe_path = global_params.log_store_dataframe_path
-
-    mccScoresList = []
-
-    aucScoresList = []
 
     y_pred = get_y_pred_resolver(individual, ml_grid_object, valid=False)
     # should write mcc parallel instead of auc also, need pair functions
@@ -287,10 +283,6 @@ def evaluate_weighted_ensemble_auc(
     # return (auc,)
 
 
-# %%cython -a
-
-import numpy as np
-from numpy.linalg import norm
 
 round_v = np.vectorize(round)
 

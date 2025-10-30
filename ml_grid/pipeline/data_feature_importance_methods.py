@@ -53,7 +53,7 @@ class feature_importance_methods:
 
         feature_method = ml_grid_object.local_param_dict.get("feature_selection_method")
 
-        if feature_method == "anova" or feature_method == None:
+        if feature_method == "anova" or feature_method is None:
 
             feature_importance_methods.logger.info("feature_method ANOVA")
 

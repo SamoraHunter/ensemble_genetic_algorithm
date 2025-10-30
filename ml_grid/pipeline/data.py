@@ -1,6 +1,7 @@
 import logging
 import os
 import random
+import warnings
 from typing import Dict, List, Optional
 
 import numpy as np
@@ -29,14 +30,6 @@ from ml_grid.pipeline.logs_project_folder import log_folder
 from ml_grid.util.global_params import global_parameters
 from ml_grid.util.project_score_save import project_score_save_class
 
-ConvergenceWarning("ignore")
-
-from warnings import filterwarnings
-
-filterwarnings("ignore")
-
-import warnings
-
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=ConvergenceWarning)
     warnings.filterwarnings("ignore", category=UserWarning)
@@ -46,7 +39,6 @@ logger = logging.getLogger("ensemble_ga")
 
 class NoFeaturesError(Exception):
     """Custom exception raised when no features are left after processing."""
-
     pass
 
 
@@ -248,32 +240,24 @@ class pipe:
             pipeline_error = e
             raise
         finally:
-            self._compile_and_log_feature_transformations(
-                error_occurred=pipeline_error is not None
-            )
+            self._compile_and_log_feature_transformations(error_occurred=pipeline_error is not None)
             if pipeline_error:
                 logger.error("Data pipeline processing HALTED due to an error.")
             else:
                 logger.info("Data pipeline processing complete.")
 
-    def _log_feature_transformation(
-        self, step_name: str, before_count: int, after_count: int, description: str
-    ):
+    def _log_feature_transformation(self, step_name: str, before_count: int, after_count: int, description: str):
         """Helper function to log feature transformation steps."""
         if self.verbose >= 1:
-            self._feature_log_list.append(
-                {
-                    "step": step_name,
-                    "features_before": before_count,
-                    "features_after": after_count,
-                    "features_changed": before_count - after_count,
-                    "description": description,
-                }
-            )
+            self._feature_log_list.append({
+                'step': step_name,
+                'features_before': before_count,
+                'features_after': after_count,
+                'features_changed': before_count - after_count,
+                'description': description
+            })
 
-    def _assert_index_alignment(
-        self, df1: pd.DataFrame, df2: pd.Series, step_name: str
-    ):
+    def _assert_index_alignment(self, df1: pd.DataFrame, df2: pd.Series, step_name: str):
         """Helper function to assert that DataFrame and Series indices are equal."""
         try:
             assert_index_equal(df1.index, df2.index)
@@ -293,11 +277,11 @@ class pipe:
         else:
             self.df = read_in.read(file_name, use_polars=True).raw_input_data
 
-        if test_sample_n > 0 and read_in_sample == False:
+        if test_sample_n > 0 and not read_in_sample:
             logger.info("sampling %s for debug/trial purposes...", test_sample_n)
             self.df = self.df.sample(test_sample_n)
 
-        if column_sample_n > 0 and read_in_sample == False:
+        if column_sample_n > 0 and not read_in_sample:
             # Check if 'age' and 'male' columns are in the original DataFrame
             if (
                 "age" in self.df.columns
@@ -330,44 +314,37 @@ class pipe:
             "Initial Load",
             len(self.all_df_columns),
             len(self.all_df_columns),
-            "Initial data loaded.",
+            "Initial data loaded."
         )
 
     def _initial_feature_selection(self, drop_term_list: List[str]):
         """Performs initial feature selection based on configuration."""
         # Disable fallback if all data toggles are False, to test the safety net.
-        disable_fallback = all(
-            value is False for value in self.local_param_dict.get("data", {}).values()
-        )
-
         self.pertubation_columns, self.drop_list = get_pertubation_columns(
             all_df_columns=self.all_df_columns,
             local_param_dict=self.local_param_dict,
             drop_term_list=drop_term_list,
+
         )
 
-        self.outcome_variable = (
-            f'outcome_var_{self.local_param_dict.get("outcome_var_n")}'
-        )
+        self.outcome_variable = f'outcome_var_{self.local_param_dict.get("outcome_var_n")}'
 
         logger.info(
             f"Using {len(self.pertubation_columns)}/{len(self.all_df_columns)} columns for {self.outcome_variable} outcome"
         )
 
         self._log_feature_transformation(
-            "Feature Selection (Toggles)",  # This step's features_after count is based on pertubation_columns
+            "Feature Selection (Toggles)", # This step's features_after count is based on pertubation_columns
             # The drop_list here is the one returned by get_pertubation_columns, which is used to filter pertubation_columns
             # So, features_after should reflect the size of pertubation_columns
             len(self.all_df_columns),
             len(self.pertubation_columns),
-            "Selected columns based on feature toggles in config.",
+            "Selected columns based on feature toggles in config."
         )
 
         # Log omitted columns
         difference_list = list(set(self.df.columns) - set(self.pertubation_columns))
-        logger.info(
-            "Omitting %s columns based on feature toggles...", len(difference_list)
-        )
+        logger.info("Omitting %s columns based on feature toggles...", len(difference_list))
         logger.debug("Sample of omitted columns: %s...", difference_list[0:5])
 
         # Initialize self.drop_list with unique columns identified so far
@@ -380,22 +357,16 @@ class pipe:
         # handle_correlation_matrix returns a list of columns to drop due to correlation.
         # It does not modify the passed drop_list.
         correlated_drops = handle_correlation_matrix(
-            local_param_dict=self.local_param_dict,
-            drop_list=[],
-            df=self.df,  # Pass empty list as it's not used for filtering
+            local_param_dict=self.local_param_dict, drop_list=[], df=self.df # Pass empty list as it's not used for filtering
         )
         self.drop_list.extend(correlated_drops)
-        self.drop_list = list(
-            set(self.drop_list)
-        )  # Ensure uniqueness after adding correlated drops
-        features_after = len(
-            [col for col in self.pertubation_columns if col not in self.drop_list]
-        )
+        self.drop_list = list(set(self.drop_list)) # Ensure uniqueness after adding correlated drops
+        features_after = len([col for col in self.pertubation_columns if col not in self.drop_list])
         self._log_feature_transformation(
             "Drop Correlated",
             features_before,
             features_after,
-            f"Dropped columns with correlation > {self.local_param_dict.get('corr', 0.95)}",
+            f"Dropped columns with correlation > {self.local_param_dict.get('corr', 0.95)}"
         )
 
         # Apply percent missing filtering and add to drop_list
@@ -403,57 +374,49 @@ class pipe:
         features_before = features_after
         # handle_percent_missing modifies the passed drop_list in place and returns it.
         # So, we reassign self.drop_list to capture any new unique drops.
-        self.drop_list = handle_percent_missing(  # This will extend self.drop_list and return it
+        self.drop_list = handle_percent_missing( # This will extend self.drop_list and return it
             local_param_dict=self.local_param_dict,
             all_df_columns=self.all_df_columns,
-            drop_list=self.drop_list,  # Pass the current comprehensive self.drop_list
+            drop_list=self.drop_list, # Pass the current comprehensive self.drop_list
         )
-        self.drop_list = list(set(self.drop_list))  # Ensure uniqueness
-        features_after = len(
-            [col for col in self.pertubation_columns if col not in self.drop_list]
-        )
+        self.drop_list = list(set(self.drop_list)) # Ensure uniqueness
+        features_after = len([col for col in self.pertubation_columns if col not in self.drop_list])
         self._log_feature_transformation(
             "Drop Missing",
             features_before,
             features_after,
-            f"Dropped columns with > {self.local_param_dict.get('percent_missing', 100)}% missing",
+            f"Dropped columns with > {self.local_param_dict.get('percent_missing', 100)}% missing"
         )
 
         # Remove other outcome variables and add to drop_list
         # Remove other outcome variables
         features_before = features_after
         # handle_outcome_list modifies the passed drop_list in place and returns it.
-        self.drop_list = (
-            handle_outcome_list(  # This will extend self.drop_list and return it
-                drop_list=self.drop_list, outcome_variable=self.outcome_variable
-            )
+        self.drop_list = handle_outcome_list( # This will extend self.drop_list and return it
+            drop_list=self.drop_list, outcome_variable=self.outcome_variable
         )
-        self.drop_list = list(set(self.drop_list))  # Ensure uniqueness
-        features_after = len(
-            [col for col in self.pertubation_columns if col not in self.drop_list]
-        )
+        self.drop_list = list(set(self.drop_list)) # Ensure uniqueness
+        features_after = len([col for col in self.pertubation_columns if col not in self.drop_list])
         self._log_feature_transformation(
             "Drop Other Outcomes",
             features_before,
             features_after,
-            "Removed other potential outcome variables from feature set.",
+            "Removed other potential outcome variables from feature set."
         )
 
         # Remove constant columns and add to drop_list
         # Remove constant columns
         features_before = features_after
         # remove_constant_columns modifies the passed drop_list in place and returns it.
-        self.drop_list = (
-            remove_constant_columns(  # This will extend self.drop_list and return it
-                X=self.df, drop_list=self.drop_list, verbose=self.verbose
-            )
+        self.drop_list = remove_constant_columns( # This will extend self.drop_list and return it
+            X=self.df, drop_list=self.drop_list, verbose=self.verbose
         )
-        self.drop_list = list(set(self.drop_list))  # Ensure uniqueness
+        self.drop_list = list(set(self.drop_list)) # Ensure uniqueness
         self._log_feature_transformation(
             "Drop Constants",
             features_before,
             len([col for col in self.pertubation_columns if col not in self.drop_list]),
-            "Removed constant columns.",
+            "Removed constant columns."
         )
 
         self.final_column_list = [
@@ -469,10 +432,8 @@ class pipe:
             numeric_cols = self.df.select_dtypes(include=np.number).columns.tolist()
             potential_features = [
                 c
-                for c in self.original_feature_names  # Iterate over all original features
-                if c in numeric_cols
-                and c != self.outcome_variable
-                and c not in self.drop_list
+                for c in self.original_feature_names # Iterate over all original features
+                if c in numeric_cols and c != self.outcome_variable and c not in self.drop_list
             ]
 
             safety_columns = []
@@ -489,7 +450,7 @@ class pipe:
                 "Safety Net",
                 0,
                 len(self.final_column_list),
-                "All features were pruned; safety net retained a minimal set.",
+                "All features were pruned; safety net retained a minimal set."
             )
 
         # Ensure columns exist in dataframe before the final check
@@ -515,7 +476,7 @@ class pipe:
                 "Drop Duplicated Columns",
                 features_before,
                 self.X.shape[1],
-                "Removed duplicated columns.",
+                "Removed duplicated columns."
             )
 
         # This check should come first to catch non-numeric types before any processing.
@@ -577,7 +538,7 @@ class pipe:
                 "Drop Post-Split Constants",
                 features_before,
                 self.X_train.shape[1],
-                "Removed columns that became constant after train/test split.",
+                "Removed columns that became constant after train/test split."
             )
 
         logger.info(f"Shape of X_train after post-split cleaning: {self.X_train.shape}")
@@ -598,34 +559,30 @@ class pipe:
                     self.X_train = pd.DataFrame(
                         scaler.fit_transform(self.X_train),
                         columns=self.X_train.columns,
-                        index=self.X_train.index,
+                        index=self.X_train.index
                     )
                     self.X_test = pd.DataFrame(
                         scaler.transform(self.X_test),
                         columns=self.X_test.columns,
-                        index=self.X_test.index,
+                        index=self.X_test.index
                     )
                     self.X_test_orig = pd.DataFrame(
                         scaler.transform(self.X_test_orig),
                         columns=self.X_test_orig.columns,
-                        index=self.X_test_orig.index,
+                        index=self.X_test_orig.index
                     )
                     self._log_feature_transformation(
                         "Standard Scaling",
                         self.X_train.shape[1],
                         self.X_train.shape[1],
-                        "Applied StandardScaler to numeric features.",
+                        "Applied StandardScaler to numeric features."
                     )
-                    self._assert_index_alignment(
-                        self.X_train, self.y_train, "After scaling"
-                    )
+                    self._assert_index_alignment(self.X_train, self.y_train, "After scaling")
                 except Exception as e:
                     logger.error(f"Exception scaling data: {e}", exc_info=True)
                     logger.warning("Continuing without scaling.")
             else:
-                logger.warning(
-                    "Skipping scaling because no features are present in X_train."
-                )
+                logger.warning("Skipping scaling because no features are present in X_train.")
 
         if self.verbose >= 1:
             logger.info(
@@ -639,9 +596,7 @@ class pipe:
         if target_n_features != "all" and self.X_train.shape[1] > 1:
             features_before = self.X_train.shape[1]
 
-            logger.info(
-                f"Shape of X_train before feature importance selection: {self.X_train.shape}"
-            )
+            logger.info(f"Shape of X_train before feature importance selection: {self.X_train.shape}")
 
             try:
                 self.X_train, self.X_test, self.X_test_orig = (
@@ -659,20 +614,14 @@ class pipe:
                     "Feature Importance",
                     features_before,
                     self.X_train.shape[1],
-                    "Selected top features using importance method.",
+                    "Selected top features using importance method."
                 )
-                self._assert_index_alignment(
-                    self.X_train, self.y_train, "After feature selection"
-                )
+                self._assert_index_alignment(self.X_train, self.y_train, "After feature selection")
 
-                logger.info(
-                    f"Shape of X_train after feature importance selection: {self.X_train.shape}"
-                )
+                logger.info(f"Shape of X_train after feature importance selection: {self.X_train.shape}")
 
                 if self.X_train.shape[1] == 0:
-                    raise NoFeaturesError(
-                        "Feature importance selection removed all features."
-                    )
+                    raise NoFeaturesError("Feature importance selection removed all features.")
 
             except Exception as e:
                 logger.error(f"Feature importance selection failed: {e}", exc_info=True)
@@ -708,19 +657,15 @@ class pipe:
         # Final definitive assertion
         try:
             assert_index_equal(self.X_train.index, self.y_train.index)
-            logger.info(
-                "Final data alignment check PASSED. X_train and y_train indices are identical."
-            )
+            logger.info("Final data alignment check PASSED. X_train and y_train indices are identical.")
         except AssertionError:
-            logger.error(
-                "CRITICAL: Final data alignment check FAILED. X_train and y_train indices are NOT identical."
-            )
+            logger.error("CRITICAL: Final data alignment check FAILED. X_train and y_train indices are NOT identical.")
             raise
 
     def _compile_and_log_feature_transformations(self, error_occurred: bool = False):
         """Compiles the feature transformation log and displays it."""
         # Ensure y_train is a pandas Series for consistency before exiting
-        if hasattr(self, "y_train") and not isinstance(self.y_train, pd.Series):
+        if hasattr(self, 'y_train') and not isinstance(self.y_train, pd.Series):
             self.y_train = pd.Series(self.y_train, index=self.X_train.index)
 
         # Finalize the feature transformation log
@@ -730,10 +675,7 @@ class pipe:
 
             if error_occurred:
                 # If an error happened, always log the transformation table for debugging
-                logger.error(
-                    "\n--- Feature Transformation Log (at time of error) ---\n"
-                    + log_string
-                )
+                logger.error("\n--- Feature Transformation Log (at time of error) ---\n" + log_string)
             elif self.verbose >= 1:
                 # Otherwise, log it based on verbosity
                 logger.info("\n--- Feature Transformation Log ---\n" + log_string)
