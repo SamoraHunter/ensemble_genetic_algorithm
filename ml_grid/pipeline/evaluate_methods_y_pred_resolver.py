@@ -2,15 +2,15 @@ from typing import Any, List, Union
 import logging
 import numpy as np
 from ml_grid.ga_functions.ga_eval_ann_weight_method import (
-    get_y_pred_ann_torch_weighting_eval,
+    get_ann_weighted_ensemble_predictions_eval,
 )
-from ml_grid.ga_functions.ga_eval_de_weight_method import (
-    get_weighted_ensemble_prediction_de_y_pred_valid_eval,
+from ml_grid.ga_functions.ga_eval_de_weight_method import ( # Renamed
+    get_de_weighted_ensemble_predictions_eval,
 )
 from ml_grid.ga_functions.ga_eval_ensemble_weight_finder_de import (
-    super_ensemble_weight_finder_differential_evolution_eval,
+    find_ensemble_weights_de_eval,
 )
-from ml_grid.ga_functions.ga_eval_unweighted import get_best_y_pred_unweighted_eval
+from ml_grid.ga_functions.ga_eval_unweighted import get_unweighted_ensemble_predictions_eval
 from numpy.linalg import norm
 logger = logging.getLogger("ensemble_ga")
 
@@ -59,7 +59,7 @@ def get_y_pred_resolver_eval(
         if ml_grid_object.verbose >= 1:
             logger.info("Using unweighted ensemble prediction...")
         try:
-            y_pred = get_best_y_pred_unweighted_eval(
+            y_pred = get_unweighted_ensemble_predictions_eval(
                 ensemble, ml_grid_object, valid=valid
             )
         except Exception as e:
@@ -72,11 +72,9 @@ def get_y_pred_resolver_eval(
     elif local_param_dict.get("weighted") == "de":
         if ml_grid_object.verbose >= 1:
             logger.info("Using DE weighted ensemble prediction...")
-        y_pred = get_weighted_ensemble_prediction_de_y_pred_valid_eval(
+        y_pred = get_de_weighted_ensemble_predictions_eval(
             ensemble,
-            super_ensemble_weight_finder_differential_evolution_eval(
-                ensemble, ml_grid_object, valid=valid
-            ),
+            find_ensemble_weights_de_eval(ensemble, ml_grid_object, valid=valid),
             ml_grid_object,
             valid=valid,
         )
@@ -85,7 +83,7 @@ def get_y_pred_resolver_eval(
     elif local_param_dict.get("weighted") == "ann":
         if ml_grid_object.verbose >= 1:
             logger.info("Using ANN weighted ensemble prediction...")
-        y_pred = get_y_pred_ann_torch_weighting_eval(
+        y_pred = get_ann_weighted_ensemble_predictions_eval(
             ensemble, ml_grid_object, valid=valid
         )
 

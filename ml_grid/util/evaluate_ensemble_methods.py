@@ -43,12 +43,12 @@ from numpy import array
 logger = logging.getLogger("ensemble_ga")
 try:
     from ml_grid.pipeline.data_train_test_split import get_data_split
-    from ml_grid.pipeline.evaluate_methods_y_pred_resolver import (
-        get_y_pred_resolver_eval,
-    )
 except ImportError as e:
     logger.error("Error: Could not import required functions from 'ml_grid': %s", e)
 
+from ml_grid.pipeline.evaluate_methods_y_pred_resolver import (
+                            get_y_pred_resolver_eval,
+                        )
 
 
 # --- Helper Class to Mimic MLGridObject ---
@@ -257,6 +257,7 @@ class EnsembleEvaluator:
         """
         import pandas as pd
 
+
         if ensemble_indices is None:
             # Default: pick the row with the highest auc_score
             if "auc_score" in results_df.columns:
@@ -330,6 +331,7 @@ class EnsembleEvaluator:
                     self.ml_grid_object.local_param_dict["weighted"] = weight_method
 
                     try:
+                        
                         # Call the resolver function directly - it handles all masking internally
                         y_pred = get_y_pred_resolver_eval(
                             [ensemble_with_features],
