@@ -8,7 +8,9 @@ from sklearn import metrics
 from ml_grid.util.debug_methods_ga import debug_base_learner
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
 from ml_grid.util.model_methods_ga import store_model
+import logging
 
+logger = logging.getLogger("ensemble_ga")
 
 def kNearestNeighborsModelGenerator(
     ml_grid_object: Any, local_param_dict: Dict
@@ -73,7 +75,7 @@ def kNearestNeighborsModelGenerator(
 
     if(n_neighbours_n > len(X_train)):
         n_neighbours_n = len(X_train)-1
-        print("warning kNearestNeighborsModelGen", "nn > sample")
+        logger.warning("warning kNearestNeighborsModelGen, nn > sample")
     
     weights_n = random.choice(["uniform", "distance"])
     try:
@@ -83,7 +85,7 @@ def kNearestNeighborsModelGenerator(
         mccscore = matthews_corrcoef(y_test, y_pred)
         auc_score = round(metrics.roc_auc_score(y_test, y_pred), 4)
     except Exception as e:
-        print("Error occurred:", e)
+        logger.error("Error occurred: %s", e)
     
     end = time.time()
     model_train_time = int(end-start)

@@ -9,7 +9,9 @@ from sklearn import metrics
 from ml_grid.util.debug_methods_ga import debug_base_learner
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
 from ml_grid.util.model_methods_ga import store_model
+import logging
 
+logger = logging.getLogger("ensemble_ga")
 
 def perceptronModelGenerator(
     ml_grid_object: Any, local_param_dict: Dict
@@ -105,8 +107,8 @@ def perceptronModelGenerator(
         )
 
     if ml_grid_object.verbose >= 1:
-        print("")
-        print(
+        logger.info(
+            "%s, %s, %s, %s, %s, %s",
             mccscore, model, list(X_train.columns), model_train_time, auc_score, y_pred
         )
 

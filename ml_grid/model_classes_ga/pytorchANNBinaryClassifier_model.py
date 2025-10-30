@@ -20,9 +20,11 @@ from ml_grid.util.debug_methods_ga import debug_base_learner
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
 from ml_grid.util.model_methods_ga import store_model
 from sklearn.preprocessing import StandardScaler
+import logging
 
 from ml_grid.util.validate_param_methods import hidden_layer_size
 
+logger = logging.getLogger("ensemble_ga")
 
 def predict_with_fallback(
     model: nn.Module, X_batch: torch.Tensor, y_batch: torch.Tensor
@@ -46,7 +48,7 @@ def predict_with_fallback(
     try:
         y_pred = model(X_batch)
     except Exception as e:
-        print(f"Model prediction failed with error: {e}. Using fallback.")
+        logger.warning(f"Model prediction failed with error: {e}. Using fallback.")
         # Fallback: return zero logits with the correct output shape.
         # BCEWithLogitsLoss expects shape (batch_size, 1).
         y_pred = torch.zeros(
@@ -146,7 +148,7 @@ def Pytorch_binary_class_ModelGenerator(
         "deep_layers_1": [2, 4, 8, 16, 32],
         "dropout_val": [0.1, 0.01, 0.001],
     }
-    # print("parameter_space", parameter_space)
+    # logger.debug("parameter_space", parameter_space)
 
     additional_grid = {
         "epochs": [10, 50, 100],
@@ -158,10 +160,10 @@ def Pytorch_binary_class_ModelGenerator(
         point = dict(zip(additional_grid.keys(), values))
         # merge the general settings
         settings = {**point}
-        # print(settings)
+        # logger.debug(settings)
         size_test.append(settings)
 
-    # print(len(size_test))
+    # logger.debug(len(size_test))
 
     # Select a random sample from the global parameter space
     sample_parameter_space = {}
@@ -177,9 +179,9 @@ def Pytorch_binary_class_ModelGenerator(
         additional_param_sample[key] = random.choice(additional_grid.get(key))
 
     if ml_grid_object.verbose > 0:
-        print(sample_parameter_space)
+        logger.debug(sample_parameter_space)
 
-        print(additional_param_sample)
+        logger.debug(additional_param_sample)
 
     free_gpu = str(get_free_gpu(ml_grid_object))
 
@@ -187,7 +189,7 @@ def Pytorch_binary_class_ModelGenerator(
 
     device = torch.device(f"cuda:{free_gpu}" if torch.cuda.is_available() else "cpu")
     if ml_grid_object.verbose > 0:
-        print(device)
+        logger.info(device)
 
     train_loader = DataLoader(
         dataset=train_data,
@@ -201,7 +203,7 @@ def Pytorch_binary_class_ModelGenerator(
     model = BinaryClassification(**sample_parameter_space)
 
     model.to(device)
-    # print(model)
+    # logger.debug(model)
 
     criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(
@@ -233,7 +235,7 @@ def Pytorch_binary_class_ModelGenerator(
             epoch_loss += loss.item()
             epoch_acc += acc.item()
     if ml_grid_object.verbose > 2:
-        print(
+        logger.debug(
             f"Epoch {e+0:03}: | Loss: {epoch_loss/len(train_loader):.5f} | Acc: {epoch_acc/len(train_loader):.3f}"
         )
 
@@ -254,15 +256,15 @@ def Pytorch_binary_class_ModelGenerator(
 
     except ValueError as e:
         if verbose >= 1:
-            print(e)
-            print("Returning random label vector")
+            logger.error(e)
+            logger.warning("Returning random label vector")
             X_test_length = len(X_test)
 
             y_pred = np.random.randint(2, size=X_test_length)
 
     # Check for and replace any NaN values before returning
     if np.isnan(y_pred).any():
-        print(
+        logger.warning(
             "Warning: NaN values detected in predictions. Replacing them with random 0 or 1."
         )
         y_pred = np.nan_to_num(y_pred, nan=np.random.randint(2)).astype(
@@ -292,7 +294,7 @@ def Pytorch_binary_class_ModelGenerator(
                 model_type="torch",
             )
         except Exception as e:
-            print(e)
+            logger.error(e)
 
     torch.cuda.empty_cache()  # exp
 

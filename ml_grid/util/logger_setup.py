@@ -4,7 +4,6 @@ from datetime import datetime
 from typing import Optional
 import sys
 
-
 def setup_logger(log_folder_path: str = ".") -> logging.Logger:
     """Sets up a root logger to write to a file.
 
@@ -32,53 +31,32 @@ def setup_logger(log_folder_path: str = ".") -> logging.Logger:
     )
     file_handler.setFormatter(file_formatter)
 
+    # Set up console handler
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_formatter = logging.Formatter("%(message)s")  # Simple format for console
+    console_handler.setFormatter(console_formatter)
+    console_handler.setLevel(logging.INFO)
+
     # Get a specific logger for the application
     logger = logging.getLogger("ensemble_ga")
     logger.setLevel(logging.INFO)
 
     # Prevent propagation to the root logger during normal runs to avoid duplicate outputs,
+
     # but allow it during tests so that caplog can capture messages.
     logger.propagate = "pytest" in sys.modules
 
     # Avoid adding duplicate handlers
-    if not any(
-        isinstance(h, logging.FileHandler) and h.baseFilename == log_file
-        for h in logger.handlers
-    ):
+    # Clear existing handlers to prevent duplicates during re-runs (e.g., in tests)
+    if logger.hasHandlers():
+        logger.handlers.clear()
+
+    if not any(isinstance(h, logging.FileHandler) for h in logger.handlers):
         logger.addHandler(file_handler)
-
-    # Store original stdout if it hasn't been stored yet
-    if not hasattr(sys, "_original_stdout"):
-        sys._original_stdout = sys.stdout
-
-    # Replace stdout with our dual writer
-    sys.stdout = DualWriter(logger, sys._original_stdout)
+    if not any(isinstance(h, logging.StreamHandler) for h in logger.handlers):
+        logger.addHandler(console_handler)
 
     return logger
-
-
-class DualWriter:
-    """A file-like object that writes to both a logger and another stream."""
-
-    def __init__(self, logger: logging.Logger, stream: object):
-        """Initializes the DualWriter.
-
-        Args:
-            logger: The logger instance to write to.
-            stream: The original stream (e.g., sys.stdout) to also write to.
-        """
-        self.logger = logger
-        self.stream = stream
-
-    def write(self, message: str):
-        """Writes a message to both the stream and the log file."""
-        self.stream.write(message)
-        if message.strip():  # Avoid logging empty lines
-            self.logger.info(message.strip())
-
-    def flush(self):
-        """Flushes the original stream buffer."""
-        self.stream.flush()
 
 
 def restore_stdout():

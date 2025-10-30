@@ -9,7 +9,9 @@ from ml_grid.util.debug_methods_ga import debug_base_learner
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
 from ml_grid.util.model_methods_ga import store_model
 from ml_grid.util.param_space import ParamSpace
+import logging
 
+logger = logging.getLogger("ensemble_ga")
 
 def SVC_ModelGenerator(
     ml_grid_object: Any, local_param_dict: Dict
@@ -138,7 +140,7 @@ def SVC_ModelGenerator(
         )
 
     except Exception as e:
-        print(e)
+        logger.error(e)
         end = time.time()
         model_train_time = int(end - start)
         return (

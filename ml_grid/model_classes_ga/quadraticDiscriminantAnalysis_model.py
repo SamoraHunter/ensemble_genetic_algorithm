@@ -9,7 +9,9 @@ from ml_grid.util.debug_methods_ga import debug_base_learner
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
 from ml_grid.util.model_methods_ga import store_model
 from ml_grid.util.param_space import ParamSpace
+import logging
 
+logger = logging.getLogger("ensemble_ga")
 
 def QuadraticDiscriminantAnalysis_ModelGenerator(
     ml_grid_object: Any, local_param_dict: Dict
@@ -103,7 +105,7 @@ def QuadraticDiscriminantAnalysis_ModelGenerator(
         y_pred = model.predict(X_test)
     except np.linalg.LinAlgError as e:
         if verbose >= 1:
-            print("Encountered LinAlgError:", e)
+            logger.warning("Encountered LinAlgError: %s", e)
 
         X_test_length = len(X_test)
 
