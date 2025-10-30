@@ -138,7 +138,6 @@ class project_score_save_class:
     def update_score_log(
         self,
         ml_grid_object: Any,
-        scores: Dict,
         best_pred_orig: np.ndarray,
         current_algorithm: Any,
         method_name: str,
@@ -161,7 +160,6 @@ class project_score_save_class:
         Args:
             ml_grid_object: The main experiment object, containing data splits
                 and configuration parameters.
-            scores: A dictionary of cross-validation scores.
             best_pred_orig: The predictions from the best-performing model/ensemble.
             current_algorithm: The best model or ensemble object.
             method_name: A string identifier for the method used.
@@ -181,7 +179,6 @@ class project_score_save_class:
             # Debugging messages and variable prints
             logger.info("Valid: %s", valid)
             logger.info("ML grid object: %s", ml_grid_object)
-            logger.info("Scores: %s", scores)
             logger.info("Best prediction original: %s", best_pred_orig)
             logger.info("Current algorithm: %s", current_algorithm)
             logger.info("Method name: %s", method_name)

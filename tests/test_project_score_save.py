@@ -151,7 +151,6 @@ def test_column_misalignment_detection(tmp_path, caplog):
     with caplog.at_level(logging.ERROR):
         saver.update_score_log(
             ml_grid_object=mock_ml_grid_object,
-            scores={},
             best_pred_orig=np.array([0, 1]),
             current_algorithm="test_algo",
             method_name="test_method",
