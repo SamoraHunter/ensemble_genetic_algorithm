@@ -57,7 +57,7 @@ def get_data_split(
         logger.warning("overriding resample with None")
 
     # No resampling
-    if local_param_dict.get("resample") is None:
+    if local_param_dict.get("resample") is None or local_param_dict.get("resample") == "nan":
         # Split into training and testing sets
         X_train_orig, X_test_orig, y_train_orig, y_test_orig = train_test_split(
             X, y, test_size=0.25, random_state=1

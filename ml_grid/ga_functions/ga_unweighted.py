@@ -101,8 +101,6 @@ def get_unweighted_ensemble_predictions(
             y_pred = target_ensemble[i][5]
             prediction_array.append(y_pred)
 
-    prediction_matrix = np.matrix(prediction_array)
-
     y_pred_best = []
     for i in range(len(prediction_array[0])):
         try:
@@ -112,7 +110,7 @@ def get_unweighted_ensemble_predictions(
                     np.matrix(prediction_array)[:, i].astype(int), keepdims=True
                 )[0][0][0]
             )
-        except TypeError:
+        except (TypeError, IndexError):  # E722
             # Scipy v1.8.0 and earlier
             y_pred_best.append(
                 stats.mode(np.matrix(prediction_array)[:, i].astype(int))[0][0]

@@ -21,7 +21,7 @@ def correlation_coefficient(col1: pd.Series, col2: pd.Series) -> float:
 
 
 def handle_correlation_matrix(
-    local_param_dict: Dict, df: pd.DataFrame, chunk_size: int = 50
+    local_param_dict: Dict, drop_list: List[str], df: pd.DataFrame, chunk_size: int = 50
 ) -> List[str]:
     """Identifies highly correlated column pairs and adds them to a drop list.
 
@@ -33,6 +33,8 @@ def handle_correlation_matrix(
     Args:
         local_param_dict: A dictionary containing local parameters, including
             the 'corr' threshold.
+        drop_list: A list of column names already marked for dropping. This
+            argument is included for signature consistency but is not used.
         df: The input DataFrame to analyze.
         chunk_size: The number of columns to process in each chunk.
             Defaults to 50.

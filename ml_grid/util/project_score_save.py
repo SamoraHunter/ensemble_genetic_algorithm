@@ -419,6 +419,5 @@ class project_score_save_class:
             logger.error(e)
             logger.error(traceback.format_exc())
             logger.error("Failed to upgrade grid entry")
-            raise
             if self.error_raise:
-                input()
+                raise

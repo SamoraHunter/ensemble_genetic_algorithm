@@ -60,7 +60,7 @@ def handle_percent_missing(
                     and percent_missing_dict.get(col) > percent_missing_threshold
                 ):
                     percent_missing_drop_list.append(col)
-            except TypeError as e:
+            except (TypeError, ValueError) as e:
                 # This can happen if a value in percent_missing_dict is not a number
                 logger.warning(
                     "Warning: Could not compare missing percentage for column '%s'. Value was not a number. Error: %s",

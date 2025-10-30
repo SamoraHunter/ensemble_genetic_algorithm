@@ -11,7 +11,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from sklearn import metrics
-from sklearn.metrics import matthews_corrcoef
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -168,8 +167,6 @@ def get_y_pred_ann_torch_weighting(
 
     auc = metrics.roc_auc_score(y_test_ann, y_pred_unweighted)
 
-    mccscore_unweighted = matthews_corrcoef(y_test_ann, y_pred_unweighted)
-
     y_pred_ensemble = train_ann_weight(
         X_prediction_matrix_raw_X_train.shape[1],
         int(X_prediction_matrix_raw_X_train.shape[0]),
@@ -193,9 +190,6 @@ def get_y_pred_ann_torch_weighting(
         y_pred_ensemble = random_y_pred_vector
 
     auc_score_weighted = metrics.roc_auc_score(y_test_ann, y_pred_ensemble)
-    mccscore_weighted = matthews_corrcoef(y_test_ann, y_pred_ensemble)
-
-    auc_score_weighted = round(metrics.roc_auc_score(y_test_ann, y_pred_ensemble), 4)
 
     if ml_grid_object.verbose >= 5:
         logger.info("ANN unweighted ensemble AUC: %s", auc)
@@ -203,8 +197,6 @@ def get_y_pred_ann_torch_weighting(
         logger.info(
             "ANN weighted   ensemble AUC difference: %s", auc_score_weighted - auc
         )
-        logger.info("ANN unweighted ensemble MCC: %s", mccscore_unweighted)
-        logger.info("ANN weighted   ensemble MCC: %s", mccscore_weighted)
 
     end = time.time()
     model_train_time = int(end - start)
@@ -277,11 +269,6 @@ def train_ann_weight(
 
     device = torch.device(f"cuda:{free_gpu}" if torch.cuda.is_available() else "cpu")
 
-    train_loader = DataLoader(
-        dataset=train_data,
-        batch_size=sample_parameter_space["hidden_layer_size"],
-        shuffle=True,
-    )
 
     # fit model with random sample of global parameter space
     model = BinaryClassification(**sample_parameter_space)
@@ -294,6 +281,11 @@ def train_ann_weight(
     )
     model.train()
     for e in range(1, additional_param_sample["epochs"] + 1):
+        train_loader = DataLoader(
+            dataset=train_data,
+            batch_size=sample_parameter_space["hidden_layer_size"],
+            shuffle=True,
+        )
         epoch_loss = 0
         epoch_acc = 0
         for X_batch, y_batch in train_loader:

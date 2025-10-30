@@ -111,7 +111,7 @@ class feature_selection_methods_class:
         """
         try:
             X = X.drop("index", axis=1)
-        except Exception:  # noqa: E722
+        except Exception:
             pass
         self.X_train = X
         self.y_train = y
@@ -146,7 +146,7 @@ class feature_selection_methods_class:
             X = X.drop("index", axis=1)
         except Exception:
             pass
-        try:
+        try:  # noqa: E722
             model = XGBClassifier()
             model.fit(X, y)
             importances = model.feature_importances_

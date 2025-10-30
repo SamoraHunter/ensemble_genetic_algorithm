@@ -357,7 +357,7 @@ class pipe:
         # handle_correlation_matrix returns a list of columns to drop due to correlation.
         # It does not modify the passed drop_list.
         correlated_drops = handle_correlation_matrix(
-            local_param_dict=self.local_param_dict, drop_list=[], df=self.df # Pass empty list as it's not used for filtering
+            local_param_dict=self.local_param_dict, drop_list=self.drop_list, df=self.df
         )
         self.drop_list.extend(correlated_drops)
         self.drop_list = list(set(self.drop_list)) # Ensure uniqueness after adding correlated drops

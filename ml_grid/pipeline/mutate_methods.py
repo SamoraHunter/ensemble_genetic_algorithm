@@ -25,7 +25,7 @@ def mutateEnsemble(individual, ml_grid_object):
         try:
             individual[0].pop(n)
             logger.debug("Successfully popped %s from individual", n)
-        except Exception as e:  # E722
+        except IndexError as e:
             logger.error("Failed to pop %s from individual of length %s, popping zero", n, len(individual[0]))
             individual[0].pop(0)
 

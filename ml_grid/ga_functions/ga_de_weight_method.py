@@ -42,7 +42,6 @@ def get_weighted_ensemble_prediction_de_y_pred_valid(
 
     X_test_orig = ml_grid_object.X_test_orig
     X_train = ml_grid_object.X_train
-    X_test = ml_grid_object.X_test
     y_train = ml_grid_object.y_train
 
     target_ensemble = best[0]

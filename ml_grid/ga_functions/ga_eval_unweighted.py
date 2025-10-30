@@ -7,7 +7,7 @@ import numpy as np
 import torch
 from scipy import stats
 
-from ml_grid.ga_functions.ga_ann_util import BinaryClassification, TestData
+from ml_grid.ga_functions.ga_ann_util import BinaryClassification
 
 logger = logging.getLogger("ensemble_ga")
 
@@ -76,8 +76,6 @@ def get_unweighted_ensemble_predictions_eval(
 
         else:
             # Handle BinaryClassification (PyTorch) models
-            test_data = TestData(torch.FloatTensor(x_test[feature_columns].values))
-
             device = torch.device("cpu")
             model = target_ensemble[i][1]
             model.to(device)
@@ -89,8 +87,6 @@ def get_unweighted_ensemble_predictions_eval(
             y_hat = y_hat.astype(int).flatten()
             prediction_array.append(y_hat)
 
-    prediction_matrix = np.matrix(prediction_array)
-
     y_pred_best = []
     for i in range(len(prediction_array[0])):
         try:
@@ -100,7 +96,7 @@ def get_unweighted_ensemble_predictions_eval(
                     np.matrix(prediction_array)[:, i].astype(int), keepdims=True
                 )[0][0][0]
             )
-        except TypeError:
+        except (TypeError, IndexError):
             # Scipy v1.8.0 and earlier
             y_pred_best.append(
                 stats.mode(np.matrix(prediction_array)[:, i].astype(int))[0][0]

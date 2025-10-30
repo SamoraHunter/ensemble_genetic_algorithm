@@ -1,13 +1,10 @@
 """Evaluate an ANN-weighted ensemble."""
 
 import logging
-import time
 from typing import Any, List
 
 import numpy as np
 import torch
-from sklearn import metrics
-from sklearn.metrics import matthews_corrcoef
 
 from ml_grid.ga_functions.ga_ann_util import (
     BinaryClassification,
@@ -62,8 +59,6 @@ def get_ann_weighted_ensemble_predictions_eval(
     y_train = ml_grid_object.y_train
     X_train = ml_grid_object.X_train
     X_test = ml_grid_object.X_test
-
-    start = time.time()
 
     target_ensemble = best[0]
 
@@ -150,15 +145,6 @@ def get_ann_weighted_ensemble_predictions_eval(
         torch.FloatTensor(np.array(y_train)),
     )
 
-    y_pred_unweighted = [
-        round(np.mean(prediction_matrix_raw_X_test.T[:, i]))
-        for i in range(len(prediction_array[0]))
-    ]
-
-    auc = metrics.roc_auc_score(y_test_ann, y_pred_unweighted)
-
-    mccscore_unweighted = matthews_corrcoef(y_test_ann, y_pred_unweighted)
-
     y_pred_ensemble = train_ann_weight(
         X_prediction_matrix_raw_X_train.shape[1],
         int(X_prediction_matrix_raw_X_train.shape[0]),
@@ -176,21 +162,6 @@ def get_ann_weighted_ensemble_predictions_eval(
         ).astype(int)
         y_pred_ensemble = random_y_pred_vector
 
-    auc_score_weighted = metrics.roc_auc_score(y_test_ann, y_pred_ensemble)
-    mccscore_weighted = matthews_corrcoef(y_test_ann, y_pred_ensemble)
-
-    auc_score_weighted = round(metrics.roc_auc_score(y_test_ann, y_pred_ensemble), 4)
-    if ml_grid_object.verbose >= 5:
-        logger.info("ANN unweighted ensemble AUC: %s", auc)
-        logger.info("ANN weighted   ensemble AUC: %s", auc_score_weighted)
-        logger.info(
-            "ANN weighted   ensemble AUC difference: %s", auc_score_weighted - auc
-        )
-        logger.info("ANN unweighted ensemble MCC: %s", mccscore_unweighted)
-        logger.info("ANN weighted   ensemble MCC: %s", mccscore_weighted)
-
-    end = time.time()
-    model_train_time = int(end - start)
     torch.cuda.empty_cache()
 
     return y_pred_ensemble
