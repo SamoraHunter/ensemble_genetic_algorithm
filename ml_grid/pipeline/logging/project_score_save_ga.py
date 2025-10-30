@@ -4,12 +4,13 @@ import warnings
 
 import numpy as np
 import pandas as pd
-from ml_grid.util.global_params import global_parameters
 from sklearn import metrics
 
 # from sklearn.utils.testing import ignore_warnings
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.metrics import *
+
+from ml_grid.util.global_params import global_parameters
 
 
 class project_score_save_class:

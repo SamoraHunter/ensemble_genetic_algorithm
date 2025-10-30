@@ -1,18 +1,21 @@
+import logging
 import random
 import time
 from typing import Any, Dict, List, Tuple
+
 import numpy as np
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import matthews_corrcoef, roc_auc_score
 from sklearn import metrics
+from sklearn.metrics import matthews_corrcoef
+from sklearn.tree import DecisionTreeClassifier
+
 from ml_grid.util.debug_methods_ga import debug_base_learner
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
 from ml_grid.util.model_methods_ga import store_model
 from ml_grid.util.param_space import ParamSpace
 from ml_grid.util.validate_param_methods import validate_max_leaf_nodes
-import logging
 
 logger = logging.getLogger("ensemble_ga")
+
 
 def DecisionTreeClassifierModelGenerator(
     ml_grid_object: Any, local_param_dict: Dict
@@ -47,8 +50,8 @@ def DecisionTreeClassifierModelGenerator(
             - y_pred (np.ndarray): The model's predictions on the test set.
     """
     from ml_grid.util.global_params import global_parameters
-    global_parameter_val = global_parameters()
 
+    global_parameter_val = global_parameters()
 
     verbose = global_parameter_val.verbose
     store_base_learners = ml_grid_object.global_params.store_base_learners

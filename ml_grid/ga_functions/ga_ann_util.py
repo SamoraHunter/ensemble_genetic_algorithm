@@ -1,17 +1,19 @@
 """Utility functions for PyTorch-based neural networks in the genetic algorithm."""
 
-from io import StringIO
-import subprocess
-from typing import Any, Optional, Tuple
-import pandas as pd
-import torch.nn as nn
-import torch
-from torch.utils.data import Dataset, DataLoader
-from numpy.linalg import norm
-import numpy as np
 import logging
+import subprocess
+from io import StringIO
+from typing import Any, Optional, Tuple
+
+import numpy as np
+import pandas as pd
+import torch
+import torch.nn as nn
+from numpy.linalg import norm
+from torch.utils.data import Dataset
 
 logger = logging.getLogger("ensemble_ga")
+
 
 class BinaryClassification(nn.Module):
     """A PyTorch neural network for binary classification.
@@ -27,7 +29,13 @@ class BinaryClassification(nn.Module):
         batchnorm2: Batch normalization for the second set of layers.
     """
 
-    def __init__(self, column_length: int, deep_layers_1: int, hidden_layer_size: int, dropout_val: float):
+    def __init__(
+        self,
+        column_length: int,
+        deep_layers_1: int,
+        hidden_layer_size: int,
+        dropout_val: float,
+    ):
         """Initializes the BinaryClassification model.
 
         Args:

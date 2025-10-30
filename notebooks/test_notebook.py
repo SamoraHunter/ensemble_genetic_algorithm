@@ -1,7 +1,9 @@
-import pytest
+from pathlib import Path  # Import Path for robust path handling
+
 import nbformat
+import pytest
 from nbconvert.preprocessors import ExecutePreprocessor
-from pathlib import Path # Import Path for robust path handling
+
 
 def test_notebook():
     """
@@ -13,18 +15,17 @@ def test_notebook():
     with open(notebook_path) as f:
         nb = nbformat.read(f, as_version=4)
 
-
     # This tells the executor to run the notebook from within its own directory.
     ep = ExecutePreprocessor(
         timeout=5400,
         startup_timeout=300,  # Increase startup timeout to 5 minutes
         kernel_name="ga_env",
-        cwd=notebook_dir  
+        cwd=notebook_dir,
     )
 
     try:
-        # Execute the notebook. 
-        ep.preprocess(nb, {'metadata': {'path': str(notebook_dir)}})
+        # Execute the notebook.
+        ep.preprocess(nb, {"metadata": {"path": str(notebook_dir)}})
     except Exception as e:
         # If the notebook fails, this will raise a more informative error.
         pytest.fail(f"Error executing notebook {notebook_path.name}: \n{e}")

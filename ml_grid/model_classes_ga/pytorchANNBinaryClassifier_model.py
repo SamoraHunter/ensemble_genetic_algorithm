@@ -1,14 +1,18 @@
 import itertools
+import logging
 import random
 import time
 from typing import Any, Dict, List, Tuple
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
-from sklearn.metrics import matthews_corrcoef, roc_auc_score
 from sklearn import metrics
+from sklearn.metrics import matthews_corrcoef
+from sklearn.preprocessing import StandardScaler
+from torch.utils.data import DataLoader
+
 from ml_grid.ga_functions.ga_ann_util import (
     BinaryClassification,
     TestData,
@@ -19,12 +23,10 @@ from ml_grid.ga_functions.ga_ann_util import (
 from ml_grid.util.debug_methods_ga import debug_base_learner
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
 from ml_grid.util.model_methods_ga import store_model
-from sklearn.preprocessing import StandardScaler
-import logging
-
 from ml_grid.util.validate_param_methods import hidden_layer_size
 
 logger = logging.getLogger("ensemble_ga")
+
 
 def predict_with_fallback(
     model: nn.Module, X_batch: torch.Tensor, y_batch: torch.Tensor
@@ -97,8 +99,8 @@ def Pytorch_binary_class_ModelGenerator(
 
     """
     from ml_grid.util.global_params import global_parameters
-    global_parameter_val = global_parameters()
 
+    global_parameter_val = global_parameters()
 
     verbose = global_parameter_val.verbose
     store_base_learners = ml_grid_object.global_params.store_base_learners

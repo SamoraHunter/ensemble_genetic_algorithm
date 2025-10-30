@@ -1,27 +1,23 @@
 import datetime
 import gc
-import pathlib
 import itertools
-from typing import Any, Dict, List
+import logging
 import os
+import pathlib
 import pickle
 import random
-import logging
 import time
 import traceback
+from typing import Any, Dict, List
 
-import ml_grid
 import numpy as np
-import pandas as pd
 import tqdm
-from deap import algorithms, base, creator, tools
+from deap import base, creator, tools
 from IPython.display import clear_output
+from sklearn import metrics
 
 # from ml_grid.ga_functions.ga_plots.ga_progress import plot_generation_progress_fitness
 from ml_grid.ga_functions.ga_plots.ga_progress import plot_generation_progress_fitness
-from ml_grid.model_classes_ga.logistic_regression_model import (
-    logisticRegressionModelGenerator,
-)
 from ml_grid.pipeline.ensemble_generator_ga import ensembleGenerator
 from ml_grid.pipeline.evaluate_methods_ga import (
     evaluate_weighted_ensemble_auc,
@@ -33,12 +29,9 @@ from ml_grid.pipeline.plot_methods.plot_auc_ga import plot_auc
 
 # from ml_grid.model_classes import LogisticRegression_class
 # from ml_grid.pipeline import grid_search_cross_validate
-from ml_grid.util import grid_param_space
 from ml_grid.util.global_params import global_parameters
 from ml_grid.util.grid_param_space_ga import Grid
 from ml_grid.util.project_score_save import project_score_save_class
-from sklearn import metrics
-from sklearn.model_selection import ParameterGrid
 
 logger = logging.getLogger("ensemble_ga")
 
@@ -99,7 +92,12 @@ class run:
     local_param_dict: Dict
     """A dictionary of local parameters for the current run."""
 
-    def __init__(self, ml_grid_object: Any, local_param_dict: Dict, global_params: global_parameters):
+    def __init__(
+        self,
+        ml_grid_object: Any,
+        local_param_dict: Dict,
+        global_params: global_parameters,
+    ):
         """Initializes the Genetic Algorithm runner.
 
         Args:
@@ -116,7 +114,9 @@ class run:
 
         self.error_raise = self.global_params.error_raise
 
-        ga_grid = Grid(global_params=self.global_params, test_grid=ml_grid_object.testing)
+        ga_grid = Grid(
+            global_params=self.global_params, test_grid=ml_grid_object.testing
+        )
 
         # pass in and get outside
         self.nb_params, self.pop_params, self.g_params = (
@@ -174,7 +174,9 @@ class run:
             logger.debug(param_grid)
             for elem in param_grid:
                 logger.debug("%s %s model generation space", elem, elem[0] * elem[1])
-                logger.debug("%s %s individual evaluation space", elem, elem[0] * elem[2])
+                logger.debug(
+                    "%s %s individual evaluation space", elem, elem[0] * elem[2]
+                )
             logger.debug(len(param_grid))
 
             prediction_array = None
@@ -257,7 +259,10 @@ class run:
                     logger.warning("failed to clear output before run: %s", e)
 
                 logger.info(
-                    "Evolving ensemble: nb_val: %s, pop_val: %s, g_val: %s, ...", nb_val, pop_val, g_val
+                    "Evolving ensemble: nb_val: %s, pop_val: %s, g_val: %s, ...",
+                    nb_val,
+                    pop_val,
+                    g_val,
                 )
 
                 generation_progress_list = []
@@ -397,7 +402,9 @@ class run:
                     for ind, fit in zip(invalid_ind, fitnesses):
                         ind.fitness.values = fit
                     pop[:] = offspring
-                    logger.info("Gather all the fitnesses in one list and print the stats")
+                    logger.info(
+                        "Gather all the fitnesses in one list and print the stats"
+                    )
                     # Gather all the fitnesses in one list and print the stats
                     fits = [ind.fitness.values[0] for ind in pop]
                     length = len(pop)
@@ -424,7 +431,9 @@ class run:
                     try:
                         gen_eval_score = metrics.roc_auc_score(self.y_test, y_pred)
                     except ValueError:
-                        gen_eval_score = 0.5  # Assign random chance score if AUC is not defined
+                        gen_eval_score = (
+                            0.5  # Assign random chance score if AUC is not defined
+                        )
                     logger.info("gen_eval_score == %s Generation %s", gen_eval_score, g)
                     generation_progress_list.append(gen_eval_score)
 
@@ -432,7 +441,9 @@ class run:
                         gen_eval_score_counter = gen_eval_score_counter + 1
                         if self.verbose >= 1:
                             logger.info(
-                                "gen_eval_score_counter %s, highest so far: %s", gen_eval_score_counter, highest_scoring_ensemble[0]
+                                "gen_eval_score_counter %s, highest so far: %s",
+                                gen_eval_score_counter,
+                                highest_scoring_ensemble[0],
                             )
 
                         if (
@@ -443,7 +454,15 @@ class run:
                     elif gen_eval_score > highest_scoring_ensemble[0]:
                         if self.verbose >= 1:
                             logger.info(
-                                "gen_eval_score gain: %s rate: %s ETA: %s", gen_eval_score-gen_eval_score_previous, (highest_scoring_ensemble[0]-0.5)/g, round(((1-highest_scoring_ensemble[0])/(gen_eval_score_gain+1.00000000e-99)))
+                                "gen_eval_score gain: %s rate: %s ETA: %s",
+                                gen_eval_score - gen_eval_score_previous,
+                                (highest_scoring_ensemble[0] - 0.5) / g,
+                                round(
+                                    (
+                                        (1 - highest_scoring_ensemble[0])
+                                        / (gen_eval_score_gain + 1.00000000e-99)
+                                    )
+                                ),
                             )
                         gen_eval_score_gain = gen_eval_score_gain + (
                             gen_eval_score - gen_eval_score_previous
@@ -465,7 +484,9 @@ class run:
                     logger.info("\n")
                     logger.info("Best Ensemble Model: ")
                     for i in range(0, len(best[0])):
-                        logger.info("%s n features: %s", best[0][i][1], len(best[0][i][2]))
+                        logger.info(
+                            "%s n features: %s", best[0][i][1], len(best[0][i][2])
+                        )
 
                 if self.verbose >= 1:
                     logger.info(
@@ -495,14 +516,18 @@ class run:
                             + "_nb="
                             + str(nb_val),
                         )
-                        logger.info("nb_val: %s, pop_val: %s, g_val: %s", nb_val, pop_val, g_val)
+                        logger.info(
+                            "nb_val: %s, pop_val: %s, g_val: %s", nb_val, pop_val, g_val
+                        )
                         try:
-                            final_auc = metrics.roc_auc_score(self.y_test_orig, best_pred_orig)
-                            logger.info(
-                                "AUC: %s, g: %s", final_auc, g
+                            final_auc = metrics.roc_auc_score(
+                                self.y_test_orig, best_pred_orig
                             )
+                            logger.info("AUC: %s, g: %s", final_auc, g)
                         except ValueError:
-                            logger.warning("AUC: undefined (only one class in y_true), g: %s", g)
+                            logger.warning(
+                                "AUC: undefined (only one class in y_true), g: %s", g
+                            )
                 except Exception as e:
                     logger.error("Failed to get best y pred and plot auc")
                     logger.error(e)
@@ -618,7 +643,7 @@ class run:
                     pickle.dump(best_str, file)
 
                 # Try to reset DEAP for second run. Should be seperate:
-                from deap import algorithms, base, creator, tools
+                from deap import base, creator
 
                 del self.toolbox
                 gc.collect()

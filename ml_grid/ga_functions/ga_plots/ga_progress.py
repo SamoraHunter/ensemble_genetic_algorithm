@@ -1,8 +1,9 @@
 """Module for plotting the progress of the genetic algorithm's fitness."""
 
+from typing import List
+
 import matplotlib.pyplot as plt
 import numpy as np
-from typing import List
 
 
 def plot_generation_progress_fitness(
@@ -51,9 +52,7 @@ def plot_generation_progress_fitness(
     ax.legend()
 
     # Saving the figure
-    save_path = (
-        f"{file_path}/logs/figures/best_pop={pop_val}_g={g_val}_nb={nb_val}.png"
-    )
+    save_path = f"{file_path}/logs/figures/best_pop={pop_val}_g={g_val}_nb={nb_val}.png"
     plt.savefig(save_path, bbox_inches="tight")
 
     plt.show()  # This shows the plot if you're running the script directly

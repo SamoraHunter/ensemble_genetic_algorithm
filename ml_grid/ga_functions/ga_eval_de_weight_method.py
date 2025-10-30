@@ -1,13 +1,15 @@
-"Evaluate a DE-weighted ensemble." 
+"Evaluate a DE-weighted ensemble."
+
+import logging
+from typing import Any, List
 
 import numpy as np
 import torch
-from typing import Any, List
-import logging
 
 from ml_grid.ga_functions.ga_ann_util import BinaryClassification, TestData, normalize
 
 logger = logging.getLogger("ensemble_ga")
+
 
 def get_de_weighted_ensemble_predictions_eval(
     best: List, weights: np.ndarray, ml_grid_object: Any, valid: bool = False
@@ -73,7 +75,9 @@ def get_de_weighted_ensemble_predictions_eval(
         ]
 
         if ml_grid_object.verbose >= 1 and len(missing_columns) >= 1:
-            logger.warning("Warning: The following columns do not exist in feature_columns:")
+            logger.warning(
+                "Warning: The following columns do not exist in feature_columns:"
+            )
             logger.warning("\n".join(missing_columns))
 
         feature_columns = existing_columns.copy()
@@ -115,7 +119,9 @@ def get_de_weighted_ensemble_predictions_eval(
             y_hat = y_hat.astype(int).flatten()
 
             if np.isnan(y_hat).any():
-                logger.warning("Returning dummy random yhat vector for torch pred, nan found")
+                logger.warning(
+                    "Returning dummy random yhat vector for torch pred, nan found"
+                )
                 y_hat = np.random.choice(a=[False, True], size=(len(y_hat),))
 
             prediction_array.append(y_hat)

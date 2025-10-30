@@ -1,7 +1,8 @@
-import os
-import yaml
 import logging
-from typing import Dict, Any
+import os
+from typing import Any, Dict
+
+import yaml
 
 # A flag to ensure the config-related message is printed only once per run.
 _config_message_printed = False
@@ -57,7 +58,11 @@ def merge_configs(default: Dict, user: Dict) -> Dict:
         The merged configuration dictionary.
     """
     for key, value in user.items():
-        if key in default and isinstance(default[key], dict) and isinstance(value, dict):
+        if (
+            key in default
+            and isinstance(default[key], dict)
+            and isinstance(value, dict)
+        ):
             default[key] = merge_configs(default[key], value)
         # Special handling for 'data' key, which contains a list of dictionaries
         elif (
@@ -65,12 +70,17 @@ def merge_configs(default: Dict, user: Dict) -> Dict:
             and key in default
             and isinstance(default[key], list)
             and isinstance(value, list)
-            and default[key] and value and isinstance(default[key][0], dict) and isinstance(value[0], dict)
+            and default[key]
+            and value
+            and isinstance(default[key][0], dict)
+            and isinstance(value[0], dict)
         ):
             # Ensure we only merge into existing keys to prevent infinite recursion
             user_data_dict = value[0]
             default_data_dict = default[key][0]
-            valid_user_data = {k: v for k, v in user_data_dict.items() if k in default_data_dict}
+            valid_user_data = {
+                k: v for k, v in user_data_dict.items() if k in default_data_dict
+            }
             default[key][0] = merge_configs(default_data_dict, valid_user_data)
         else:
             default[key] = value

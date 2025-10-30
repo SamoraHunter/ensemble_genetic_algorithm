@@ -1,5 +1,6 @@
-import unittest
 import logging
+import unittest
+
 from ml_grid.pipeline.column_names import get_pertubation_columns
 
 # Suppress logging during tests to keep the output clean
@@ -115,6 +116,7 @@ class TestGetPertubationColumns(unittest.TestCase):
         """Test that the function handles an empty list of columns gracefully."""
         pert_cols, _ = get_pertubation_columns([], self.local_param_dict_fallback, [])
         self.assertEqual(pert_cols, [])
+
 
 if __name__ == "__main__":
     unittest.main()

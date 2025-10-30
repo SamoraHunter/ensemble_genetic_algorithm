@@ -1,10 +1,11 @@
 import unittest
-import numpy as np
 from unittest.mock import MagicMock, patch
-from ml_grid.pipeline.evaluate_methods_ga import measure_binary_vector_diversity
-from sklearn.tree import DecisionTreeClassifier
+
+import numpy as np
 from sklearn.linear_model import LogisticRegression
-import scipy.spatial.distance
+from sklearn.tree import DecisionTreeClassifier
+
+from ml_grid.pipeline.evaluate_methods_ga import measure_binary_vector_diversity
 
 
 class TestBinaryVectorDiversity(unittest.TestCase):

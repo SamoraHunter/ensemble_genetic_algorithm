@@ -1,17 +1,16 @@
+import logging
 import multiprocessing
 import random
-import logging
-import warnings
+from functools import partial
 from typing import Any, List, Tuple
-from multiprocessing import Manager, Process
 
 import numpy as np
-from ml_grid.pipeline.mutate_methods import baseLearnerGenerator
-from ml_grid.util.global_params import global_parameters
-from ml_grid.util.model_methods_ga import get_stored_model
 from scipy.stats import skewnorm
 from tqdm import tqdm
-from functools import partial
+
+from ml_grid.pipeline.mutate_methods import baseLearnerGenerator
+from ml_grid.util.model_methods_ga import get_stored_model
+
 logger = logging.getLogger("ensemble_ga")
 
 
@@ -54,7 +53,9 @@ def do_work(n: int = 0, ml_grid_object: Any = None) -> Tuple:
 
         else:
             if ml_grid_object.verbose >= 11:
-                logger.debug("Generating new model with %s", modelFuncList[index].__name__)
+                logger.debug(
+                    "Generating new model with %s", modelFuncList[index].__name__
+                )
             return modelFuncList[index](ml_grid_object, ml_grid_object.local_param_dict)
     except Exception as e:
         logger.error(e)
@@ -142,10 +143,13 @@ def ensembleGenerator(nb_val: int = 28, ml_grid_object: Any = None) -> List[Tupl
 
         if len(ensemble) != nb_val:
             logger.error(
-                "Error generating ensemble %s %s %s", len(ensemble), nb_val, len(dummy_list)
+                "Error generating ensemble %s %s %s",
+                len(ensemble),
+                nb_val,
+                len(dummy_list),
             )
             raise Exception(
-                f"Error generating ensemble {len(ensemble)} {nb_val} {len(dummy_list)}" # f-string is fine for exceptions
+                f"Error generating ensemble {len(ensemble)} {nb_val} {len(dummy_list)}"  # f-string is fine for exceptions
             )
 
         if ml_grid_object.verbose >= 11:
@@ -165,10 +169,13 @@ def ensembleGenerator(nb_val: int = 28, ml_grid_object: Any = None) -> List[Tupl
 
         if len(ensemble) != nb_val:
             logger.error(
-                "Error generating ensemble %s %s %s", len(ensemble), nb_val, len(dummy_list)
+                "Error generating ensemble %s %s %s",
+                len(ensemble),
+                nb_val,
+                len(dummy_list),
             )
             raise Exception(
-                f"Error generating ensemble {len(ensemble)} {nb_val} {len(dummy_list)}" # f-string is fine for exceptions
+                f"Error generating ensemble {len(ensemble)} {nb_val} {len(dummy_list)}"  # f-string is fine for exceptions
             )
 
         if ml_grid_object.verbose >= 11:

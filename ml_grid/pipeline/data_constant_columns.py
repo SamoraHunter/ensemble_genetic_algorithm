@@ -1,7 +1,8 @@
-import numpy as np
-import pandas as pd
-from typing import List, Optional, Tuple
 import logging
+from typing import List, Optional, Tuple
+
+import pandas as pd
+
 logger = logging.getLogger("ensemble_ga")
 
 
@@ -90,7 +91,9 @@ def remove_constant_columns_with_debug(
     if verbosity > 1:
         logger.debug("Variance of X_train columns:\n%s", train_variances)
         logger.debug("Variance of X_test columns:\n%s", test_variances)
-        logger.debug("Variance of X_test_orig columns:\n%s", test_orig_variances)  # ADD THIS
+        logger.debug(
+            "Variance of X_test_orig columns:\n%s", test_orig_variances
+        )  # ADD THIS
 
     # Identify constant columns in each dataset
     constant_columns_train = train_variances[train_variances == 0].index
@@ -102,7 +105,9 @@ def remove_constant_columns_with_debug(
     if verbosity > 0:
         logger.debug("Constant columns in X_train: %s", list(constant_columns_train))
         logger.debug("Constant columns in X_test: %s", list(constant_columns_test))
-        logger.debug("Constant columns in X_test_orig: %s", list(constant_columns_test_orig))
+        logger.debug(
+            "Constant columns in X_test_orig: %s", list(constant_columns_test_orig)
+        )
 
     # Combine constant columns from ALL THREE datasets
     constant_columns = constant_columns_train.union(constant_columns_test).union(

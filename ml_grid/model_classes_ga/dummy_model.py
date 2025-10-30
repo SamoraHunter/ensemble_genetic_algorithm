@@ -1,9 +1,11 @@
-import random
-import numpy as np
-from typing import Any, Dict, List, Tuple
-from ml_grid.model_classes_ga.perceptron_dummy_model import perceptronModelGen_dummy
-from sklearn.linear_model import Perceptron
 import logging
+import random
+from typing import Any, Dict, List, Tuple
+
+import numpy as np
+from sklearn.linear_model import Perceptron
+
+from ml_grid.model_classes_ga.perceptron_dummy_model import perceptronModelGen_dummy
 
 logger = logging.getLogger("ensemble_ga")
 

@@ -26,7 +26,9 @@ class TestPredictWithFallback(unittest.TestCase):
 
         # Verify that the fallback (zeros tensor) is returned
         expected_fallback = torch.zeros(
-            self.target_data.unsqueeze(1).shape, dtype=self.target_data.dtype, device=self.target_data.device
+            self.target_data.unsqueeze(1).shape,
+            dtype=self.target_data.dtype,
+            device=self.target_data.device,
         )
         self.assertTrue(torch.equal(y_pred, expected_fallback))
 

@@ -1,9 +1,9 @@
 """
 Finds optimal ensemble weights using Differential Evolution for evaluation."""
 
+import logging
 import time
 from typing import Any, List
-import logging
 
 import numpy as np
 import pandas as pd
@@ -12,11 +12,13 @@ import torch
 from sklearn import metrics
 
 from ml_grid.ga_functions.ga_ann_util import BinaryClassification
-from ml_grid.ga_functions.ga_ensemble_weight_finder_de import \
-    get_weighted_ensemble_prediction_de
+from ml_grid.ga_functions.ga_ensemble_weight_finder_de import (
+    get_weighted_ensemble_prediction_de,
+)
 from ml_grid.pipeline.torch_binary_classification_method_ga import TestData
 
 logger = logging.getLogger("ensemble_ga")
+
 
 def find_ensemble_weights_de_eval(
     best: List, ml_grid_object: Any, valid: bool = False
@@ -95,7 +97,9 @@ def find_ensemble_weights_de_eval(
         ]
 
         if ml_grid_object.verbose >= 1 and len(missing_columns) >= 1:
-            logger.warning("Warning: The following columns do not exist in feature_columns:")
+            logger.warning(
+                "Warning: The following columns do not exist in feature_columns:"
+            )
             logger.warning("\n".join(missing_columns))
 
         feature_columns = existing_columns.copy()
@@ -111,7 +115,9 @@ def find_ensemble_weights_de_eval(
             except ValueError as e:
                 logger.error(f"ValueError on fit for model {i+1}: {e}")
                 logger.error("feature_columns length: %s", len(feature_columns))
-                logger.error("X_train shape: %s, x_test shape: %s", X_train.shape, x_test.shape)
+                logger.error(
+                    "X_train shape: %s, x_test shape: %s", X_train.shape, x_test.shape
+                )
                 raise e
 
             prediction_array.append(y_pred)

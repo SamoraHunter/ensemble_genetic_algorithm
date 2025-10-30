@@ -1,6 +1,8 @@
 import unittest
+
 import numpy as np
 import pandas as pd
+
 from ml_grid.pipeline.data_correlation_matrix import handle_correlation_matrix
 
 
@@ -55,7 +57,9 @@ class TestHandleCorrelationMatrix(unittest.TestCase):
         # Pairs found: (A,B), (A,C), (B,C)
         # Logic: drop B (from A,B), drop C (from A,C). B is already processed when we check (B,C).
         # The function now correctly identifies that 'B' and 'C' should be dropped.
-        self.assertEqual(len(result), 2, f"Expected 2 items, but got {len(result)}: {result}")
+        self.assertEqual(
+            len(result), 2, f"Expected 2 items, but got {len(result)}: {result}"
+        )
         self.assertCountEqual(result, ["B", "C"])
 
     def test_all_columns_in_single_chunk(self):
@@ -64,7 +68,9 @@ class TestHandleCorrelationMatrix(unittest.TestCase):
         )
 
         # 'B' is highly correlated with 'A', so 'B' should be added to the drop list.
-        self.assertEqual(len(result), 1, f"Expected 1 item, but got {len(result)}: {result}")
+        self.assertEqual(
+            len(result), 1, f"Expected 1 item, but got {len(result)}: {result}"
+        )
         self.assertCountEqual(result, ["B"])
 
 

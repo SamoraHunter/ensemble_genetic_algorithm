@@ -1,12 +1,14 @@
+import logging
 import random
 import time
 from typing import Any, Dict, List, Tuple
+
 import numpy as np
-from sklearn.ensemble import AdaBoostClassifier
-from sklearn.metrics import matthews_corrcoef, roc_auc_score
 from sklearn import metrics
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.metrics import matthews_corrcoef
+
 from ml_grid.util.debug_methods_ga import debug_base_learner
-import logging
 
 logger = logging.getLogger("ensemble_ga")
 
@@ -48,6 +50,7 @@ def AdaBoostClassifierModelGenerator(
             - y_pred (np.ndarray): The model's predictions on the test set.
     """
     from ml_grid.util.global_params import global_parameters
+
     # Retrieve global parameters
 
     global_parameter_val = global_parameters()

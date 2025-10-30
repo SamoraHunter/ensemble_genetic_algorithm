@@ -1,13 +1,14 @@
+import logging
+from typing import Dict, List, Tuple
+
 from fuzzysearch import find_near_matches
+
 from ml_grid.pipeline.data_plot_split import (
     plot_candidate_feature_category_lists,
     plot_dict_values,
-    plot_pie_chart_with_counts,
 )
 from ml_grid.util.global_params import global_parameters
-import logging
 
-from typing import Dict, List, Tuple
 logger = logging.getLogger("ensemble_ga")
 
 
@@ -366,7 +367,9 @@ def get_pertubation_columns(
     if local_param_dict.get("data").get("appointments") == True:
         pertubation_columns.extend(appointments_list)
 
-    logger.info("local_param_dict data perturbation: \n %s", local_param_dict.get('data'))
+    logger.info(
+        "local_param_dict data perturbation: \n %s", local_param_dict.get("data")
+    )
 
     if verbose >= 2:
         plot_dict_values(local_param_dict.get("data"))
@@ -388,16 +391,16 @@ def get_pertubation_columns(
     # Do not trigger fallback if feature_set_n is 99, as this is used for testing the safety net.
     # The disable_fallback flag is used in tests to prevent this fallback from activating.
     # The fallback should trigger if no columns were selected by the toggles.
-    all_data_toggles_false = all(not v for v in local_param_dict.get("data", {}).values())
+    all_data_toggles_false = all(
+        not v for v in local_param_dict.get("data", {}).values()
+    )
 
     if not pertubation_columns or all_data_toggles_false:
         logger.warning(
             "No columns selected with suffix-based logic. Falling back to generic column selection."
         )
         # Get all columns that are not in the initial drop_list
-        potential_columns = [
-            col for col in all_df_columns if col not in set(drop_list)
-        ]
+        potential_columns = [col for col in all_df_columns if col not in set(drop_list)]
         # Also exclude the outcome variable from the feature list
         pertubation_columns = [
             col for col in potential_columns if col != outcome_variable

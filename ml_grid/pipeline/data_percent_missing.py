@@ -1,7 +1,8 @@
-import pickle
-import os
-from typing import Dict, List
 import logging
+import os
+import pickle
+from typing import Dict, List
+
 logger = logging.getLogger("ensemble_ga")
 
 
@@ -42,7 +43,9 @@ def handle_percent_missing(
                 logger.warning("Error loading pickle file: %s. Treating as empty.", e)
                 percent_missing_dict = {}
     else:
-        logger.info("File 'percent_missing_dict.pickle' not found. Skipping missing data check.")
+        logger.info(
+            "File 'percent_missing_dict.pickle' not found. Skipping missing data check."
+        )
         percent_missing_dict = {}
 
     percent_missing_threshold = local_param_dict.get("percent_missing")
@@ -59,7 +62,10 @@ def handle_percent_missing(
                     percent_missing_drop_list.append(col)
             except TypeError:
                 # This can happen if a value in percent_missing_dict is not a number
-                logger.warning("Warning: Could not compare missing percentage for column '%s'. Value was not a number.", col)
+                logger.warning(
+                    "Warning: Could not compare missing percentage for column '%s'. Value was not a number.",
+                    col,
+                )
                 pass
 
         logger.info(

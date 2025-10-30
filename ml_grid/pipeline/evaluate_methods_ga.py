@@ -1,5 +1,11 @@
-import time
-from typing import Any, Dict, List, Tuple, Union
+import logging
+from typing import Any, List, Tuple, Union
+
+import numpy as np
+import pandas as pd
+import scipy
+from sklearn import metrics
+
 from ml_grid.ga_functions.ga_ann_weight_methods import get_y_pred_ann_torch_weighting
 from ml_grid.ga_functions.ga_de_weight_method import (
     get_weighted_ensemble_prediction_de_y_pred_valid,
@@ -8,29 +14,14 @@ from ml_grid.ga_functions.ga_ensemble_weight_finder_de import find_ensemble_weig
 from ml_grid.ga_functions.ga_unweighted import (
     get_unweighted_ensemble_predictions,
 )
-
 from ml_grid.util.ensemble_diversity_methods import (
     apply_diversity_penalty,
     measure_diversity_wrapper,
 )
-import numpy
-import numpy as np
-import pandas as pd
-import scipy
-import torch
-import tqdm
-from ml_grid.pipeline import torch_binary_classification_method_ga
-from ml_grid.pipeline.torch_binary_classification_method_ga import (
-    BinaryClassification,
-    TestData,
-)
-
 from ml_grid.util.global_params import global_parameters
-from sklearn import metrics
-
-import logging
 
 logger = logging.getLogger("ensemble_ga")
+
 
 def get_y_pred_resolver(
     ensemble: List, ml_grid_object: Any, valid: bool = False
@@ -216,7 +207,7 @@ def evaluate_weighted_ensemble_auc(
         mcc_score_list.append(individual[0][i][0])
 
     # orignal_feature_names
-    
+
     feature_map_vector = []
     for col in original_feature_names:
         if col in feature_count_list:
@@ -296,12 +287,10 @@ def evaluate_weighted_ensemble_auc(
     # return (auc,)
 
 
-
 # %%cython -a
 
 import numpy as np
 from numpy.linalg import norm
-from sklearn import metrics
 
 round_v = np.vectorize(round)
 

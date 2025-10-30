@@ -1,8 +1,6 @@
 from typing import Optional
+
 import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.metrics import roc_curve, auc
-import os
 
 
 def plot_auc(

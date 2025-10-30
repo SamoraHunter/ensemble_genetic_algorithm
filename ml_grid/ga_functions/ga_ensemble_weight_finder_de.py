@@ -1,8 +1,8 @@
 """Finds optimal ensemble weights using Differential Evolution."""
 
+import logging
 import time
 from typing import Any, List
-import logging
 
 import numpy as np
 import scipy

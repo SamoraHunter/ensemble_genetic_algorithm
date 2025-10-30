@@ -1,25 +1,44 @@
-from sklearn.metrics import make_scorer, roc_auc_score
-from typing import Dict, Any
 import logging
+from typing import Dict
 
-from ml_grid.util.config import load_config
+from sklearn.metrics import make_scorer, roc_auc_score
+
+from ml_grid.model_classes_ga.adaboostClassifier_model import (
+    AdaBoostClassifierModelGenerator,
+)
+from ml_grid.model_classes_ga.decisionTreeClassifier_model import (
+    DecisionTreeClassifierModelGenerator,
+)
 from ml_grid.model_classes_ga.dummy_model import DummyModelGenerator
-from ml_grid.model_classes_ga.adaboostClassifier_model import AdaBoostClassifierModelGenerator
-from ml_grid.model_classes_ga.decisionTreeClassifier_model import DecisionTreeClassifierModelGenerator
-from ml_grid.model_classes_ga.elasticNeuralNetwork_model import elasticNeuralNetworkModelGenerator
+from ml_grid.model_classes_ga.elasticNeuralNetwork_model import (
+    elasticNeuralNetworkModelGenerator,
+)
 from ml_grid.model_classes_ga.extra_trees_model import extraTreesModelGenerator
 from ml_grid.model_classes_ga.gaussianNB_model import GaussianNB_ModelGenerator
-from ml_grid.model_classes_ga.gradientBoostingClassifier_model import GradientBoostingClassifier_ModelGenerator
-from ml_grid.model_classes_ga.kNearestNeighbors_model import kNearestNeighborsModelGenerator
-from ml_grid.model_classes_ga.logistic_regression_model import logisticRegressionModelGenerator
+from ml_grid.model_classes_ga.gradientBoostingClassifier_model import (
+    GradientBoostingClassifier_ModelGenerator,
+)
+from ml_grid.model_classes_ga.kNearestNeighbors_model import (
+    kNearestNeighborsModelGenerator,
+)
+from ml_grid.model_classes_ga.logistic_regression_model import (
+    logisticRegressionModelGenerator,
+)
 from ml_grid.model_classes_ga.mlpClassifier_model import MLPClassifier_ModelGenerator
 from ml_grid.model_classes_ga.perceptron_model import perceptronModelGenerator
-from ml_grid.model_classes_ga.pytorchANNBinaryClassifier_model import Pytorch_binary_class_ModelGenerator
-from ml_grid.model_classes_ga.quadraticDiscriminantAnalysis_model import QuadraticDiscriminantAnalysis_ModelGenerator
+from ml_grid.model_classes_ga.pytorchANNBinaryClassifier_model import (
+    Pytorch_binary_class_ModelGenerator,
+)
+from ml_grid.model_classes_ga.quadraticDiscriminantAnalysis_model import (
+    QuadraticDiscriminantAnalysis_ModelGenerator,
+)
 from ml_grid.model_classes_ga.randomForest_model import randomForestModelGenerator
 from ml_grid.model_classes_ga.svc_model import SVC_ModelGenerator
 from ml_grid.model_classes_ga.XGBoost_model import XGBoostModelGenerator
+from ml_grid.util.config import load_config
+
 logger = logging.getLogger("ensemble_ga")
+
 
 class global_parameters:
     """A centralized configuration class for global project parameters.
@@ -28,7 +47,7 @@ class global_parameters:
     data processing pipeline and the genetic algorithm.
 
     """
-    
+
     # --- Experiment Settings ---
     input_csv_path: str
     """Path to the input dataset CSV file."""
@@ -173,15 +192,28 @@ class global_parameters:
 
         # Default list of model names
         default_model_names = [
-            "logisticRegression", "perceptron", "extraTrees", "randomForest",
-            "kNearestNeighbors", "XGBoost", "DecisionTreeClassifier",
-            "AdaBoostClassifier", "elasticNeuralNetwork", "GaussianNB",
-            "QuadraticDiscriminantAnalysis", "SVC", "GradientBoostingClassifier",
-            "MLPClassifier", "Pytorch_binary_class"
+            "logisticRegression",
+            "perceptron",
+            "extraTrees",
+            "randomForest",
+            "kNearestNeighbors",
+            "XGBoost",
+            "DecisionTreeClassifier",
+            "AdaBoostClassifier",
+            "elasticNeuralNetwork",
+            "GaussianNB",
+            "QuadraticDiscriminantAnalysis",
+            "SVC",
+            "GradientBoostingClassifier",
+            "MLPClassifier",
+            "Pytorch_binary_class",
         ]
         # Resolve model names to classes
-        self.model_list = [self.MODEL_REGISTRY[name] for name in default_model_names if name in self.MODEL_REGISTRY]
-
+        self.model_list = [
+            self.MODEL_REGISTRY[name]
+            for name in default_model_names
+            if name in self.MODEL_REGISTRY
+        ]
 
         # 2. Load and merge from config file
         user_config = load_config(config_path)
@@ -196,13 +228,17 @@ class global_parameters:
                             if model_name in self.MODEL_REGISTRY:
                                 resolved_models.append(self.MODEL_REGISTRY[model_name])
                             else:
-                                logger.warning("Unknown model '%s' in config file.", model_name)
-                        if resolved_models: # Only overwrite if we found valid models
+                                logger.warning(
+                                    "Unknown model '%s' in config file.", model_name
+                                )
+                        if resolved_models:  # Only overwrite if we found valid models
                             self.model_list = resolved_models
                     elif hasattr(self, key):
                         setattr(self, key, value)
                     else:
-                        logger.warning("Unknown global parameter '%s' in config file.", key)
+                        logger.warning(
+                            "Unknown global parameter '%s' in config file.", key
+                        )
 
         # 3. Apply runtime keyword argument overrides
         for key, value in kwargs.items():

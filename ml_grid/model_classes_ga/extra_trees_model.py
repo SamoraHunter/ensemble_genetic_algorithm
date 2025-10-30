@@ -1,13 +1,15 @@
+import logging
 import random
 import time
-import numpy as np
 from typing import Any, Dict, List, Tuple
+
+import numpy as np
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.metrics import matthews_corrcoef, roc_auc_score
+
 from ml_grid.util.debug_methods_ga import debug_base_learner
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
 from ml_grid.util.model_methods_ga import store_model
-import logging
 
 logger = logging.getLogger("ensemble_ga")
 
@@ -45,8 +47,8 @@ def extraTreesModelGenerator(
             - y_pred (np.ndarray): The model's predictions on the test set.
     """
     from ml_grid.util.global_params import global_parameters
-    global_parameter_val = global_parameters()
 
+    global_parameter_val = global_parameters()
 
     verbose = global_parameter_val.verbose
     store_base_learners = ml_grid_object.global_params.store_base_learners

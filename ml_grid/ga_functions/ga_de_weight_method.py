@@ -1,13 +1,15 @@
 """Method for generating weighted ensemble predictions using differential evolution."""
 
+import logging
+from typing import Any, List
+
 import numpy as np
 import torch
-from typing import Any, List
-import logging
 
 from ml_grid.ga_functions.ga_ann_util import BinaryClassification, TestData, normalize
 
 logger = logging.getLogger("ensemble_ga")
+
 
 def get_weighted_ensemble_prediction_de_y_pred_valid(
     best: List, weights: np.ndarray, ml_grid_object: Any, valid: bool = False
@@ -108,9 +110,7 @@ def get_weighted_ensemble_prediction_de_y_pred_valid(
 
     weights = normalize(weights)
 
-    weighted_prediction_matrix_array = (
-        np.array(prediction_matrix) * weights[:, None]
-    )
+    weighted_prediction_matrix_array = np.array(prediction_matrix) * weights[:, None]
     collapsed_weighted_prediction_matrix_array = weighted_prediction_matrix_array.sum(
         axis=0
     )

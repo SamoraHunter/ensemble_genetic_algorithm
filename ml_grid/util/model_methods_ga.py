@@ -1,12 +1,13 @@
 import json
+import logging
 import pickle
 import random
 import time
-import logging
-
 from typing import Any, Dict, List, Tuple
+
 import numpy as np
 import torch
+
 logger = logging.getLogger("ensemble_ga")
 
 
@@ -159,7 +160,9 @@ def get_stored_model(ml_grid_object: Any) -> Tuple:
     try:
         model_key = str(random.choice(model_key_list))
 
-        logger.info("Returning stored model at index %s/%s", model_key, len(model_key_list))
+        logger.info(
+            "Returning stored model at index %s/%s", model_key, len(model_key_list)
+        )
 
         if model_store_data["models"].get(model_key)["model_type"] == "sklearn":
             model = eval(model_store_data["models"].get(model_key)["model"])
@@ -183,7 +186,9 @@ def get_stored_model(ml_grid_object: Any) -> Tuple:
             np.array(model_store_data["models"].get(model_key)["y_pred"]),
         )
     except Exception as e:
-        logger.error("Failed inside getting stored model, returning random new model: %s", e)
+        logger.error(
+            "Failed inside getting stored model, returning random new model: %s", e
+        )
         index = random.randint(0, len(modelFuncList) - 1)
 
         return modelFuncList[index](ml_grid_object, ml_grid_object.local_param_dict)

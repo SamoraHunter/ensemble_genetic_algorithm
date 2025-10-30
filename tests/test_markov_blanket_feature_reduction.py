@@ -1,9 +1,11 @@
 import unittest
+
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+
 from ml_grid.pipeline.data_feature_methods import (
     feature_methods,
 )
-from sklearn.datasets import make_classification
-from sklearn.model_selection import train_test_split
 
 
 class TestGetNFeaturesMarkovBlanket(unittest.TestCase):

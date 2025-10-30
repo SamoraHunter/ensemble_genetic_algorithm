@@ -1,11 +1,12 @@
+from typing import Any, List, Union
+
 import numpy as np
 import pandas as pd
 import sklearn
 import sklearn.feature_selection
 from PyImpetus import PPIMBC
-from sklearn.svm import SVC
-from typing import List, Union, Any
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.svm import SVC
 
 
 class ClippedSVC(BaseEstimator, ClassifierMixin):
@@ -20,7 +21,9 @@ class ClippedSVC(BaseEstimator, ClassifierMixin):
         kwargs["probability"] = True
         self.svc = SVC(**kwargs)
 
-    def fit(self, X: np.ndarray, y: np.ndarray, sample_weight: Any = None) -> "ClippedSVC":
+    def fit(
+        self, X: np.ndarray, y: np.ndarray, sample_weight: Any = None
+    ) -> "ClippedSVC":
         self.svc.fit(X, y, sample_weight=sample_weight)
         self.classes_ = self.svc.classes_
         return self
@@ -33,6 +36,7 @@ class ClippedSVC(BaseEstimator, ClassifierMixin):
         # We return the probability of the positive class to satisfy log_loss.
         # This is a workaround for the PyImpetus library's behavior.
         return self.predict_proba(X)[:, 1]
+
 
 class feature_methods:
     def __init__(self):

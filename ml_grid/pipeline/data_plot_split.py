@@ -1,5 +1,6 @@
+from typing import Dict
+
 import matplotlib.pyplot as plt
-from typing import Dict, List, Union
 import pandas as pd
 
 # class plot_methods():

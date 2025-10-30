@@ -1,8 +1,8 @@
+import unittest
+
 import numpy as np
 import pandas as pd
-import sklearn
-import unittest
-from unittest.mock import patch
+
 from ml_grid.pipeline.data_feature_methods import feature_methods
 
 
@@ -59,7 +59,7 @@ class TestFeatureMethods(unittest.TestCase):
         y_train = np.array([1, 0, 1])
         n_features = 5  # More than available features
         result = self.feature_methods.getNfeaturesANOVAF(n_features, X_train, y_train)
-        
+
         self.assertEqual(len(result), 2)
         self.assertCountEqual(result, ["feature1", "feature2"])
 

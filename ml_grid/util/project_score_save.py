@@ -1,20 +1,22 @@
-import os
-import time
 import json
 import logging
+import os
 import pathlib
+import time
 import traceback
-from typing import Any, Dict, List
 import warnings
+from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
-from ml_grid.util.global_params import global_parameters
 from sklearn import metrics
 
 # from sklearn.utils.testing import ignore_warnings
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.metrics import *
+
+from ml_grid.util.global_params import global_parameters
+
 logger = logging.getLogger("ensemble_ga")
 
 
@@ -370,7 +372,9 @@ class project_score_save_class:
 
             # --- Column Alignment Validation ---
             # Read the header of the existing CSV file to get the expected columns
-            log_file_path = os.path.join(ml_grid_object.base_project_dir, "final_grid_score_log.csv")
+            log_file_path = os.path.join(
+                ml_grid_object.base_project_dir, "final_grid_score_log.csv"
+            )
             try:
                 existing_header = pd.read_csv(log_file_path, nrows=0).columns.tolist()
                 new_line_columns = line[column_list].columns.tolist()
@@ -379,18 +383,25 @@ class project_score_save_class:
                     logger.error("COLUMN MISALIGNMENT DETECTED!")
                     logger.error("Expected columns (from CSV): %s", existing_header)
                     logger.error("Actual columns (to be saved): %s", new_line_columns)
-                    
+
                     # Find differences for easier debugging
                     missing_from_new = set(existing_header) - set(new_line_columns)
                     extra_in_new = set(new_line_columns) - set(existing_header)
                     if missing_from_new:
-                        logger.error("Columns missing from the new data: %s", list(missing_from_new))
+                        logger.error(
+                            "Columns missing from the new data: %s",
+                            list(missing_from_new),
+                        )
                     if extra_in_new:
-                        logger.error("Extra columns in the new data: %s", list(extra_in_new))
+                        logger.error(
+                            "Extra columns in the new data: %s", list(extra_in_new)
+                        )
             except Exception as e:
                 logger.warning("Could not perform column alignment check: %s", e)
 
-            log_file_path = os.path.join(ml_grid_object.base_project_dir, "final_grid_score_log.csv")
+            log_file_path = os.path.join(
+                ml_grid_object.base_project_dir, "final_grid_score_log.csv"
+            )
             line[column_list].to_csv(
                 log_file_path,
                 mode="a",

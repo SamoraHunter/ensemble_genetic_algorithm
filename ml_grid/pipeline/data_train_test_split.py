@@ -1,11 +1,12 @@
+import logging
+import random
+from typing import Dict, Tuple, Union
+
+import numpy as np
+import pandas as pd
 from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
 from sklearn.model_selection import train_test_split
-import numpy as np
-import pandas as pd
-import random
-import logging
-from typing import Dict, Tuple, Union
 
 logger = logging.getLogger("ensemble_ga")
 
@@ -46,7 +47,7 @@ def get_data_split(
     # y = y
     # local_param_dict = local_param_dict
     # X_train_orig, X_test_orig, y_train_orig, y_test_orig = None, None, None, None
-    
+
     random.seed(1234)
     np.random.seed(1234)
 
@@ -105,7 +106,6 @@ def get_data_split(
         )
 
     return X_train, X_test, y_train, y_test, X_test_orig, y_test_orig
-
 
 
 def is_valid_shape(input_data: Union[pd.DataFrame, np.ndarray]) -> bool:

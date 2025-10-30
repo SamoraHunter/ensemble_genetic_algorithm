@@ -1,10 +1,11 @@
 import itertools as it
-import random
 import logging
+import random
 
 from ml_grid.util.global_params import global_parameters
 
 logger = logging.getLogger("ensemble_ga")
+
 
 class Grid:
 

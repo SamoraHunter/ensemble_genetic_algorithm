@@ -1,10 +1,12 @@
 import random
 import time
 from typing import Any, Dict, List, Tuple
+
 import numpy as np
 from sklearn import metrics
+from sklearn.metrics import matthews_corrcoef
 from sklearn.naive_bayes import GaussianNB
-from sklearn.metrics import matthews_corrcoef, roc_auc_score
+
 from ml_grid.util.debug_methods_ga import debug_base_learner
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
 from ml_grid.util.model_methods_ga import store_model
@@ -44,8 +46,8 @@ def GaussianNB_ModelGenerator(
             - y_pred (np.ndarray): The model's predictions on the test set.
     """
     from ml_grid.util.global_params import global_parameters
-    global_parameter_val = global_parameters()
 
+    global_parameter_val = global_parameters()
 
     verbose = global_parameter_val.verbose
     store_base_learners = ml_grid_object.global_params.store_base_learners

@@ -1,12 +1,10 @@
+import logging
+from typing import Any, Dict
 
 from numpy import absolute, mean, std
-from sklearn import metrics
-from sklearn.metrics import (classification_report, f1_score, make_scorer,
-                             matthews_corrcoef, roc_auc_score) # Removed unused imports
-from typing import Dict, Any
-import logging
 
-class debug_print_statements_class():
+
+class debug_print_statements_class:
     """A utility class for printing formatted debug information about model scores.
 
     This class provides a static method to display mean and standard deviation

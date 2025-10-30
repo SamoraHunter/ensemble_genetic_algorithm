@@ -1,9 +1,10 @@
-import re
 import logging
+import re
 
 import pandas as pd
 
 from ml_grid.util.global_params import global_parameters
+
 logger = logging.getLogger("ensemble_ga")
 
 
@@ -47,7 +48,9 @@ class clean_up_class:
 
             X = X.loc[:, ~X.columns.duplicated()].copy()
 
-            assert X is not None, "Null pointer exception: X became None after dropping duplicated columns."
+            assert (
+                X is not None
+            ), "Null pointer exception: X became None after dropping duplicated columns."
 
         except AssertionError as e:
             logger.error(str(e))

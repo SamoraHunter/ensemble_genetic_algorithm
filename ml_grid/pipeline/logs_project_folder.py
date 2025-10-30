@@ -121,7 +121,9 @@ class log_folder:
                     parents=True, exist_ok=True
                 )
             except Exception as e:
-                logger.error("An error occurred while creating directory '%s': %s", sub_dir, e)
+                logger.error(
+                    "An error occurred while creating directory '%s': %s", sub_dir, e
+                )
 
         # Now that directories are guaranteed to exist, set up logging
         try:

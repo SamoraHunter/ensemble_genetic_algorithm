@@ -1,7 +1,9 @@
-from ml_grid.pipeline.data_feature_methods import feature_methods
-from typing import Any, Tuple
 import logging
+from typing import Any, Tuple
+
 import pandas as pd
+
+from ml_grid.pipeline.data_feature_methods import feature_methods
 
 # rename this class
 
@@ -13,6 +15,7 @@ class feature_importance_methods:
     defined in `feature_methods`. It selects features based on the method
     specified in the `ml_grid_object`'s configuration.
     """
+
     logger = logging.getLogger("ensemble_ga")
 
     def __init__(self):
@@ -66,7 +69,9 @@ class feature_importance_methods:
                 self, n=target_n_features, X_train=X_train, y_train=y_train
             )
 
-        feature_importance_methods.logger.info("target_n_features: %s", target_n_features)
+        feature_importance_methods.logger.info(
+            "target_n_features: %s", target_n_features
+        )
 
         X_train = X_train[features]
 

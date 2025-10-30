@@ -1,9 +1,10 @@
+import logging
 import traceback
 from typing import Any, Dict, List
-import logging
 
-import ml_grid
 import numpy as np
+from sklearn.model_selection import ParameterGrid
+
 from ml_grid.model_classes.adaboost_classifier_class import adaboost_class
 from ml_grid.model_classes.gaussiannb_class import GaussianNB_class
 from ml_grid.model_classes.gradientboosting_classifier_class import (
@@ -11,7 +12,6 @@ from ml_grid.model_classes.gradientboosting_classifier_class import (
 )
 from ml_grid.model_classes.keras_classifier_class import kerasClassifier_class
 from ml_grid.model_classes.knn_classifier_class import knn_classifiers_class
-from ml_grid.model_classes.knn_gpu_classifier_class import knn__gpu_wrapper_class
 from ml_grid.model_classes.logistic_regression_class import LogisticRegression_class
 from ml_grid.model_classes.mlp_classifier_class import mlp_classifier_class
 from ml_grid.model_classes.quadratic_discriminant_class import (
@@ -25,9 +25,8 @@ from ml_grid.model_classes.xgb_classifier_class import XGB_class_class
 
 # from ml_grid.model_classes import LogisticRegression_class
 from ml_grid.pipeline import grid_search_cross_validate
-from ml_grid.util import grid_param_space
 from ml_grid.util.global_params import global_parameters
-from sklearn.model_selection import ParameterGrid
+
 logger = logging.getLogger("ensemble_ga")
 
 
@@ -191,9 +190,14 @@ class run:
                             is False
                         ):
                             logger.warning("What is this?")
-                            logger.warning("%s, %s %s", elem.method_name, param, type(elem.parameter_space.get(param)))
+                            logger.warning(
+                                "%s, %s %s",
+                                elem.method_name,
+                                param,
+                                type(elem.parameter_space.get(param)),
+                            )
 
-                except Exception as e:
+                except Exception:
                     # logger.debug(e)
                     pass
 
@@ -281,7 +285,9 @@ class run:
                             "error thrown in grid_search_crossvalidate on model class list"
                         )
 
-        logger.info("Model error list: nb. errors returned from func: %s", self.model_error_list)
+        logger.info(
+            "Model error list: nb. errors returned from func: %s", self.model_error_list
+        )
         logger.info(self.model_error_list)
 
         return self.model_error_list

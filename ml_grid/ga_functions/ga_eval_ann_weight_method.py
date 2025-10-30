@@ -1,8 +1,8 @@
 """Evaluate an ANN-weighted ensemble."""
 
+import logging
 import time
 from typing import Any, List
-import logging
 
 import numpy as np
 import torch
@@ -17,6 +17,7 @@ from ml_grid.ga_functions.ga_ann_util import (
 from ml_grid.ga_functions.ga_ann_weight_methods import train_ann_weight
 
 logger = logging.getLogger("ensemble_ga")
+
 
 def get_ann_weighted_ensemble_predictions_eval(
     best: List, ml_grid_object: Any, valid: bool = False
@@ -182,7 +183,9 @@ def get_ann_weighted_ensemble_predictions_eval(
     if ml_grid_object.verbose >= 5:
         logger.info("ANN unweighted ensemble AUC: %s", auc)
         logger.info("ANN weighted   ensemble AUC: %s", auc_score_weighted)
-        logger.info("ANN weighted   ensemble AUC difference: %s", auc_score_weighted - auc)
+        logger.info(
+            "ANN weighted   ensemble AUC difference: %s", auc_score_weighted - auc
+        )
         logger.info("ANN unweighted ensemble MCC: %s", mccscore_unweighted)
         logger.info("ANN weighted   ensemble MCC: %s", mccscore_weighted)
 

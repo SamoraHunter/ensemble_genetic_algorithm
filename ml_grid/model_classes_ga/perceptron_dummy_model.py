@@ -1,16 +1,18 @@
-import time
+import logging
 import random
-import numpy as np
-from sklearn.preprocessing import StandardScaler
+import time
 from typing import Any, Dict, List, Tuple
+
+import numpy as np
 from sklearn.linear_model import Perceptron
 from sklearn.metrics import matthews_corrcoef, roc_auc_score
+from sklearn.preprocessing import StandardScaler
 
 from ml_grid.util.debug_methods_ga import debug_base_learner
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
-import logging
 
 logger = logging.getLogger("ensemble_ga")
+
 
 def perceptronModelGen_dummy(
     ml_grid_object: Any, local_param_dict: Dict

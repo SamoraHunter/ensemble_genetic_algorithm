@@ -1,7 +1,10 @@
 import unittest
+
 import torch
 import torch.nn as nn
+
 from ml_grid.ga_functions.ga_ann_util import BinaryClassification
+
 
 class TestBinaryClassification(unittest.TestCase):
 
@@ -18,7 +21,7 @@ class TestBinaryClassification(unittest.TestCase):
             column_length=self.column_length,
             deep_layers_1=self.deep_layers,
             hidden_layer_size=self.hidden_size,
-            dropout_val=self.dropout_val
+            dropout_val=self.dropout_val,
         )
 
     def test_initialization(self):
@@ -79,12 +82,18 @@ class TestBinaryClassification(unittest.TestCase):
         self.model.train()
         output1_train = self.model(input_tensor)
         output2_train = self.model(input_tensor)
-        self.assertFalse(torch.equal(output1_train, output2_train), "Outputs should differ in train mode due to dropout.")
+        self.assertFalse(
+            torch.equal(output1_train, output2_train),
+            "Outputs should differ in train mode due to dropout.",
+        )
 
         self.model.eval()
         output1_eval = self.model(input_tensor)
         output2_eval = self.model(input_tensor)
-        self.assertTrue(torch.equal(output1_eval, output2_eval), "Outputs should be identical in eval mode.")
+        self.assertTrue(
+            torch.equal(output1_eval, output2_eval),
+            "Outputs should be identical in eval mode.",
+        )
 
     @unittest.skipIf(not torch.cuda.is_available(), "CUDA not available")
     def test_forward_pass_on_gpu(self):
@@ -92,7 +101,7 @@ class TestBinaryClassification(unittest.TestCase):
         device = torch.device("cuda")
         model_gpu = self.model.to(device)
         input_tensor = torch.randn(self.batch_size, self.column_length).to(device)
-        
+
         try:
             output = model_gpu(input_tensor)
             self.assertEqual(output.shape, (self.batch_size, 1))
@@ -100,5 +109,6 @@ class TestBinaryClassification(unittest.TestCase):
         except Exception as e:
             self.fail(f"Forward pass on GPU failed with exception: {e}")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

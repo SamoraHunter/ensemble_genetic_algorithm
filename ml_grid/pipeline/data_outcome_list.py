@@ -1,6 +1,8 @@
-from typing import List
-from ml_grid.util import outcome_list
 import logging
+from typing import List
+
+from ml_grid.util import outcome_list
+
 logger = logging.getLogger("ensemble_ga")
 
 
@@ -32,7 +34,10 @@ def handle_outcome_list(drop_list: List[str], outcome_variable: str) -> List[str
     try:
         drop_list.remove(outcome_variable)
     except ValueError:
-        logger.warning("Warning: Target outcome '%s' was not in the master outcome list to begin with.", outcome_variable)
+        logger.warning(
+            "Warning: Target outcome '%s' was not in the master outcome list to begin with.",
+            outcome_variable,
+        )
         pass
 
     return drop_list

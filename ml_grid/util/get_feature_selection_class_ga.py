@@ -1,14 +1,14 @@
+import logging
 import random
 from operator import itemgetter
-import logging
-from typing import Any, List, Tuple
+from typing import Any, List
 
 import numpy as np
 import pandas as pd
-import sklearn
 from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
 from sklearn.feature_selection import f_classif
 from xgboost import XGBClassifier
+
 logger = logging.getLogger("ensemble_ga")
 
 
@@ -43,12 +43,14 @@ class feature_selection_methods_class:
         self.X_test = ml_grid_object.X_test
 
         start_val = 2
-        
+
         if len(self.X_train.columns) < 2:
             self.feature_parameter_vector = [len(self.X_train.columns)]
         else:
             self.feature_parameter_vector = np.linspace(
-                2, len(self.X_train.columns), int(len(self.X_train.columns) + 1 - start_val)
+                2,
+                len(self.X_train.columns),
+                int(len(self.X_train.columns) + 1 - start_val),
             ).astype(int)
 
     def getNfeaturesANOVAF(self, n: int) -> List[str]:
@@ -209,41 +211,40 @@ class feature_selection_methods_class:
             finalColNames.append(elem[0])
         return finalColNames
 
+    # # Base learner and ensemble generation
 
-    # # Base learner and ensemble generation  
-            
+    def get_featured_selected_training_data(self, method="anova"):
+        # global self.X_train, X_test, self.y_train, y_test
+        # Select n features------------------------------------------------------------------------
+        f = self.feature_parameter_vector
 
-
-
-
-    
-
-    def get_featured_selected_training_data(self, method='anova'):
-        #global self.X_train, X_test, self.y_train, y_test
-            # Select n features------------------------------------------------------------------------
-        f = self.feature_parameter_vector 
-        
         nFeatures = random.choice(f)
-        
-        if(method=='anova'):
-            xFeatureColumnNames = feature_selection_methods_class.getNfeaturesANOVAF(self, 
-                nFeatures)
-        
-        elif(method=='randomforest'):
-            xFeatureColumnNames = feature_selection_methods_class.getRandomForestFeatureColumns(self, 
-            self.X_train, self.y_train, nFeatures
-        )
-        elif(method=='extratrees'):
-            xFeatureColumnNames = feature_selection_methods_class.getExtraTreesFeatureColumns(self,
-            self.X_train, self.y_train, nFeatures
-        )
-        elif(method=='xgb'):
-            xFeatureColumnNames = feature_selection_methods_class.getXGBoostFeatureColumns(self,
-            self.X_train, self.y_train, nFeatures
-        )
-            
-            
+
+        if method == "anova":
+            xFeatureColumnNames = feature_selection_methods_class.getNfeaturesANOVAF(
+                self, nFeatures
+            )
+
+        elif method == "randomforest":
+            xFeatureColumnNames = (
+                feature_selection_methods_class.getRandomForestFeatureColumns(
+                    self, self.X_train, self.y_train, nFeatures
+                )
+            )
+        elif method == "extratrees":
+            xFeatureColumnNames = (
+                feature_selection_methods_class.getExtraTreesFeatureColumns(
+                    self, self.X_train, self.y_train, nFeatures
+                )
+            )
+        elif method == "xgb":
+            xFeatureColumnNames = (
+                feature_selection_methods_class.getXGBoostFeatureColumns(
+                    self, self.X_train, self.y_train, nFeatures
+                )
+            )
+
         X_train_fs = self.X_train[xFeatureColumnNames].copy()
         X_test_fs = self.X_test[xFeatureColumnNames].copy()
-        
+
         return X_train_fs, X_test_fs

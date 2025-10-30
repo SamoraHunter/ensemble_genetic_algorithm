@@ -1,17 +1,21 @@
-from typing import Any, List, Union
 import logging
+from typing import Any, List, Union
+
 import numpy as np
+
 from ml_grid.ga_functions.ga_eval_ann_weight_method import (
     get_ann_weighted_ensemble_predictions_eval,
 )
-from ml_grid.ga_functions.ga_eval_de_weight_method import ( # Renamed
+from ml_grid.ga_functions.ga_eval_de_weight_method import (  # Renamed
     get_de_weighted_ensemble_predictions_eval,
 )
 from ml_grid.ga_functions.ga_eval_ensemble_weight_finder_de import (
     find_ensemble_weights_de_eval,
 )
-from ml_grid.ga_functions.ga_eval_unweighted import get_unweighted_ensemble_predictions_eval
-from numpy.linalg import norm
+from ml_grid.ga_functions.ga_eval_unweighted import (
+    get_unweighted_ensemble_predictions_eval,
+)
+
 logger = logging.getLogger("ensemble_ga")
 
 

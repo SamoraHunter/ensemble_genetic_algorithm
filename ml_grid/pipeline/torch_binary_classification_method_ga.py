@@ -1,7 +1,8 @@
+from typing import Tuple
+
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset
-from typing import Tuple
 
 
 ## train data
@@ -77,7 +78,11 @@ class BinaryClassification(nn.Module):
     """
 
     def __init__(
-        self, column_length: int, deep_layers_1: int, batch_size: int, dropout_val: float
+        self,
+        column_length: int,
+        deep_layers_1: int,
+        batch_size: int,
+        dropout_val: float,
     ):
         super(BinaryClassification, self).__init__()
         self.layer_1 = nn.Linear(column_length, batch_size)

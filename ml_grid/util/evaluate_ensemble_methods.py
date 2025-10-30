@@ -1,44 +1,13 @@
 # A module for evaluating ensembles by calling the prediction resolver function.
 
-import pandas as pd
-import numpy as np
-import pickle
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import logging
+import pickle
 from typing import Any, Dict, List, Optional, Tuple
 
-
-from sklearn.linear_model import Perceptron, LogisticRegression
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.svm import SVC
-from sklearn.neighbors import KNeighborsClassifier
-from ml_grid.ga_functions.ga_ann_util import (
-    BinaryClassification,
-    TestData,
-    TrainData,
-    binary_acc,
-    get_free_gpu,
-)
-from sklearn.ensemble import AdaBoostClassifier
-from sklearn.ensemble import AdaBoostClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.dummy import DummyClassifier
-from sklearn.linear_model import ElasticNet
-from sklearn.multiclass import OneVsRestClassifier
-from sklearn.ensemble import ExtraTreesClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.neural_network import MLPClassifier
-from ml_grid.model_classes_ga.perceptron_dummy_model import perceptronModelGen_dummy
-from sklearn.linear_model import Perceptron
-from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.svm import SVC
-from xgboost import XGBClassifier
+import numpy as np
+import pandas as pd
 from numpy import array
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 
 logger = logging.getLogger("ensemble_ga")
 try:
@@ -47,8 +16,8 @@ except ImportError as e:
     logger.error("Error: Could not import required functions from 'ml_grid': %s", e)
 
 from ml_grid.pipeline.evaluate_methods_y_pred_resolver import (
-                            get_y_pred_resolver_eval,
-                        )
+    get_y_pred_resolver_eval,
+)
 
 
 # --- Helper Class to Mimic MLGridObject ---
@@ -128,9 +97,7 @@ class EnsembleEvaluator:
         self.original_feature_names = None
         self._load_and_split_data(input_csv_path, outcome_variable)
 
-    def _load_and_split_data(
-        self, input_csv_path: str, outcome_variable: str
-    ) -> None:
+    def _load_and_split_data(self, input_csv_path: str, outcome_variable: str) -> None:
         """Loads data from a CSV and splits it into train, test, and validation sets."""
         if self.debug:
             logger.debug("Loading data from: %s", input_csv_path)
@@ -170,7 +137,6 @@ class EnsembleEvaluator:
             input data is from an untrusted source.
         """
         import pandas as pd
-        from numpy import array
 
         # If it's a pandas Series, extract the first value
         if isinstance(ensemble_record, pd.Series):
@@ -209,7 +175,9 @@ class EnsembleEvaluator:
         for ensemble in ensembles:
             if not isinstance(ensemble, (list, tuple)):
                 if debug:
-                    logger.debug("[DEBUG] Skipping non-list/tuple ensemble: %s", ensemble)
+                    logger.debug(
+                        "[DEBUG] Skipping non-list/tuple ensemble: %s", ensemble
+                    )
                 continue
             processed_ensemble = []
             for model_tuple in ensemble:
@@ -256,7 +224,6 @@ class EnsembleEvaluator:
             ensemble and weighting method.
         """
         import pandas as pd
-
 
         if ensemble_indices is None:
             # Default: pick the row with the highest auc_score
@@ -331,7 +298,7 @@ class EnsembleEvaluator:
                     self.ml_grid_object.local_param_dict["weighted"] = weight_method
 
                     try:
-                        
+
                         # Call the resolver function directly - it handles all masking internally
                         y_pred = get_y_pred_resolver_eval(
                             [ensemble_with_features],

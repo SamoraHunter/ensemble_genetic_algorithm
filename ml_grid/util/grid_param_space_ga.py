@@ -1,10 +1,11 @@
 import itertools as it
-import random
-from typing import Dict, List, Iterator, Any
 import logging
+import random
+from typing import Any, Dict, Iterator, List
 
 from ml_grid.util.config import load_config, merge_configs
 from ml_grid.util.global_params import global_parameters
+
 logger = logging.getLogger("ensemble_ga")
 
 
@@ -47,7 +48,13 @@ class Grid:
     g_params: List[int]
     """A list of possible values for the number of generations in the genetic algorithm."""
 
-    def __init__(self, global_params: global_parameters, sample_n: int = 1000, test_grid: bool = False, config_path: str = "config.yml"):
+    def __init__(
+        self,
+        global_params: global_parameters,
+        sample_n: int = 1000,
+        test_grid: bool = False,
+        config_path: str = "config.yml",
+    ):
         """Initializes the Grid class.
 
         Args:
@@ -79,7 +86,9 @@ class Grid:
             "use_stored_base_learners": [
                 False
             ],  # Whether to reuse stored base learners
-            "store_base_learners": [False],  # Per-run override for storing base learners
+            "store_base_learners": [
+                False
+            ],  # Per-run override for storing base learners
             "resample": ["undersample", "oversample", None],  # Resampling methods
             "scale": [True],  # Whether to scale features
             "n_features": ["all"],  # Number of features to use
@@ -147,7 +156,6 @@ class Grid:
             grid_config = user_config.get("grid_params")
             if grid_config:  # Check if the config section is not None
                 self.grid = merge_configs(default_grid, grid_config)
-
 
         def c_prod(d: Dict) -> Iterator[Dict]:
             """Recursively generates all combinations of hyperparameter settings.

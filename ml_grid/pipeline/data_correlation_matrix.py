@@ -1,9 +1,9 @@
-import traceback
 import logging
+from typing import Dict, List
+
 import pandas as pd
-import numpy as np
 from tqdm import tqdm
-from typing import Dict, List, Tuple
+
 logger = logging.getLogger("ensemble_ga")
 
 
@@ -64,18 +64,17 @@ def handle_correlation_matrix(
 
     # Split columns into chunks for memory efficiency
     column_chunks = [
-        df_numeric.columns[i : i + chunk_size]
-        for i in range(0, n_cols, chunk_size)
+        df_numeric.columns[i : i + chunk_size] for i in range(0, n_cols, chunk_size)
     ]
 
     with tqdm(total=n_cols, desc="Calculating Correlations") as pbar:
         for i, chunk_cols in enumerate(column_chunks):
             # Define the columns to correlate against: the current chunk and all subsequent chunks
             remaining_cols = df_numeric.columns[i * chunk_size :]
-            
+
             # Calculate correlation for the current slice of the matrix
             corr_matrix_chunk = df_numeric[remaining_cols].corr(numeric_only=True).abs()
-            
+
             # We only need to check correlations of the current chunk against all remaining columns
             # This is equivalent to the top-left block of the chunk's correlation matrix
             sub_matrix = corr_matrix_chunk.loc[chunk_cols, :]
@@ -83,7 +82,9 @@ def handle_correlation_matrix(
             # Find highly correlated pairs
             for col1 in chunk_cols:
                 # Find correlations above the threshold, excluding self-correlation
-                correlated_series = sub_matrix.loc[col1][sub_matrix.loc[col1] > threshold]
+                correlated_series = sub_matrix.loc[col1][
+                    sub_matrix.loc[col1] > threshold
+                ]
                 for col2, _ in correlated_series.items():
                     # If two columns are correlated, and we haven't already decided to drop col1, drop col2.
                     if col1 != col2 and col1 not in to_drop:

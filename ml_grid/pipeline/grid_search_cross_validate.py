@@ -1,26 +1,12 @@
-import time
-import traceback
-from typing import Any, Dict
 import logging
+import time
+from typing import Any, Dict
 
 import keras
 import numpy as np
 import pandas as pd
-from ml_grid.model_classes.keras_classifier_class import kerasClassifier_class
-from ml_grid.util.debug_print_statements import debug_print_statements_class
-from ml_grid.util.global_params import global_parameters
-from ml_grid.util.project_score_save import project_score_save_class
-from numpy import absolute, mean, std
 from scikeras.wrappers import KerasClassifier
-from sklearn import metrics
 from sklearn.metrics import *
-from sklearn.metrics import (
-    classification_report,
-    f1_score,
-    make_scorer,
-    matthews_corrcoef,
-    roc_auc_score,
-)
 from sklearn.model_selection import (
     GridSearchCV,
     ParameterGrid,
@@ -29,16 +15,20 @@ from sklearn.model_selection import (
     cross_validate,
 )
 
-
+from ml_grid.model_classes.keras_classifier_class import kerasClassifier_class
+from ml_grid.util.debug_print_statements import debug_print_statements_class
 from ml_grid.util.global_params import global_parameters
+from ml_grid.util.project_score_save import project_score_save_class
+
 logger = logging.getLogger("ensemble_ga")
 
 
 import warnings
 
+import tensorflow as tf
+
 # from sklearn.utils.testing import ignore_warnings
 from sklearn.exceptions import ConvergenceWarning
-import tensorflow as tf
 
 
 class grid_search_crossvalidate:
@@ -214,7 +204,14 @@ class grid_search_crossvalidate:
 
         if self.global_parameters.verbose >= 1:
             if random_grid_search:
-                logger.info("Randomized parameter grid size for %s \n : Full: %s, (mean * %s): %s, current: %s ", current_algorithm, pg, self.sub_sample_param_space_pct, self.sub_sample_parameter_val, n_iter_v)
+                logger.info(
+                    "Randomized parameter grid size for %s \n : Full: %s, (mean * %s): %s, current: %s ",
+                    current_algorithm,
+                    pg,
+                    self.sub_sample_param_space_pct,
+                    self.sub_sample_parameter_val,
+                    n_iter_v,
+                )
 
             else:
                 logger.info("parameter grid size: Full: %s", pg)

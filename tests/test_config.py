@@ -1,7 +1,8 @@
 import pytest
+
+from ml_grid.util import config
 from ml_grid.util.global_params import global_parameters
 from ml_grid.util.grid_param_space_ga import Grid
-from ml_grid.util import config
 
 
 @pytest.fixture(autouse=True)
@@ -11,6 +12,7 @@ def reset_config_flag():
     config._config_message_printed = False
     yield
     config._config_message_printed = False
+
 
 def test_global_params_defaults():
     """Tests that global_parameters initializes with hardcoded defaults when no config is found."""

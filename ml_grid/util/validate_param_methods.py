@@ -1,8 +1,10 @@
-import numpy as np
-from typing import Any, Dict
 import logging
+from typing import Any, Dict
+
+import numpy as np
 
 logger = logging.getLogger("ensemble_ga")
+
 
 def validate_max_leaf_nodes(param_space: Dict[str, Any]) -> Dict[str, Any]:
     """Validates the 'max_leaf_nodes' parameter in a hyperparameter space.
@@ -20,7 +22,9 @@ def validate_max_leaf_nodes(param_space: Dict[str, Any]) -> Dict[str, Any]:
         max_leaf_nodes = param_space["max_leaf_nodes"]
         if not isinstance(max_leaf_nodes, int) or max_leaf_nodes < 2:
             param_space["max_leaf_nodes"] = 2  # Or any other valid value you prefer
-            logger.warning("Invalid value for max_leaf_nodes. Setting it to default value.")
+            logger.warning(
+                "Invalid value for max_leaf_nodes. Setting it to default value."
+            )
     return param_space
 
 
@@ -29,7 +33,9 @@ def hidden_layer_size(param_space):
         hidden_size = param_space["hidden_layer_size"]
         if not isinstance(hidden_size, int) or hidden_size < 2:
             param_space["hidden_layer_size"] = 2  # Or any other valid value you prefer
-            logger.warning("Invalid value for hidden_layer_size. Setting it to default value.")
+            logger.warning(
+                "Invalid value for hidden_layer_size. Setting it to default value."
+            )
     return param_space
 
 
@@ -60,7 +66,10 @@ def validate_subsample(param_space: Dict[str, Any]) -> Dict[str, Any]:
                         param_space["subsample"][i] = max(
                             0.01, min(float(subsample[i]), 1.0)
                         )  # Change default value to 0.01
-                        logger.warning("Invalid value for subsample[%s]. Setting it to a value within the valid range.", i)
+                        logger.warning(
+                            "Invalid value for subsample[%s]. Setting it to a value within the valid range.",
+                            i,
+                        )
             else:
                 if (
                     not isinstance(subsample, float)
@@ -117,5 +126,7 @@ def validate_min_samples_split(param_space: Dict[str, Any]) -> Dict[str, Any]:
             isinstance(min_samples_split, float) and 0.0 < min_samples_split < 1.0
         ):
             param_space["min_samples_split"] = 2  # Or any other valid value you prefer
-            logger.warning("Invalid value for min_samples_split. Setting it to default value.")
+            logger.warning(
+                "Invalid value for min_samples_split. Setting it to default value."
+            )
     return param_space

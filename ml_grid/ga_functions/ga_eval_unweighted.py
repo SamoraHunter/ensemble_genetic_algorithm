@@ -1,7 +1,7 @@
 """Evaluate an unweighted ensemble."""
 
-from typing import Any, List
 import logging
+from typing import Any, List
 
 import numpy as np
 import torch
@@ -10,6 +10,7 @@ from scipy import stats
 from ml_grid.ga_functions.ga_ann_util import BinaryClassification, TestData
 
 logger = logging.getLogger("ensemble_ga")
+
 
 def get_unweighted_ensemble_predictions_eval(
     best: List, ml_grid_object: Any, valid: bool = False

@@ -1,8 +1,8 @@
-
-from typing import Any
 import logging
+from typing import Any
 
 import pandas as pd
+
 logger = logging.getLogger("ensemble_ga")
 
 
@@ -37,7 +37,12 @@ def debug_base_learner(
     )
 
     logger.debug(
-        "%s, %s, %s, %s, %s", str(model).split("(")[0], round(mccscore, 5), len(X_train.columns), auc_score, model_train_time
+        "%s, %s, %s, %s, %s",
+        str(model).split("(")[0],
+        round(mccscore, 5),
+        len(X_train.columns),
+        auc_score,
+        model_train_time,
     )
     if model_train_time > model_train_time_warning_threshold:
         logger.warning("Warning long train time, ")

@@ -1,11 +1,12 @@
+import logging
 import random
 import string
-import logging
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
-from typing import Dict, List
 from sklearn.datasets import make_classification
+
 logger = logging.getLogger("ensemble_ga")
 
 
@@ -243,13 +244,16 @@ class SyntheticDataGenerator:
             The DataFrame with duplicate columns added.
         """
         if not df.columns.to_list():
-            logger.warning("Cannot add duplicate columns to a DataFrame with no columns.")
+            logger.warning(
+                "Cannot add duplicate columns to a DataFrame with no columns."
+            )
             return df
 
         if self.n_duplicate_cols > len(df.columns):
             logger.warning(
                 "More duplicate columns requested (%s) than available features (%s). Capping at available.",
-                self.n_duplicate_cols, len(df.columns)
+                self.n_duplicate_cols,
+                len(df.columns),
             )
             self.n_duplicate_cols = len(df.columns)
 
@@ -271,13 +275,16 @@ class SyntheticDataGenerator:
             The DataFrame with correlated columns added.
         """
         if not df.columns.to_list():
-            logger.warning("Cannot add correlated columns to a DataFrame with no columns.")
+            logger.warning(
+                "Cannot add correlated columns to a DataFrame with no columns."
+            )
             return df
 
         if self.n_correlated_pairs > len(df.columns):
             logger.warning(
                 "More correlated columns requested (%s) than available features (%s). Capping at available.",
-                self.n_correlated_pairs, len(df.columns)
+                self.n_correlated_pairs,
+                len(df.columns),
             )
             self.n_correlated_pairs = len(df.columns)
 
@@ -394,7 +401,9 @@ class SyntheticDataGenerator:
         random.shuffle(final_cols)
         df = df[[self.outcome_name] + final_cols]
 
-        logger.info("--- Synthetic data generated successfully. Shape: %s ---", df.shape)
+        logger.info(
+            "--- Synthetic data generated successfully. Shape: %s ---", df.shape
+        )
         return df
 
 

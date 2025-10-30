@@ -3,16 +3,18 @@ import datetime
 import logging
 import os
 import pathlib
-from ml_grid.util.logger_setup import setup_logger, get_logger
-from ml_grid.util.project_score_save import project_score_save_class
-from ml_grid.util.GA_results_explorer import GA_results_explorer
-from ml_grid.pipeline.evaluate_methods_ga import get_y_pred_resolver
+
 import pandas as pd
 from sklearn.metrics import classification_report, confusion_matrix
 from tqdm import tqdm
+
 from ml_grid.pipeline import data, main_ga
+from ml_grid.pipeline.evaluate_methods_ga import get_y_pred_resolver
+from ml_grid.util.GA_results_explorer import GA_results_explorer
 from ml_grid.util.global_params import global_parameters
 from ml_grid.util.grid_param_space_ga import Grid
+from ml_grid.util.logger_setup import setup_logger
+from ml_grid.util.project_score_save import project_score_save_class
 
 
 def initialize_logger(config_path: str) -> logging.Logger:
@@ -26,13 +28,16 @@ def initialize_logger(config_path: str) -> logging.Logger:
         logging.Logger: The configured logger instance.
     """
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    run_specific_dir = os.path.join("experiments", timestamp)  # Store experiments in a dedicated folder
+    run_specific_dir = os.path.join(
+        "experiments", timestamp
+    )  # Store experiments in a dedicated folder
     pathlib.Path(run_specific_dir).mkdir(parents=True, exist_ok=True)
 
     logger = setup_logger(log_folder_path=run_specific_dir)
     logger.info(f"Using configuration from: {config_path}")
     logger.info(f"Experiment outputs will be saved in: {run_specific_dir}")
     return logger
+
 
 def main(config_path: str, plot: bool = False, evaluate: bool = False):
     """
@@ -49,7 +54,7 @@ def main(config_path: str, plot: bool = False, evaluate: bool = False):
     global_params = global_parameters(config_path=config_path)
 
     # 2. Update the base project directory to the run-specific directory.
-    run_specific_dir = logger.handlers[0].baseFilename.rsplit('/', 1)[0]
+    run_specific_dir = logger.handlers[0].baseFilename.rsplit("/", 1)[0]
     global_params.base_project_dir = run_specific_dir
 
     # 3. Initialize the project score CSV file.
@@ -76,7 +81,11 @@ def main(config_path: str, plot: bool = False, evaluate: bool = False):
             testing=global_params.testing,
         )
 
-        main_ga.run(ml_grid_object, local_param_dict=local_param_dict, global_params=global_params).execute()
+        main_ga.run(
+            ml_grid_object,
+            local_param_dict=local_param_dict,
+            global_params=global_params,
+        ).execute()
 
     # 6. Optionally evaluate the best model and generate plots.
     if evaluate:
@@ -86,7 +95,7 @@ def main(config_path: str, plot: bool = False, evaluate: bool = False):
             results_df = pd.read_csv(results_path)
 
             logger.info("--- Evaluating Best Ensemble on Validation Set ---")
-            best_run = results_df.loc[results_df['auc'].idxmax()]
+            best_run = results_df.loc[results_df["auc"].idxmax()]
             logger.info(f"Best run identified with AUC: {best_run['auc']:.4f}")
 
             ml_grid_object = data.pipe(
@@ -99,7 +108,7 @@ def main(config_path: str, plot: bool = False, evaluate: bool = False):
                 testing=global_params.testing,
             )
 
-            best_ensemble = eval(best_run['best_ensemble'])
+            best_ensemble = eval(best_run["best_ensemble"])
 
             y_pred_orig = get_y_pred_resolver(
                 ensemble=best_ensemble, ml_grid_object=ml_grid_object, valid=True
@@ -129,6 +138,7 @@ def main(config_path: str, plot: bool = False, evaluate: bool = False):
             logger.info(f"--- Plots saved to: {run_specific_dir} ---")
         except Exception as e:
             logger.error(f"❌ Failed during plot generation: {e}", exc_info=True)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the Ensemble Genetic Algorithm.")

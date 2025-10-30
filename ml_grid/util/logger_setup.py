@@ -1,8 +1,8 @@
 import logging
 import os
-from datetime import datetime
-from typing import Optional
 import sys
+from datetime import datetime
+
 
 def setup_logger(log_folder_path: str = ".") -> logging.Logger:
     """Sets up a root logger to write to a file.

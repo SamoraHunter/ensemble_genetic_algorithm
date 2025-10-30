@@ -1,7 +1,7 @@
 """Get unweighted ensemble predictions."""
 
-from typing import Any, List
 import logging
+from typing import Any, List
 
 import numpy as np
 import torch
