@@ -3,9 +3,11 @@
 import numpy as np
 import torch
 from typing import Any, List
+import logging
 
 from ml_grid.ga_functions.ga_ann_util import BinaryClassification, TestData, normalize
 
+logger = logging.getLogger("ensemble_ga")
 
 def get_weighted_ensemble_prediction_de_y_pred_valid(
     best: List, weights: np.ndarray, ml_grid_object: Any, valid: bool = False
@@ -44,7 +46,7 @@ def get_weighted_ensemble_prediction_de_y_pred_valid(
     target_ensemble = best[0]
     if valid:
         if ml_grid_object.verbose >= 1:
-            print("Evaluating weighted ensemble on validation set")
+            logger.info("Evaluating weighted ensemble on validation set")
         x_test = X_test_orig.copy()
 
         prediction_array = []
@@ -56,16 +58,17 @@ def get_weighted_ensemble_prediction_de_y_pred_valid(
 
             if not isinstance(model, BinaryClassification):
                 if ml_grid_object.verbose >= 2:
-                    print(f"Fitting model {i+1}")
+                    logger.debug(f"Fitting model {i+1}")
 
                 try:
                     model.fit(X_train[feature_columns], y_train)
                 except ValueError as e:
-                    print(e)
-                    print("ValueError on fit")
-                    print("feature_columns")
-                    print(len(feature_columns))
-                    print(
+                    logger.error(e)
+                    logger.error("ValueError on fit")
+                    logger.error("feature_columns")
+                    logger.error(len(feature_columns))
+                    logger.error(
+                        "%s, %s, %s, %s, %s",
                         X_train.shape,
                         X_test.shape,
                         type(X_train),
@@ -76,7 +79,7 @@ def get_weighted_ensemble_prediction_de_y_pred_valid(
                 prediction_array.append(model.predict(x_test[feature_columns]))
             else:
                 if ml_grid_object.verbose >= 2:
-                    print(f"Handling torch model prediction for model {i+1}")
+                    logger.debug(f"Handling torch model prediction for model {i+1}")
                 test_data = TestData(torch.FloatTensor(x_test[feature_columns].values))
 
                 device = torch.device("cpu")
@@ -88,7 +91,7 @@ def get_weighted_ensemble_prediction_de_y_pred_valid(
                 y_hat = y_hat.astype(int).flatten()
 
                 if np.isnan(y_hat).any():
-                    print(
+                    logger.warning(
                         "Returning dummy random yhat vector for torch pred, nan found"
                     )
                     y_hat = np.random.choice(a=[False, True], size=(len(y_hat),))

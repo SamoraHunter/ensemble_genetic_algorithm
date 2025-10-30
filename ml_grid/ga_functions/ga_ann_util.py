@@ -9,7 +9,9 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from numpy.linalg import norm
 import numpy as np
+import logging
 
+logger = logging.getLogger("ensemble_ga")
 
 class BinaryClassification(nn.Module):
     """A PyTorch neural network for binary classification.
@@ -159,7 +161,7 @@ def get_free_gpu(ml_grid_object: Optional[Any] = None) -> int:
         idx = gpu_df["memory.free"].astype(int).idxmax()
 
         if verbosity >= 6:
-            print(
+            logger.debug(
                 f"Returning GPU{idx} with {gpu_df.iloc[idx]['memory.free']} free MiB"
             )
         return int(idx)

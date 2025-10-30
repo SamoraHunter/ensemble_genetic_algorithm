@@ -2,12 +2,15 @@
 
 import time
 from typing import Any, List
+import logging
 
 import numpy as np
 import scipy
 from sklearn import metrics
 
 from ml_grid.ga_functions.ga_ann_util import normalize
+
+logger = logging.getLogger("ensemble_ga")
 
 round_v = np.vectorize(round)
 
@@ -53,10 +56,10 @@ def get_weighted_ensemble_prediction_de(
         score = auc
         return 1 - score
     except Exception as e:
-        print(y_test)
-        print(y_pred_best)
-        print(type(y_test))
-        print(type(y_pred_best))
+        logger.error(y_test)
+        logger.error(y_pred_best)
+        logger.error(type(y_test))
+        logger.error(type(y_pred_best))
         raise e
 
 
@@ -90,8 +93,7 @@ def find_ensemble_weights_de(best: List, ml_grid_object: Any) -> np.ndarray:
     debug = ml_grid_object.verbose > 11
 
     if debug:
-        print("find_ensemble_weights_de, best:")
-        print(best)
+        logger.debug("find_ensemble_weights_de, best: %s", best)
 
     model_train_time_warning_threshold = 5
     # Get prediction matrix:
@@ -108,7 +110,7 @@ def find_ensemble_weights_de(best: List, ml_grid_object: Any) -> np.ndarray:
         for i in range(len(prediction_array[0]))
     ]
     auc = metrics.roc_auc_score(y_test, y_pred_best)
-    print("Unweighted ensemble AUC: ", auc)
+    logger.info("Unweighted ensemble AUC: %s", auc)
 
     bounds = [(0, 1) for _ in range(len(best[0]))]
 
@@ -136,8 +138,8 @@ def find_ensemble_weights_de(best: List, ml_grid_object: Any) -> np.ndarray:
             x0=None,
         )
     except Exception as e:
-        print("Failed on find_ensemble_weights_de", e)
-        print(prediction_matrix_raw, y_test)
+        logger.error("Failed on find_ensemble_weights_de: %s", e)
+        logger.error("%s, %s", prediction_matrix_raw, y_test)
         raise e
 
     score = 1 - de.fun
@@ -147,11 +149,11 @@ def find_ensemble_weights_de(best: List, ml_grid_object: Any) -> np.ndarray:
     model_train_time = int(end - start)
     if debug:
         if model_train_time > model_train_time_warning_threshold:
-            print(
-                "Warning long DE weights train time, ",
+            logger.warning(
+                "Warning long DE weights train time, %s, %s",
                 model_train_time,
                 model_train_time_warning_threshold,
             )
 
-    print("best weighted score: ", score, "difference:", score - auc)
+    logger.info("best weighted score: %s, difference: %s", score, score - auc)
     return optimal_weights

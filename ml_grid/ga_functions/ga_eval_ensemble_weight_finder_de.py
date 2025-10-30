@@ -3,6 +3,7 @@ Finds optimal ensemble weights using Differential Evolution for evaluation."""
 
 import time
 from typing import Any, List
+import logging
 
 import numpy as np
 import pandas as pd
@@ -15,6 +16,7 @@ from ml_grid.ga_functions.ga_ensemble_weight_finder_de import \
     get_weighted_ensemble_prediction_de
 from ml_grid.pipeline.torch_binary_classification_method_ga import TestData
 
+logger = logging.getLogger("ensemble_ga")
 
 def find_ensemble_weights_de_eval(
     best: List, ml_grid_object: Any, valid: bool = False
@@ -56,12 +58,12 @@ def find_ensemble_weights_de_eval(
     # Choose prediction target based on valid parameter
     if valid:
         if ml_grid_object.verbose >= 1:
-            print("Finding optimal weights using validation set")
+            logger.info("Finding optimal weights using validation set")
         x_test = X_test_orig.copy()
         y_test_target = y_test_orig.copy()
     else:
         if ml_grid_object.verbose >= 1:
-            print("Finding optimal weights using test set")
+            logger.info("Finding optimal weights using test set")
         x_test = X_test.copy()
         y_test_target = y_test.copy()
 
@@ -71,8 +73,7 @@ def find_ensemble_weights_de_eval(
     debug = ml_grid_object.verbose > 11
 
     if debug:
-        print("find_ensemble_weights_de_eval, best:")
-        print(best)
+        logger.debug("find_ensemble_weights_de_eval, best: %s", best)
 
     model_train_time_warning_threshold = 5
 
@@ -94,23 +95,23 @@ def find_ensemble_weights_de_eval(
         ]
 
         if ml_grid_object.verbose >= 1 and len(missing_columns) >= 1:
-            print("Warning: The following columns do not exist in feature_columns:")
-            print("\n".join(missing_columns))
+            logger.warning("Warning: The following columns do not exist in feature_columns:")
+            logger.warning("\n".join(missing_columns))
 
         feature_columns = existing_columns.copy()
 
         if not isinstance(target_ensemble[i][1], BinaryClassification):
             model = target_ensemble[i][1]
             if ml_grid_object.verbose >= 2:
-                print(f"Fitting model {i+1} for weight optimization")
+                logger.debug(f"Fitting model {i+1} for weight optimization")
 
             try:
                 model.fit(X_train[feature_columns], y_train)
                 y_pred = model.predict(x_test[feature_columns])
             except ValueError as e:
-                print(f"ValueError on fit for model {i+1}: {e}")
-                print("feature_columns length:", len(feature_columns))
-                print("X_train shape:", X_train.shape, "x_test shape:", x_test.shape)
+                logger.error(f"ValueError on fit for model {i+1}: {e}")
+                logger.error("feature_columns length: %s", len(feature_columns))
+                logger.error("X_train shape: %s, x_test shape: %s", X_train.shape, x_test.shape)
                 raise e
 
             prediction_array.append(y_pred)
@@ -118,7 +119,7 @@ def find_ensemble_weights_de_eval(
         else:
             # Handle BinaryClassification (PyTorch) models
             if ml_grid_object.verbose >= 2:
-                print(f"Handling torch model {i+1} for weight optimization")
+                logger.debug(f"Handling torch model {i+1} for weight optimization")
 
             test_data = TestData(torch.FloatTensor(x_test[feature_columns].values))
 
@@ -131,7 +132,7 @@ def find_ensemble_weights_de_eval(
             y_hat = y_hat.astype(int).flatten()
 
             if np.isnan(y_hat).any():
-                print(
+                logger.warning(
                     f"Returning dummy random yhat vector for torch model {i+1}, nan found"
                 )
                 y_hat = np.random.choice(a=[False, True], size=(len(y_hat),))
@@ -147,7 +148,7 @@ def find_ensemble_weights_de_eval(
         for i in range(len(prediction_array[0]))
     ]
     auc = metrics.roc_auc_score(y_test_target, y_pred_best)
-    print("Unweighted ensemble AUC: ", auc)
+    logger.info("Unweighted ensemble AUC: %s", auc)
 
     bounds = [(0, 1) for _ in range(len(best[0]))]
 
@@ -175,8 +176,8 @@ def find_ensemble_weights_de_eval(
             x0=None,
         )
     except Exception as e:
-        print("Failed on find_ensemble_weights_de_eval", e)
-        print(prediction_matrix_raw, y_test_target)
+        logger.error("Failed on find_ensemble_weights_de_eval: %s", e)
+        logger.error("%s, %s", prediction_matrix_raw, y_test_target)
         raise e
 
     score = 1 - de.fun
@@ -186,11 +187,11 @@ def find_ensemble_weights_de_eval(
     model_train_time = int(end - start)
     if debug:
         if model_train_time > model_train_time_warning_threshold:
-            print(
-                "Warning long DE weights train time, ",
+            logger.warning(
+                "Warning long DE weights train time, %s, %s",
                 model_train_time,
                 model_train_time_warning_threshold,
             )
 
-    print("best weighted score: ", score, "difference:", score - auc)
+    logger.info("best weighted score: %s, difference: %s", score, score - auc)
     return optimal_weights

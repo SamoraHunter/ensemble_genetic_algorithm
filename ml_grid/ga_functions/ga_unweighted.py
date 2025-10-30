@@ -1,12 +1,15 @@
 """Get unweighted ensemble predictions."""
 
 from typing import Any, List
+import logging
 
 import numpy as np
 import torch
 from scipy import stats
 
 from ml_grid.ga_functions.ga_ann_util import BinaryClassification, TestData
+
+logger = logging.getLogger("ensemble_ga")
 
 
 def get_unweighted_ensemble_predictions(
@@ -39,18 +42,15 @@ def get_unweighted_ensemble_predictions(
         - Supports both scikit-learn style models and PyTorch `BinaryClassification` models.
         - For PyTorch models, predictions are generated via the forward pass and
           thresholded with `torch.sigmoid`.
-        - In non-validation mode (`valid=False`), predictions are directly taken
+        - In non-validation mode (`valid`=False), predictions are directly taken
           from `target_ensemble[i][5]`.
     """
 
-    if ml_grid_object.verbose >= 1:
-        print("get_unweighted_ensemble_predictions: best:")
-        print(best)
-        print("len(best)")
-        print(len(best))
-        print("len(best[0])")
-        print(len(best[0]))
-        print("Valid", valid)
+    if ml_grid_object.verbose >= 2:
+        logger.debug("get_unweighted_ensemble_predictions: best: %s", best)
+        logger.debug("len(best): %s", len(best))
+        logger.debug("len(best[0]): %s", len(best[0]))
+        logger.debug("Valid: %s", valid)
 
     X_test_orig = ml_grid_object.X_test_orig
     X_train = ml_grid_object.X_train
@@ -63,7 +63,7 @@ def get_unweighted_ensemble_predictions(
     target_ensemble = best[0]
     if valid:
         if ml_grid_object.verbose >= 1:
-            print("Predicting on validation set...")
+            logger.info("Predicting on validation set...")
         for i in range(len(target_ensemble)):
 
             feature_columns = list(target_ensemble[i][2])
@@ -71,7 +71,7 @@ def get_unweighted_ensemble_predictions(
             if not isinstance(target_ensemble[i][1], BinaryClassification):
                 model = target_ensemble[i][1]
                 if ml_grid_object.verbose >= 2:
-                    print(f"Fitting model {i+1}")
+                    logger.debug(f"Fitting model {i+1}")
                 model.fit(X_train[feature_columns], y_train)
 
                 prediction_array.append(model.predict(x_test[feature_columns]))
@@ -92,10 +92,11 @@ def get_unweighted_ensemble_predictions(
 
     else:
         if ml_grid_object.verbose >= 1:
-            print("Predicting on non-validation set...")
-            print("Evaluating...", target_ensemble)
-            print(len(target_ensemble), "len(target_ensemble)")
-            print(target_ensemble)
+            logger.info("Predicting on non-validation set...")
+        if ml_grid_object.verbose >= 2:
+            logger.debug("Evaluating... %s", target_ensemble)
+            logger.debug("%s len(target_ensemble)", len(target_ensemble))
+            logger.debug("%s", target_ensemble)
         for i in range(len(target_ensemble)):
             y_pred = target_ensemble[i][5]
             prediction_array.append(y_pred)

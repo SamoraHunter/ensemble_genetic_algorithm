@@ -4,6 +4,7 @@ import itertools
 import random
 import time
 from typing import Any, List
+import logging
 
 import numpy as np
 import torch
@@ -22,6 +23,7 @@ from ml_grid.ga_functions.ga_ann_util import (
     get_free_gpu,
 )
 
+logger = logging.getLogger("ensemble_ga")
 
 def get_y_pred_ann_torch_weighting(
     best: List, ml_grid_object: Any, valid: bool = False
@@ -58,9 +60,9 @@ def get_y_pred_ann_torch_weighting(
     """
 
     if ml_grid_object.verbose >= 11:
-        print("get_y_pred_ann_torch_weighting")
-        print(best)
-        print("len best", len(best))
+        logger.debug("get_y_pred_ann_torch_weighting")
+        logger.debug("best: %s", best)
+        logger.debug("len best: %s", len(best))
 
     y_test = ml_grid_object.y_test
     X_test_orig = ml_grid_object.X_test_orig
@@ -75,7 +77,7 @@ def get_y_pred_ann_torch_weighting(
     target_ensemble = best[0]
     if valid:
         if ml_grid_object.verbose >= 1:
-            print(f"Evaluating ANN weighted ensemble on validation set: {valid}")
+            logger.info(f"Evaluating ANN weighted ensemble on validation set: {valid}")
         x_test = X_test_orig.copy()
         y_test_ann = y_test_orig.copy()
 
@@ -87,7 +89,7 @@ def get_y_pred_ann_torch_weighting(
             if not isinstance(target_ensemble[i][1], BinaryClassification):
                 model = target_ensemble[i][1]
                 if ml_grid_object.verbose >= 2:
-                    print(f"Fitting model {i+1}")
+                    logger.debug(f"Fitting model {i+1}")
                 model.fit(X_train[feature_columns], y_train)
 
                 prediction_array.append(model.predict(X_train[feature_columns]))
@@ -139,8 +141,8 @@ def get_y_pred_ann_torch_weighting(
 
     elif not valid:
         if ml_grid_object.verbose >= 11:
-            print("Training ANN weighted ensemble on full data")
-            print(target_ensemble)
+            logger.info("Training ANN weighted ensemble on full data")
+            logger.debug("target_ensemble: %s", target_ensemble)
         prediction_array = []
         for i in tqdm(range(0, len(target_ensemble))):
             prediction_array.append(target_ensemble[i][5])
@@ -175,7 +177,7 @@ def get_y_pred_ann_torch_weighting(
     )
 
     if any(np.isnan(y_pred_ensemble)):
-        print("Torch model nan, returning random y pred vector")
+        logger.warning("Torch model nan, returning random y pred vector")
         random_y_pred_vector = (
             np.random.choice(
                 a=[False, True],
@@ -195,16 +197,16 @@ def get_y_pred_ann_torch_weighting(
     auc_score_weighted = round(metrics.roc_auc_score(y_test_ann, y_pred_ensemble), 4)
 
     if ml_grid_object.verbose >= 5:
-        print("ANN unweighted ensemble AUC: ", auc)
-        print("ANN weighted   ensemble AUC: ", auc_score_weighted)
-        print("ANN weighted   ensemble AUC difference: ", auc_score_weighted - auc)
-        print("ANN unweighted ensemble MCC: ", mccscore_unweighted)
-        print("ANN weighted   ensemble MCC: ", mccscore_weighted)
+        logger.info("ANN unweighted ensemble AUC: %s", auc)
+        logger.info("ANN weighted   ensemble AUC: %s", auc_score_weighted)
+        logger.info("ANN weighted   ensemble AUC difference: %s", auc_score_weighted - auc)
+        logger.info("ANN unweighted ensemble MCC: %s", mccscore_unweighted)
+        logger.info("ANN weighted   ensemble MCC: %s", mccscore_weighted)
 
     end = time.time()
     model_train_time = int(end - start)
     if ml_grid_object.verbose >= 5:
-        print("Model training time: ", model_train_time)
+        logger.info("Model training time: %s", model_train_time)
     torch.cuda.empty_cache()
 
     return y_pred_ensemble
@@ -306,7 +308,7 @@ def train_ann_weight(
             epoch_loss += loss.item()
             epoch_acc += acc.item()
 
-        print(
+        logger.debug(
             f"Epoch {e:03}: | Loss: {epoch_loss/len(train_loader):.5f} | Acc: {epoch_acc/len(train_loader):.3f}"
         )
 

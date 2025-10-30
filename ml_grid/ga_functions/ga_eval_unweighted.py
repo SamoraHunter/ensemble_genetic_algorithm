@@ -1,6 +1,7 @@
 """Evaluate an unweighted ensemble."""
 
 from typing import Any, List
+import logging
 
 import numpy as np
 import torch
@@ -8,6 +9,7 @@ from scipy import stats
 
 from ml_grid.ga_functions.ga_ann_util import BinaryClassification, TestData
 
+logger = logging.getLogger("ensemble_ga")
 
 def get_unweighted_ensemble_predictions_eval(
     best: List, ml_grid_object: Any, valid: bool = False
@@ -35,14 +37,11 @@ def get_unweighted_ensemble_predictions_eval(
         determined by majority vote.
     """
 
-    if ml_grid_object.verbose >= 1:
-        print("get_unweighted_ensemble_predictions_eval: best:")
-        print(best)
-        print("len(best)")
-        print(len(best))
-        print("len(best[0])")
-        print(len(best[0]))
-        print("Valid", valid)
+    if ml_grid_object.verbose >= 2:
+        logger.debug("get_unweighted_ensemble_predictions_eval: best: %s", best)
+        logger.debug("len(best): %s", len(best))
+        logger.debug("len(best[0]): %s", len(best[0]))
+        logger.debug("Valid: %s", valid)
 
     X_test_orig = ml_grid_object.X_test_orig
     X_train = ml_grid_object.X_train
@@ -53,11 +52,11 @@ def get_unweighted_ensemble_predictions_eval(
     if valid:
         x_test = X_test_orig.copy()
         if ml_grid_object.verbose >= 1:
-            print("Predicting on validation set...")
+            logger.info("Predicting on validation set...")
     else:
         x_test = X_test.copy()
         if ml_grid_object.verbose >= 1:
-            print("Predicting on test set...")
+            logger.info("Predicting on test set...")
 
     prediction_array = []
     target_ensemble = best[0]
@@ -69,7 +68,7 @@ def get_unweighted_ensemble_predictions_eval(
         if not isinstance(target_ensemble[i][1], BinaryClassification):
             model = target_ensemble[i][1]
             if ml_grid_object.verbose >= 2:
-                print(f"Fitting model {i+1}")
+                logger.debug(f"Fitting model {i+1}")
             model.fit(X_train[feature_columns], y_train)
 
             prediction_array.append(model.predict(x_test[feature_columns]))
