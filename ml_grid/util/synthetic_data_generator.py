@@ -418,11 +418,11 @@ class SyntheticDataGenerator:
 #     )
 #     synthetic_df = generator.generate_data()
 
-#     logger.info("\nGenerated DataFrame head:")
-#     logger.info(synthetic_df.head())
+#     logger.info("\nGenerated DataFrame head:\n%s", synthetic_df.head())
 
 #     logger.info("\nInfo:")
-#     synthetic_df.info()
+#     # .info() prints to stdout, so we can't directly capture it with the logger easily.
+#     # For debugging, this is often acceptable.
 
 #     # Save to a CSV file for use in the pipeline
 #     output_path = "synthetic_data_for_testing.csv"

@@ -280,8 +280,7 @@ class GA_results_explorer:
         plt.show()
 
         # Print the detailed results table
-        logger.info("\nANOVA F-test Results (sorted by importance):")
-        logger.info(results_df.to_string())
+        logger.info("\nANOVA F-test Results (sorted by importance):\n%s", results_df.to_string())
 
     def plot_run_details_anova_feature_importances(
         self, outcome_variable: str = "auc", plot_dir: Optional[str] = None
@@ -402,8 +401,7 @@ class GA_results_explorer:
         plt.show()
 
         # Print the detailed results table
-        logger.info("\nANOVA F-test Results (sorted by importance):")
-        logger.info(results_df.to_string())
+        logger.info("\nANOVA F-test Results (sorted by importance):\n%s", results_df.to_string())
 
     def plot_combined_anova_feature_importances(
         self, outcome_variable: str = "auc", plot_dir: Optional[str] = None
@@ -514,8 +512,7 @@ class GA_results_explorer:
         plt.close()
 
         # Print the detailed results table
-        logger.info("\nCombined ANOVA F-test Results (sorted by importance):")
-        logger.info(results_df.to_string())
+        logger.info("\nCombined ANOVA F-test Results (sorted by importance):\n%s", results_df.to_string())
 
     def plot_initial_feature_importance(self, outcome_variable="auc", plot_dir=None):
         """
@@ -689,8 +686,7 @@ class GA_results_explorer:
         plt.close()
 
         # 5. Print the results table
-        logger.info("\nInitial Feature Importance (sorted):")
-        logger.info(results_df.to_string())
+        logger.info("\nInitial Feature Importance (sorted):\n%s", results_df.to_string())
 
     def plot_base_learner_feature_importance(
         self, outcome_variable: str = "auc", plot_dir: Optional[str] = None
@@ -825,8 +821,7 @@ class GA_results_explorer:
         plt.close()
 
         # 6. Print the results table
-        logger.info("\nBase Learner Feature Importance (sorted):")
-        logger.info(results_df.to_string())
+        logger.info("\nBase Learner Feature Importance (sorted):\n%s", results_df.to_string())
 
     def plot_parameter_distributions(self, param_type="config", plot_dir=None):
         """
