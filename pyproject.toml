@@ -60,6 +60,8 @@ Repository = "https://github.com/SamoraHunter/ensemble_genetic_algorithm"
 dev = [
     "pytest",
     "pre-commit",
+    "black",
+    "ruff",
     "nbformat", 
     "session-info",
     "nbconvert", 
@@ -82,3 +84,21 @@ all = [
 [tool.setuptools]
 # Explicitly tell setuptools which directory contains the package source code.
 packages = ["ml_grid"]
+
+[tool.black]
+line-length = 88
+target-version = ["py310"]
+
+[tool.ruff]
+# Set the same line length as Black.
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+# Enable Pyflakes (F), pycodestyle (E, W), and isort (I) rules.
+select = ["E", "F", "I", "W"]
+ignore = ["E501"] # line too long, handled by Black
+
+[tool.ruff.lint.isort]
+# Tell ruff that `ml_grid` is a first-party module.
+known-first-party = ["ml_grid"]
