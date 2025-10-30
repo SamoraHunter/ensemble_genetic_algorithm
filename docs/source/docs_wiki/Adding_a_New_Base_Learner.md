@@ -85,10 +85,10 @@ Now, you can use your new model generator in your experiments. The framework aut
     # in config.yml
     global_params:
       model_list:
-        - "logisticRegression"
-        - "randomForest"
-        - "XGBoost"
-        - "SGDClassifierModelGenerator" # Add your new model's class name here
+        - "LogisticRegressionModelGenerator"
+        - "RandomForestModelGenerator"
+        - "XGBoostModelGenerator"
+        - "SGDClassifierModelGenerator" # Add your new model's class name
     ```
 
 That's it! When you run an experiment using `main.py`, the framework will now be able to select, tune, and include `SGDClassifier` in the ensembles it evolves. You can follow this same pattern to add any scikit-learn compatible classifier to the project.

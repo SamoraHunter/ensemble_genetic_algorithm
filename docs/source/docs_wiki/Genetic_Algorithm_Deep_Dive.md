@@ -1,6 +1,6 @@
 # Genetic Algorithm Deep Dive
 
-This guide provides a more detailed, code-oriented explanation of the core genetic algorithm (GA) process implemented in this project. It complements the high-level [Architectural Overview](docs_wiki/Architectural_Overview.md) and the theoretical [Technical Deep Dive](docs_wiki/Technical-Deep-Dive.md).
+This guide provides a more detailed, code-oriented explanation of the core genetic algorithm (GA) process implemented in this project. It complements the high-level {doc}`Architectural_Overview` and the theoretical {doc}`Technical-Deep-Dive`.
 
 ---
 

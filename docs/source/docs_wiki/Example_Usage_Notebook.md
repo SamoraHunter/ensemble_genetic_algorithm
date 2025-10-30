@@ -40,15 +40,14 @@ The first few cells prepare the environment for a new experiment.
 
 ### 2. Experiment Configuration
 
-This is the primary section where you can customize the experiment to fit your needs. Key parameters include:
-
--   `input_csv_path`: The path to your dataset. By default, it points to `synthetic_data_for_testing.csv`, but you should change this to the path of your own data file.
--   `n_iter`: The number of grid search iterations to perform. Each iteration runs the genetic algorithm with a different set of hyperparameters.
--   `modelFuncList`: A Python list containing the base machine learning models that the genetic algorithm can choose from to build ensembles. You can add or remove models from this list to customize the search space.
+The notebook is designed to be configured via the `config.yml` file in the project's root directory. Before running the notebook, you should edit `config.yml` to set key parameters like:
+-   `input_csv_path`: The path to your dataset.
+-   `n_iter`: The number of grid search iterations.
+-   `model_list`: The base learners to use in the experiment.
 
 ### 3. Main Experiment Loop (Execution)
 
-The core of the notebook is a `for` loop that iterates `n_iter` times. In each iteration:
+The core of the notebook is a `for` loop that iterates `n_iter` times (as defined in `config.yml`). In each iteration:
 
 1.  A new set of hyperparameters is selected from the predefined search space (`grid_param_space_ga`).
 2.  An `ml_grid_object` is created, which encapsulates all the settings for that specific run (data, parameters, paths, etc.).
@@ -82,11 +81,11 @@ The final section of the notebook performs a robust evaluation of the best-perfo
 
 ## Customizing Your Experiment
 
-To adapt the notebook for your own research, you will primarily need to modify the **Configuration** section:
+To adapt the notebook for your own research, you will primarily need to modify the `config.yml` file:
 
 1.  **Set `input_csv_path`**: Change the file path to point to your dataset.
-2.  **Adjust `n_iter`**: Increase this value for a more thorough grid search (e.g., `50` or `100`), but be aware that this will increase the total runtime.
-3.  **Modify `modelFuncList`**: Curate the list of base learners to include the algorithms you want to explore.
-4.  **Review `ml_grid.pipeline.data.pipe` arguments**: You can further customize data sampling (`test_sample_n`, `column_sample_n`) and other settings within the main loop.
+2.  **Adjust `n_iter`**: Increase this value for a more thorough grid search (e.g., `50` or `100`).
+3.  **Modify `model_list`**: Curate the list of base learners to include the algorithms you want to explore.
+4.  **Tune `ga_params` and `grid_params`**: Adjust the search space for the genetic algorithm and data processing steps as needed.
 
 By following this structure, you can systematically run, analyze, and validate complex ensemble models for your specific classification problem.

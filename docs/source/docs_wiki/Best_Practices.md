@@ -8,8 +8,9 @@ This guide provides a collection of best practices, tips, and common workflows t
 
 When starting with a new dataset or a new research question, avoid running a large-scale experiment immediately.
 
--   **Use the Test Grid**: In your experiment script (e.g., `example_usage.ipynb`), set `testing=True` when calling `ml_grid.pipeline.data.pipe`. This uses a much smaller, predefined hyperparameter grid (`nb_params`, `pop_params`, `g_params`) that runs very quickly, allowing you to verify that your entire pipeline works without errors.
+-   **Use the Test Grid**: In your `config.yml`, set `testing: True` under `global_params`. This uses a much smaller, predefined hyperparameter grid (`nb_params`, `pop_params`, `g_params`) that runs very quickly, allowing you to verify that your entire pipeline works without errors.
     ```yaml
+    # In config.yml
     global_params:
       testing: True
     ```

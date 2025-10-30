@@ -55,15 +55,15 @@ This happens because some models (like scikit-learn's `LogisticRegression` or `S
 #### Problem: The experiment runs out of memory (`MemoryError`).
 
 **Solutions:**
-1.  **Reduce Population Size**: In your `config.yml`, use smaller values for `pop_params` under the `ga_params` section.
-2.  **Reduce Data Size**: For testing, either use a smaller input CSV file or set `testing: True` in your `config.yml` under `global_params`. This uses a much smaller test grid.
-3.  **Disable Model Caching**: In your `config.yml`, set `store_base_learners: False` under `global_params`.
+1.  **Reduce Population Size**: In your `config.yml`, use smaller values for `pop_params` under the `ga_params` section (e.g., `[32]`).
+2.  **Reduce Data Size**: For testing, either use a smaller input CSV file or set `testing: True` in your `config.yml` under `global_params`. You can also set `test_sample_n` to a small number (e.g., `1000`) to sample your data.
+3.  **Disable Model Caching**: In your `config.yml`, set `store_base_learners: [False]` under `grid_params`.
 
 #### Problem: The experiment is running very slowly.
 
 **Solutions:**
 1.  **Start Small**: For initial runs, set `n_iter` to a low number (e.g., 1-3) and `testing: True` in your `config.yml` under `global_params`.
-2.  **Use Model Caching**: For subsequent runs, use the model caching feature (`use_stored_base_learners=True`) to avoid retraining models. See Best Practices.
+2.  **Use Model Caching**: For subsequent runs, set `use_stored_base_learners: [True]` in `grid_params` to avoid retraining models. See Best Practices.
 3.  **Simplify Weighting**: In your `config.yml`, limit the `weighted` list under `grid_params` to `["unweighted"]` for fast runs. `'de'` and `'ann'` are much slower.
 
 #### Problem: The genetic algorithm's fitness score is not improving (the convergence plot is flat).

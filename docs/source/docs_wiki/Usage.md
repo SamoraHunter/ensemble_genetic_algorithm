@@ -57,14 +57,14 @@ The following diagram illustrates this workflow:
 
 ---
 
-## Alternative: Running the Example Notebook
+## Alternative: Programmatic Usage with the Example Notebook
 
-For development, debugging, or a more interactive, step-by-step walkthrough, you can use the `example_usage.ipynb` notebook. See the {doc}`Example_Usage_Notebook` guide for a detailed breakdown of its contents.
+For development, debugging, or a more interactive walkthrough, you can use the `example_usage.ipynb` notebook. This notebook provides a script-based implementation of the same workflow orchestrated by `main.py`. See the {doc}`Example_Usage_Notebook` guide for a detailed breakdown of its contents.
 
 To execute the notebook from the command line (useful for HPC environments), use the following command from the **root** of the repository:
 
 ```bash
-jupyter nbconvert --to notebook --execute notebooks/example_usage.ipynb --output notebooks/executed_example_usage.ipynb
+jupyter nbconvert --to notebook --execute notebooks/example_usage.ipynb --output notebooks/example_usage_executed.ipynb
 ```
 
 This command will:

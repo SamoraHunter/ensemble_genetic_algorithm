@@ -17,11 +17,11 @@ The `Grid` class in `grid_param_space_ga.py` defines the search space for the ou
     -   `'de'`: Uses **Differential Evolution** to find optimal linear weights for the base learners. More computationally expensive but can improve performance.
     -   `'ann'`: Trains a small **Artificial Neural Network** to learn a non-linear combination of predictions. The most expensive method, but potentially the most powerful.
 
--   `store_base_learners`: A boolean.
+-   `store_base_learners`: A boolean, configured in `config.yml` under `grid_params`.
     -   If `True`, every trained base learner is saved to disk. This is necessary if you want to use `use_stored_base_learners` in a subsequent run.
     -   **Warning**: This can consume a very large amount of disk space.
 
--   `use_stored_base_learners`: A boolean.
+-   `use_stored_base_learners`: A boolean, configured in `config.yml` under `grid_params`.
     -   If `True`, the experiment will load and reuse previously trained and saved base learners instead of training new ones. This can dramatically speed up experiments if you are re-running with similar data configurations.
 
 ---
@@ -47,7 +47,7 @@ The `Grid` class in `grid_param_space_ga.py` defines the search space for the ou
 
 ### Genetic Algorithm Evolutionary Parameters
 
-These parameters, defined in the `grid` dictionary, control the core evolutionary operators from the `DEAP` library.
+These parameters, defined in `config.yml` under `grid_params`, control the core evolutionary operators from the `DEAP` library.
 
 -   `cxpb`: **Crossover Probability**. The probability that two selected parent individuals will undergo crossover to create offspring. A higher value encourages exploration of new combinations.
 
@@ -74,7 +74,7 @@ These parameters are set in the `ga_params` section of your `config.yml` file an
 ### Miscellaneous Parameters
 
 -   `n_features`: The number of features to use. Currently hardcoded to `['all']` in the default grid, but the framework could be extended to use numerical values for feature subset selection.
-
+-
 -   `param_space_size`: A string (e.g., `'small'`, `'medium'`, `'large'`) that controls the size of the hyperparameter search space for the individual base learners. This allows you to manage the trade-off between thoroughness of tuning and computational cost.
 
 -   `n_unique_out`: The number of unique outcomes. While the project is focused on binary classification, this parameter is included for potential future extensions to multiclass problems.

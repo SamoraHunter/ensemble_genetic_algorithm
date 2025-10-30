@@ -44,11 +44,13 @@ First, an instance of `EnsembleEvaluator` is created:
 
 ```python
 from ml_grid.util.evaluate_ensemble_methods import EnsembleEvaluator
+import pandas as pd
 
 evaluator = EnsembleEvaluator(
-    input_csv_path=input_csv_path,
+    input_csv_path="path/to/your/data.csv",
     outcome_variable="outcome_var_1",
-    initial_param_dict={"resample": None},
+    # This dict can be used for initial data processing settings
+    initial_param_dict={"resample": None}, 
     debug=False
 )
 ```

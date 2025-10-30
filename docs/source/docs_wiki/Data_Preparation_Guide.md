@@ -34,7 +34,7 @@ This is the most important requirement.
 ### 5. Missing Values (NaNs)
 
 -   The framework has a built-in mechanism to handle missing data. The `percent_missing` parameter in the configuration grid (`grid_param_space_ga.py`) allows you to specify a threshold for column removal. For example, a value of `99.8` will remove any column that has more than 99.8% missing values.
--   The framework has a built-in mechanism to handle missing data. The `percent_missing` parameter, configured in your `config.yml` under `grid_params`, allows you to specify a threshold for column removal. For example, a value of `99.8` will remove any column that has more than 99.8% missing values.
+-   The `percent_missing` parameter, configured in your `config.yml` under `grid_params`, allows you to specify a threshold for column removal. For example, a value of `99.8` will remove any column that has more than 99.8% missing values.
 -   Remaining missing values in the data are typically handled by the base learners, many of which (like XGBoost) can handle NaNs natively. For others, you may need to perform imputation before running the experiment if you encounter errors.
 
 ---

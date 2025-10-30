@@ -1,7 +1,6 @@
 # Ensemble Genetic Algorithm
 
-[![GA Project Test](https://github.com/SamoraHunter/ensemble_genetic_algorithm/actions/workflows/notebook-test.yml/badge.svg)](https://github.com/SamoraHunter/ensemble_genetic_algorithm/actions/workflows/notebook-test.yml)
-[![Documentation Status](https://readthedocs.org/projects/ensemble-genetic-algorithm/badge/?version=latest)](https://ensemble-genetic-algorithm.readthedocs.io/en/latest/?badge=latest)
+[![GA Project Test](https://github.com/SamoraHunter/ensemble_genetic_algorithm/actions/workflows/notebook-test.yml/badge.svg)](https://github.com/SamoraHunter/ensemble_genetic_algorithm/actions/workflows/notebook-test.yml) [![Build and Deploy Docs](https://github.com/SamoraHunter/ensemble_genetic_algorithm/actions/workflows/docs.yml/badge.svg)](https://samorahunter.github.io/ensemble_genetic_algorithm/)
 [![PyPI version](https://badge.fury.io/py/ensemble-genetic-algorithm.svg)](https://badge.fury.io/py/ensemble-genetic-algorithm)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -129,8 +128,12 @@ The `main.py` script is the primary entry point for running experiments.
 For development or debugging, you can still run the pipeline within a Python script or Jupyter notebook.
 
 ```python
+import datetime
+import os
+import pathlib
 from tqdm import tqdm
-from ml_grid.pipeline import main_ga, data
+
+from ml_grid.pipeline import data, main_ga
 from ml_grid.util.global_params import global_parameters
 from ml_grid.util.grid_param_space_ga import Grid
 
@@ -138,25 +141,36 @@ from ml_grid.util.grid_param_space_ga import Grid
 config_path = 'config.yml'
 global_params = global_parameters(config_path=config_path)
 
-# 2. Define the search space
+# 2. Create a unique, timestamped directory for the experiment run
+timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+run_specific_dir = os.path.join(global_params.base_project_dir, timestamp)
+pathlib.Path(run_specific_dir).mkdir(parents=True, exist_ok=True)
+
+# 3. Update global_params to use this new directory for all outputs
+global_params.base_project_dir = run_specific_dir
+
+# 4. Define the search space from the config
 grid = Grid(
     global_params=global_params,
     config_path=config_path
 )
 
-# 3. Run the main experiment loop
+# 5. Run the main experiment loop
 for i in tqdm(range(global_params.n_iter)):
     local_param_dict = next(grid.settings_list_iterator)
+    
     # The data pipeline prepares the data for this specific iteration
     ml_grid_object = data.pipe(
         global_params=global_params,
         file_name=global_params.input_csv_path,
         local_param_dict=local_param_dict,
-        base_project_dir=global_params.base_project_dir,
         param_space_index=i,
-        drop_term_list=[],
     )
-    main_ga.run(ml_grid_object, local_param_dict=local_param_dict, global_params=global_params).execute()
+    main_ga.run(
+        ml_grid_object, 
+        local_param_dict=local_param_dict, 
+        global_params=global_params
+    ).execute()
 ```
 
 ## Configuration

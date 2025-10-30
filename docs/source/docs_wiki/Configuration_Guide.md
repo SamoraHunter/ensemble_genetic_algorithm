@@ -27,15 +27,17 @@ global_params:
   # Number of grid search iterations to run
   n_iter: 20
   # List of models to include in the base learner pool
-  model_list: ["logisticRegression", "randomForest", "XGBoost", "Pytorch_binary_class"]
+  model_list: ["logisticRegression", "randomForest", "XGBoost"]
   # Verbosity level for console output
   verbose: 2
   # Number of parallel jobs for grid search
   grid_n_jobs: 8
-  # Whether to cache trained base learners to speed up subsequent runs
-  store_base_learners: True
   # The root directory for saving project outputs
   base_project_dir: "HFE_GA_experiments/"
+  # Use a smaller, faster grid for testing and debugging
+  testing: False
+  # Number of rows to sample from the dataset for quick tests (0 = use all)
+  test_sample_n: 0
 ```
 
 ### 2. `ga_params`
