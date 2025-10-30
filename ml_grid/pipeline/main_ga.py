@@ -535,7 +535,6 @@ class run:
                     self.project_score_save_object.update_score_log(
                         # self=self.project_score_save_object,
                         ml_grid_object=self.ml_grid_object,
-                        scores=scores,
                         best_pred_orig=best_pred_orig,
                         current_algorithm=current_algorithm,
                         method_name=method_name,
