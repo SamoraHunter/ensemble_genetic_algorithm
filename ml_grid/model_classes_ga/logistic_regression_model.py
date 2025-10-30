@@ -8,6 +8,9 @@ from ml_grid.util.get_feature_selection_class_ga import feature_selection_method
 from ml_grid.util.model_methods_ga import store_model
 from sklearn import metrics
 from sklearn.linear_model import LogisticRegression
+import logging
+
+logger = logging.getLogger("ensemble_ga")
 
 
 def logisticRegressionModelGenerator(
@@ -75,7 +78,7 @@ def logisticRegressionModelGenerator(
     model.fit(X_train, y_train)
     y_train_hat = model.predict(X_train)
     score = model.score(X_test, y_test)
-    # print(score)
+    logger.debug(f"LogisticRegression score: {score}")
     y_pred = model.predict(X_test)
     mccscore = metrics.matthews_corrcoef(y_test, y_pred)
     try:
@@ -86,7 +89,6 @@ def logisticRegressionModelGenerator(
     model_train_time = int(end - start)
     if verbose >= 2:
         debug_base_learner(model, mccscore, X_train, auc_score, model_train_time)
-        # print(sample_parameter_space)
 
     if store_base_learners:
         store_model(

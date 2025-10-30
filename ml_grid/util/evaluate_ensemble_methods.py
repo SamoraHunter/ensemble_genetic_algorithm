@@ -374,9 +374,7 @@ class EnsembleEvaluator:
                         logger.error(
                             f"Error evaluating ensemble {i+1} with method {weight_method}: {e}"
                         )
-                        import traceback
-
-                        traceback.print_exc()
+                        logger.exception(e)
                         # Add a result with zero scores to maintain consistency
                         result = {
                             "row_index": row_idx,

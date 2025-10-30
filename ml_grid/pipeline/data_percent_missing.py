@@ -47,9 +47,6 @@ def handle_percent_missing(
 
     percent_missing_threshold = local_param_dict.get("percent_missing")
     if percent_missing_threshold is not None and percent_missing_dict:
-        # print(
-        #     f"Identifying columns with > {percent_missing_threshold} percent missing data..."
-        # )
 
         # Iterate through columns
         for col in all_df_columns:

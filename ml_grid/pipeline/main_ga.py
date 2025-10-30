@@ -381,15 +381,10 @@ class run:
                     logger.info("mutate")
                     for mutant in offspring:
                         if random.random() < MUTPB:
-                            # print(mutant[0][0])
-                            # mutant[0][0] = baseLearnerGenerator()#
-                            # print(offspring[counter])
                             mutatedEnsemble = mutateEnsemble(
                                 offspring[counter], ml_grid_object=self.ml_grid_object
                             )
                             offspring[counter] = mutatedEnsemble
-                            # print("mutated into:")
-                            # print(mutatedEnsemble)
                             # toolbox.mutateEnsemble(mutant[0])
                             # toolbox.mutate(mutant[0][0])
                             del mutant.fitness.values

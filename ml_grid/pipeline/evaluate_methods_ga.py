@@ -164,13 +164,7 @@ def evaluate_weighted_ensemble_auc(
 
     aucScoresList = []
 
-    # print("Evaluating individual of size: ", len(individual[0]))
-
-    # individual_data = individual[0]
-
     y_pred = get_y_pred_resolver(individual, ml_grid_object, valid=False)
-
-    # print(y_test.shape, y_pred.shape, )
     # should write mcc parallel instead of auc also, need pair functions
     try:
         auc = metrics.roc_auc_score(y_test, y_pred)

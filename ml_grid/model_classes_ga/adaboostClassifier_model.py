@@ -109,8 +109,11 @@ def AdaBoostClassifierModelGenerator(
     end = time.time()
     model_train_time = int(end - start)
 
+    verbose = global_parameter_val.verbose
+
     # Print performance of base learner
-    debug_base_learner(model, mccscore, X_train, auc_score, model_train_time)
+    if verbose >= 2:
+        debug_base_learner(model, mccscore, X_train, auc_score, model_train_time)
 
     if store_base_learners:
         # Store the model, performance, and other relevant information

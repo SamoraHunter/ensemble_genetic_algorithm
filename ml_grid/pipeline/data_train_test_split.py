@@ -140,7 +140,4 @@ def is_valid_shape(input_data: Union[pd.DataFrame, np.ndarray]) -> bool:
 
 # local_param_dict = {k: v if v!= 'nan' else None for k, v in local_param_dict.items()}
 
-# print(local_param_dict)
-
-
 # X_train, X_test, y_train, y_test, X_train_orig, y_test_orig = get_data_split(X, y, local_param_dict)

@@ -11,6 +11,9 @@ from sklearn import metrics
 from ml_grid.util.debug_methods_ga import debug_base_learner
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
 from ml_grid.util.model_methods_ga import store_model
+import logging
+
+logger = logging.getLogger("ensemble_ga")
 
 
 def elasticNeuralNetworkModelGenerator(
@@ -88,7 +91,7 @@ def elasticNeuralNetworkModelGenerator(
     model.fit(X_train, y_train)
     y_train_hat = model.predict(X_train)
     score = model.score(X_test, y_test)
-    # print(score)
+    logger.debug(f"ElasticNet score: {score}")
     y_pred = model.predict(X_test)
     mccscore = matthews_corrcoef(y_test, y_pred)
 

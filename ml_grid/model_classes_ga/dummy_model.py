@@ -3,6 +3,9 @@ import numpy as np
 from typing import Any, Dict, List, Tuple
 from ml_grid.model_classes_ga.perceptron_dummy_model import perceptronModelGen_dummy
 from sklearn.linear_model import Perceptron
+import logging
+
+logger = logging.getLogger("ensemble_ga")
 
 
 class DummyModelGenerator:
@@ -85,4 +88,4 @@ class DummyModelGenerator:
 
 # # Call the dummy_model_gen method
 # result = dummy_generator.dummy_model_gen(ml_grid_object, local_param_dict)  # Make sure ml_grid_object and local_param_dict are defined
-# print(result)
+# logger.info(result)

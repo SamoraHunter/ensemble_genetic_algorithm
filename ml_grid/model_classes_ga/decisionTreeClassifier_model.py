@@ -10,7 +10,9 @@ from ml_grid.util.get_feature_selection_class_ga import feature_selection_method
 from ml_grid.util.model_methods_ga import store_model
 from ml_grid.util.param_space import ParamSpace
 from ml_grid.util.validate_param_methods import validate_max_leaf_nodes
+import logging
 
+logger = logging.getLogger("ensemble_ga")
 
 def DecisionTreeClassifierModelGenerator(
     ml_grid_object: Any, local_param_dict: Dict
@@ -99,8 +101,8 @@ def DecisionTreeClassifierModelGenerator(
     if sample_parameter_space.get("min_samples_split") == 0.0:
         sample_parameter_space["min_samples_split"] = 0.001
     # fit model with random sample of global parameter space
-    # display(sample_parameter_space)
     sample_parameter_space = validate_max_leaf_nodes(sample_parameter_space)
+    logger.debug(sample_parameter_space)
 
     model = DecisionTreeClassifier(**sample_parameter_space)
 

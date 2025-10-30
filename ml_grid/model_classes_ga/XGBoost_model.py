@@ -1,6 +1,6 @@
 import random
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, cast
 import logging
 import numpy as np
 from sklearn.metrics import matthews_corrcoef, roc_auc_score
@@ -10,6 +10,8 @@ from ml_grid.ga_functions.ga_ann_util import get_free_gpu
 from ml_grid.util.debug_methods_ga import debug_base_learner
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
 from ml_grid.util.model_methods_ga import store_model
+
+logger = logging.getLogger("ensemble_ga")
 
 
 def XGBoostModelGenerator(
@@ -136,7 +138,7 @@ def XGBoostModelGenerator(
         mccscore = matthews_corrcoef(y_test, y_pred)
         auc_score = round(metrics.roc_auc_score(y_test, y_pred), 4)
     except Exception as e:
-        logging.error(f"Error occurred: {e}")
+        logger.error(f"Error occurred: {e}")
         model = XGBClassifier(
             gamma=gamma_n,
             reg_alpha=reg_alpha_n,

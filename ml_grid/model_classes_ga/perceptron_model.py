@@ -106,12 +106,6 @@ def perceptronModelGenerator(
             y_pred,
         )
 
-    if ml_grid_object.verbose >= 1:
-        logger.info(
-            "%s, %s, %s, %s, %s, %s",
-            mccscore, model, list(X_train.columns), model_train_time, auc_score, y_pred
-        )
-
     return (
         mccscore,
         model,

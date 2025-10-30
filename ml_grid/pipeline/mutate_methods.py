@@ -17,8 +17,6 @@ def baseLearnerGenerator(ml_grid_object):
 
 
 def mutateEnsemble(individual, ml_grid_object):
-    # print(individual[0])
-    # print(len(individual[0]))
     try:
         logger.debug("original individual of size %s:", len(individual[0])-1)
         n = random.randint(0, len(individual[0]) - 1)

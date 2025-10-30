@@ -178,18 +178,15 @@ def Pytorch_binary_class_ModelGenerator(
     for key in additional_grid.keys():
         additional_param_sample[key] = random.choice(additional_grid.get(key))
 
-    if ml_grid_object.verbose > 0:
-        logger.debug(sample_parameter_space)
-
-        logger.debug(additional_param_sample)
+    logger.debug(sample_parameter_space)
+    logger.debug(additional_param_sample)
 
     free_gpu = str(get_free_gpu(ml_grid_object))
 
     # os.environ["CUDA_VISIBLE_DEVICES"]=free_gpu
 
     device = torch.device(f"cuda:{free_gpu}" if torch.cuda.is_available() else "cpu")
-    if ml_grid_object.verbose > 0:
-        logger.info(device)
+    logger.info(f"Using device: {device}")
 
     train_loader = DataLoader(
         dataset=train_data,
@@ -235,7 +232,7 @@ def Pytorch_binary_class_ModelGenerator(
             epoch_loss += loss.item()
             epoch_acc += acc.item()
     if ml_grid_object.verbose > 2:
-        logger.debug(
+        logger.info(
             f"Epoch {e+0:03}: | Loss: {epoch_loss/len(train_loader):.5f} | Acc: {epoch_acc/len(train_loader):.3f}"
         )
 
