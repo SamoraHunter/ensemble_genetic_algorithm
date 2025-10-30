@@ -6,6 +6,10 @@ from sklearn.ensemble import AdaBoostClassifier
 from sklearn.metrics import matthews_corrcoef, roc_auc_score
 from sklearn import metrics
 from ml_grid.util.debug_methods_ga import debug_base_learner
+import logging
+
+logger = logging.getLogger("ensemble_ga")
+
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
 from ml_grid.util.model_methods_ga import store_model
 from ml_grid.util.param_space import ParamSpace
@@ -47,7 +51,6 @@ def AdaBoostClassifierModelGenerator(
     # Retrieve global parameters
 
     global_parameter_val = global_parameters()
-    verbose = global_parameter_val.verbose
     store_base_learners = ml_grid_object.global_params.store_base_learners
 
     # Retrieve data
@@ -106,9 +109,8 @@ def AdaBoostClassifierModelGenerator(
     end = time.time()
     model_train_time = int(end - start)
 
-    if verbose >= 2:
-        # Print performance of base learner
-        debug_base_learner(model, mccscore, X_train, auc_score, model_train_time)
+    # Print performance of base learner
+    debug_base_learner(model, mccscore, X_train, auc_score, model_train_time)
 
     if store_base_learners:
         # Store the model, performance, and other relevant information

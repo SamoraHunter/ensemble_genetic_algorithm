@@ -1,6 +1,7 @@
 import random
 import time
 from typing import Any, Dict, List, Tuple
+import logging
 import numpy as np
 from sklearn.metrics import matthews_corrcoef, roc_auc_score
 from sklearn import metrics
@@ -135,7 +136,7 @@ def XGBoostModelGenerator(
         mccscore = matthews_corrcoef(y_test, y_pred)
         auc_score = round(metrics.roc_auc_score(y_test, y_pred), 4)
     except Exception as e:
-        print("Error occurred:", e)
+        logging.error(f"Error occurred: {e}")
         model = XGBClassifier(
             gamma=gamma_n,
             reg_alpha=reg_alpha_n,

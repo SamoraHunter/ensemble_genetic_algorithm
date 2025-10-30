@@ -42,8 +42,8 @@ def setup_logger(log_folder_path: str = ".") -> logging.Logger:
     logger.setLevel(logging.INFO)
 
     # Prevent propagation to the root logger during normal runs to avoid duplicate outputs,
-
     # but allow it during tests so that caplog can capture messages.
+    logger.propagate = False
     logger.propagate = "pytest" in sys.modules
 
     # Avoid adding duplicate handlers
