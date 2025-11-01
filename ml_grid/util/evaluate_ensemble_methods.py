@@ -258,6 +258,11 @@ class EnsembleEvaluator:
                 ensemble_record, debug=self.debug
             )
 
+            if not processed_ensembles or not processed_ensembles[0]:
+                logger.warning(f"Skipping row {row_idx}: Parsed ensemble is empty.")
+                continue
+
+
             # Convert mask to feature names for each ensemble
             def mask_to_features(mask, feature_names):
                 # mask can be a list/array of 0/1 or bool, or indices

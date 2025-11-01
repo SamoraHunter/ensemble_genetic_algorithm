@@ -353,7 +353,7 @@ class GA_results_explorer:
                     )
                 except Exception as e:
                     logger.warning(
-                        "Could not perform ANOVA for run detail '%s': %s", detail, e
+                        "Could not perform ANOVA for run detail '%s': %s", detail, e, exc_info=False
                     )
             else:
                 logger.info(

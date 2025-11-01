@@ -1,18 +1,14 @@
 import itertools
-import logging
 import random
 import time
 from typing import Any, Dict, List, Tuple
-
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from sklearn import metrics
-from sklearn.metrics import matthews_corrcoef
-from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader
-
+from sklearn.metrics import matthews_corrcoef, roc_auc_score
+from sklearn import metrics
 from ml_grid.ga_functions.ga_ann_util import (
     BinaryClassification,
     TestData,
@@ -23,6 +19,9 @@ from ml_grid.ga_functions.ga_ann_util import (
 from ml_grid.util.debug_methods_ga import debug_base_learner
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
 from ml_grid.util.model_methods_ga import store_model
+from sklearn.preprocessing import StandardScaler
+import logging
+
 from ml_grid.util.validate_param_methods import hidden_layer_size
 
 logger = logging.getLogger("ensemble_ga")
@@ -235,18 +234,18 @@ def Pytorch_binary_class_ModelGenerator(
     if ml_grid_object.verbose > 2:
         logger.info(f"Epoch {e+0:03}: | Loss: {epoch_loss/len(train_loader):.5f} | Acc: {epoch_acc/len(train_loader):.3f}")
 
+    y_pred_fallback = np.random.randint(2, size=len(y_test))
+
     try:
-        y_pred = model(test_data.X_data.to(device))
-
-        y_pred = torch.round(torch.sigmoid(y_pred)).cpu().detach().numpy().flatten()
-
-    except ValueError as e:
+        with torch.no_grad():
+            model.eval()
+            y_pred_tensor = model(test_data.X_data.to(device))
+            y_pred = torch.round(torch.sigmoid(y_pred_tensor)).cpu().numpy().flatten()
+    except Exception as e:
         if verbose >= 1:
             logger.error(e)
             logger.warning("Returning random label vector")
-            X_test_length = len(X_test)
-
-            y_pred = np.random.randint(2, size=X_test_length)
+        y_pred = y_pred_fallback
 
     # Check for and replace any NaN values before returning
     if np.isnan(y_pred).any():
@@ -254,7 +253,7 @@ def Pytorch_binary_class_ModelGenerator(
             "Warning: NaN values detected in predictions. Replacing them with random 0 or 1."
         )
         y_pred = np.nan_to_num(y_pred, nan=np.random.randint(2)).astype(
-            int
+            int # type: ignore
         )  # Replaces nan with random 0 or 1
 
     mccscore = matthews_corrcoef(y_test, y_pred)
