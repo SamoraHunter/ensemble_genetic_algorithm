@@ -48,6 +48,7 @@ dependencies = [
     "pyarrow",
     "tqdm",
     "PyYAML",
+    "cupy-cuda12x"
 ]
 
 [project.urls]

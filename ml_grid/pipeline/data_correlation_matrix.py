@@ -1,95 +1,188 @@
-import logging
-from typing import Dict, List
-
+import numpy as np
 import pandas as pd
+from typing import Dict, List, Set
 from tqdm import tqdm
-
+import logging
+import warnings
 logger = logging.getLogger("ensemble_ga")
 
 
-def correlation_coefficient(col1: pd.Series, col2: pd.Series) -> float:
-    """Calculates the Pearson correlation coefficient between two pandas Series.
-
-    Args:
-        col1: The first pandas Series.
-        col2: The second pandas Series.
-
-    Returns:
-        The correlation coefficient as a float.
-    """
-    return col1.corr(col2)
-
 
 def handle_correlation_matrix(
-    local_param_dict: Dict, drop_list: List[str], df: pd.DataFrame, chunk_size: int = 50
+    local_param_dict: Dict, drop_list: List[str], df: pd.DataFrame, chunk_size: int = 1000
 ) -> List[str]:
-    """Identifies highly correlated column pairs and adds them to a drop list.
-
-    This function calculates the correlation matrix of a DataFrame in chunks to
-    manage memory usage. It identifies pairs of columns where the absolute
-    correlation coefficient exceeds a specified threshold and returns a list
-    of these pairs.
-
-    Args:
-        local_param_dict: A dictionary containing local parameters, including
-            the 'corr' threshold.
-        drop_list: A list of column names already marked for dropping. This
-            argument is included for signature consistency but is not used.
-        df: The input DataFrame to analyze.
-        chunk_size: The number of columns to process in each chunk.
-            Defaults to 50.
-
-    Returns:
-        An updated list of columns to drop, including one column from each
-        highly correlated pair.
     """
-
-    # Define the correlation threshold
+    Hybrid Correlation Optimizer.
+    
+    Features:
+    1. Respects existing 'drop_list' (adds to it, doesn't replace it).
+    2. Optimizes by skipping columns already in 'drop_list'.
+    3. Hybrid GPU/CPU execution with robust error handling.
+    """
+    
     threshold = local_param_dict.get("corr", 0.25)
-
-    # Ensure chunk_size is at least 1
-    if chunk_size <= 0:
-        chunk_size = 1
-
-    # Remove non-numeric columns
+    
+    # Filter to numeric columns only
     numeric_columns = df.select_dtypes(include=["number"]).columns
+    
+    if len(numeric_columns) == 0:
+        return drop_list # Return existing list if no new work to do
+
+    logger.info("Preparing data (converting to float32)...")
     df_numeric = df[numeric_columns]
+    col_names = df_numeric.columns.tolist()
+    
+    # Create a mapping for fast index lookups
+    col_to_idx = {name: i for i, name in enumerate(col_names)}
+    
+    # Convert data to float32
+    data = df_numeric.values.astype(np.float32)
+    
+    # --- GPU DETECTION & SAFETY ---
+    use_gpu = False
+    try:
+        import cupy as cp
+        if cp.cuda.is_available():
+            free_mem = cp.cuda.Device().mem_info[0]
+            req_mem = (data.shape[1] ** 2) * 4  # 4 bytes per float32
+            
+            if free_mem > req_mem * 1.2:
+                use_gpu = True
+                logger.info(f"GPU Detected: {cp.cuda.Device().name}. Free VRAM: {free_mem/1e9:.2f} GB.")
+            else:
+                logger.warning("GPU detected but insufficient VRAM. Falling back to CPU.")
+    except Exception as e:
+        logger.warning(f"GPU acceleration unavailable (falling back to CPU): {e}")
+        use_gpu = False
+    # -----------------------------
 
-    if df_numeric.empty:
-        return []
+    # Convert input drop_list to a Set for O(1) lookups
+    existing_drops = set(drop_list)
 
-    n_cols = len(df_numeric.columns)
-    to_drop = set()
+    if use_gpu:
+        try:
+            return _process_on_gpu(data, col_names, threshold, existing_drops)
+        except Exception as e:
+            logger.error(f"GPU processing failed: {e}. Retrying on CPU.")
+            # Fallthrough to CPU
+            pass
 
-    # Split columns into chunks for memory efficiency
-    column_chunks = [
-        df_numeric.columns[i : i + chunk_size]
-        for i in range(0, n_cols, chunk_size)
-    ]
+    # CPU Fallback
+    return _process_on_cpu(data, col_names, col_to_idx, threshold, chunk_size, existing_drops)
 
-    with tqdm(total=n_cols, desc="Calculating Correlations") as pbar:
-        for i, chunk_cols in enumerate(column_chunks):
-            # Define the columns to correlate against: the current chunk and all subsequent chunks
-            remaining_cols = df_numeric.columns[i * chunk_size :]
 
-            # Calculate correlation for the current slice of the matrix
-            corr_matrix_chunk = df_numeric[remaining_cols].corr(numeric_only=True).abs()
-
-            # We only need to check correlations of the current chunk against all remaining columns
-            # This is equivalent to the top-left block of the chunk's correlation matrix
-            sub_matrix = corr_matrix_chunk.loc[chunk_cols, :]
-
-            # Find highly correlated pairs
-            for col1 in chunk_cols:
-                # Find correlations above the threshold, excluding self-correlation
-                correlated_series = sub_matrix.loc[col1][sub_matrix.loc[col1] > threshold]
-                for col2, _ in correlated_series.items():
-                    # If two columns are correlated, and we haven't already decided to drop col1, drop col2.
-                    if col1 != col2 and col1 not in to_drop:
-                        to_drop.add(col2)
-            pbar.update(len(chunk_cols))
-
-    logger.info(f"Identified {len(to_drop)} columns to drop due to high correlation.")
-
-    # Return a list of unique columns to drop
+def _process_on_gpu(data: np.ndarray, col_names: List[str], threshold: float, existing_drops: Set[str]) -> List[str]:
+    import cupy as cp
+    
+    n_samples = data.shape[0]
+    
+    # Initialize the final set with what we already had
+    to_drop = existing_drops.copy()
+    
+    # Move data to GPU
+    gpu_data = cp.asarray(data)
+    
+    # Standardize
+    means = gpu_data.mean(axis=0, keepdims=True)
+    stds = gpu_data.std(axis=0, keepdims=True)
+    stds[stds == 0] = 1.0
+    gpu_data = (gpu_data - means) / stds
+    
+    scale_factor = 1.0 / (n_samples - 1)
+    
+    # Matrix Multiplication
+    corr_matrix = cp.matmul(gpu_data.T, gpu_data)
+    corr_matrix *= scale_factor
+    corr_matrix = cp.abs(corr_matrix)
+    
+    # Upper Triangle only (k=1)
+    upper_tri = cp.triu(corr_matrix, k=1)
+    
+    # Get indices of high correlations
+    rows, cols = cp.where(upper_tri > threshold)
+    
+    cpu_rows = cp.asnumpy(rows)
+    cpu_cols = cp.asnumpy(cols)
+    
+    # Process pairs
+    for i, j in zip(cpu_rows, cpu_cols):
+        col_i = col_names[i]
+        col_j = col_names[j]
+        
+        # KEY LOGIC: If Col_I is already marked for drop (either from input list 
+        # or from this loop), we skip. Otherwise, we drop Col_J.
+        if col_i not in to_drop:
+            to_drop.add(col_j)
+            
+    logger.info(f"GPU complete. Total columns to drop: {len(to_drop)}")
     return sorted(list(to_drop))
+
+
+def _process_on_cpu(
+    data: np.ndarray, 
+    col_names: List[str], 
+    col_to_idx: Dict[str, int],
+    threshold: float, 
+    chunk_size: int, 
+    existing_drops: Set[str]
+) -> List[str]:
+    
+    logger.info("Using optimized CPU processing...")
+    n_samples, n_cols = data.shape
+    
+    # Standardize
+    means = data.mean(axis=0, keepdims=True)
+    stds = data.std(axis=0, keepdims=True)
+    stds[stds == 0] = 1.0
+    data = (data - means) / stds
+    
+    scale_factor = 1.0 / (n_samples - 1)
+    
+    # Initialize mask with PRE-EXISTING drops
+    # This optimizes the loop: we won't calculate correlations for columns 
+    # that came in already dropped.
+    dropped_mask = np.zeros(n_cols, dtype=bool)
+    
+    for col in existing_drops:
+        if col in col_to_idx:
+            dropped_mask[col_to_idx[col]] = True
+            
+    effective_chunk_size = max(chunk_size, 500)
+    
+    with tqdm(total=n_cols, desc="CPU Correlation") as pbar:
+        for i in range(0, n_cols, effective_chunk_size):
+            i_end = min(i + effective_chunk_size, n_cols)
+            
+            chunk_data = data[:, i:i_end]
+            
+            # Correlation Block
+            corr_chunk = np.matmul(chunk_data.T, data) * scale_factor
+            corr_chunk = np.abs(corr_chunk)
+            
+            for local_row in range(corr_chunk.shape[0]):
+                global_current_idx = i + local_row
+                
+                # OPTIMIZATION:
+                # If this column was in the input drop_list OR we just dropped it, SKIP.
+                if dropped_mask[global_current_idx]:
+                    continue
+                
+                # Check neighbors to the right
+                candidates = corr_chunk[local_row, global_current_idx + 1:]
+                hits = np.where(candidates > threshold)[0]
+                
+                if hits.size > 0:
+                    # Add to mask
+                    dropped_mask[global_current_idx + 1 + hits] = True
+            
+            pbar.update(i_end - i)
+            
+    # Convert mask back to list
+    dropped_indices = np.where(dropped_mask)[0]
+    newly_identified_drops = {col_names[i] for i in dropped_indices}
+    
+    # Merge with original list (in case original list had cols not in this dataframe)
+    final_drop_set = existing_drops.union(newly_identified_drops)
+    
+    logger.info(f"CPU complete. Total columns to drop: {len(final_drop_set)}")
+    return sorted(list(final_drop_set))

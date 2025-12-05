@@ -356,9 +356,12 @@ class pipe:
         features_before = len(self.pertubation_columns)
         # handle_correlation_matrix returns a list of columns to drop due to correlation.
         # It does not modify the passed drop_list.
+        logger.debug("Dropping columns with correlation > %s", self.local_param_dict.get('corr', 0.95))
         correlated_drops = handle_correlation_matrix(
             local_param_dict=self.local_param_dict, drop_list=self.drop_list, df=self.df
         )
+        logger.debug("Correlated drops: %s", correlated_drops)
+        
         self.drop_list.extend(correlated_drops)
         self.drop_list = list(set(self.drop_list)) # Ensure uniqueness after adding correlated drops
         features_after = len([col for col in self.pertubation_columns if col not in self.drop_list])
