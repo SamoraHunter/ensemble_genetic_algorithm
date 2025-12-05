@@ -1,5 +1,5 @@
-import unittest
 import time
+import unittest
 
 import numpy as np
 import pandas as pd
@@ -84,7 +84,7 @@ class TestHandleCorrelationMatrix(unittest.TestCase):
         target_cols = 15000  # What we want to extrapolate to
 
         print(f"\n{'='*70}")
-        print(f"Performance scaling test")
+        print("Performance scaling test")
         print(f"{'='*70}")
 
         # Create test data with known correlation patterns
@@ -134,7 +134,7 @@ class TestHandleCorrelationMatrix(unittest.TestCase):
         )
 
         print(f"\n{'='*70}")
-        print(f"RESULTS:")
+        print("RESULTS:")
         print(f"{'='*70}")
         print(f"Time for {n_cols_test} columns: {elapsed_time:.2f} seconds")
         print(f"Columns dropped: {len(result)}")
@@ -176,7 +176,7 @@ class TestHandleCorrelationMatrix(unittest.TestCase):
             len(found), 0, f"Expected to find some of {expected_in_drop} in results"
         )
 
-        print(f"\n✓ Performance test passed!")
+        print("\n✓ Performance test passed!")
         print(f"✓ Found {len(found)}/{len(expected_in_drop)} expected correlations")
         print(
             f"✓ Estimated to handle {target_cols} columns in ~{conservative_estimate/60:.1f} minutes"

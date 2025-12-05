@@ -1,9 +1,9 @@
+import logging
+from typing import Dict, List, Set
+
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Set
 from tqdm import tqdm
-import logging
-import warnings
 
 logger = logging.getLogger("ensemble_ga")
 

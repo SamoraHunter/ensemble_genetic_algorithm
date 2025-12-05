@@ -1,14 +1,18 @@
 import itertools
+import logging
 import random
 import time
 from typing import Any, Dict, List, Tuple
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
-from sklearn.metrics import matthews_corrcoef, roc_auc_score
 from sklearn import metrics
+from sklearn.metrics import matthews_corrcoef
+from sklearn.preprocessing import StandardScaler
+from torch.utils.data import DataLoader
+
 from ml_grid.ga_functions.ga_ann_util import (
     BinaryClassification,
     TestData,
@@ -19,9 +23,6 @@ from ml_grid.ga_functions.ga_ann_util import (
 from ml_grid.util.debug_methods_ga import debug_base_learner
 from ml_grid.util.get_feature_selection_class_ga import feature_selection_methods_class
 from ml_grid.util.model_methods_ga import store_model
-from sklearn.preprocessing import StandardScaler
-import logging
-
 from ml_grid.util.validate_param_methods import hidden_layer_size
 
 logger = logging.getLogger("ensemble_ga")
