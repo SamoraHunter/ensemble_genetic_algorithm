@@ -23,6 +23,7 @@ from ml_grid.util.global_params import global_parameters
 
 logger = logging.getLogger("ensemble_ga")
 
+
 def get_y_pred_resolver(
     ensemble: List, ml_grid_object: Any, valid: bool = False
 ) -> Union[List, np.ndarray]:
@@ -281,7 +282,6 @@ def evaluate_weighted_ensemble_auc(
     else:
         return (auc,)
     # return (auc,)
-
 
 
 round_v = np.vectorize(round)

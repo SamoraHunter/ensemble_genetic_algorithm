@@ -26,6 +26,7 @@ from ml_grid.util.validate_param_methods import hidden_layer_size
 
 logger = logging.getLogger("ensemble_ga")
 
+
 def predict_with_fallback(
     model: nn.Module, X_batch: torch.Tensor, y_batch: torch.Tensor
 ) -> torch.Tensor:
@@ -97,8 +98,8 @@ def Pytorch_binary_class_ModelGenerator(
 
     """
     from ml_grid.util.global_params import global_parameters
-    global_parameter_val = global_parameters()
 
+    global_parameter_val = global_parameters()
 
     verbose = global_parameter_val.verbose
     store_base_learners = ml_grid_object.global_params.store_base_learners
@@ -232,7 +233,9 @@ def Pytorch_binary_class_ModelGenerator(
             epoch_loss += loss.item()
             epoch_acc += acc.item()
     if ml_grid_object.verbose > 2:
-        logger.info(f"Epoch {e+0:03}: | Loss: {epoch_loss/len(train_loader):.5f} | Acc: {epoch_acc/len(train_loader):.3f}")
+        logger.info(
+            f"Epoch {e+0:03}: | Loss: {epoch_loss/len(train_loader):.5f} | Acc: {epoch_acc/len(train_loader):.3f}"
+        )
 
     y_pred_fallback = np.random.randint(2, size=len(y_test))
 
@@ -253,7 +256,7 @@ def Pytorch_binary_class_ModelGenerator(
             "Warning: NaN values detected in predictions. Replacing them with random 0 or 1."
         )
         y_pred = np.nan_to_num(y_pred, nan=np.random.randint(2)).astype(
-            int # type: ignore
+            int  # type: ignore
         )  # Replaces nan with random 0 or 1
 
     mccscore = matthews_corrcoef(y_test, y_pred)

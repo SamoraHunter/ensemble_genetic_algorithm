@@ -15,11 +15,10 @@ from ml_grid.util.param_space import ParamSpace
 
 logger = logging.getLogger("ensemble_ga")
 
+
 def QuadraticDiscriminantAnalysis_ModelGenerator(
     ml_grid_object: Any, local_param_dict: Dict
-) -> Tuple[
-    float, QuadraticDiscriminantAnalysis, List[str], int, float, np.ndarray
-]:
+) -> Tuple[float, QuadraticDiscriminantAnalysis, List[str], int, float, np.ndarray]:
     """Generates, trains, and evaluates a QuadraticDiscriminantAnalysis model.
 
     This function performs a single trial of training and evaluating a
@@ -53,8 +52,8 @@ def QuadraticDiscriminantAnalysis_ModelGenerator(
             - y_pred (np.ndarray): The model's predictions on the test set.
     """
     from ml_grid.util.global_params import global_parameters
-    global_parameter_val = global_parameters()
 
+    global_parameter_val = global_parameters()
 
     verbose = global_parameter_val.verbose
     store_base_learners = ml_grid_object.global_params.store_base_learners

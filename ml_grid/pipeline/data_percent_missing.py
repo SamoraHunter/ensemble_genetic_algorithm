@@ -64,7 +64,8 @@ def handle_percent_missing(
                 # This can happen if a value in percent_missing_dict is not a number
                 logger.warning(
                     "Warning: Could not compare missing percentage for column '%s'. Value was not a number. Error: %s",
-                    col, e
+                    col,
+                    e,
                 )
 
         logger.info(

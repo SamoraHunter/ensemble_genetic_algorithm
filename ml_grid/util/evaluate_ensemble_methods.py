@@ -97,9 +97,7 @@ class EnsembleEvaluator:
         self.original_feature_names = None
         self._load_and_split_data(input_csv_path, outcome_variable)
 
-    def _load_and_split_data(
-        self, input_csv_path: str, outcome_variable: str
-    ) -> None:
+    def _load_and_split_data(self, input_csv_path: str, outcome_variable: str) -> None:
         """Loads data from a CSV and splits it into train, test, and validation sets."""
         if self.debug:
             logger.debug("Loading data from: %s", input_csv_path)
@@ -177,7 +175,9 @@ class EnsembleEvaluator:
         for ensemble in ensembles:
             if not isinstance(ensemble, (list, tuple)):
                 if debug:
-                    logger.debug("[DEBUG] Skipping non-list/tuple ensemble: %s", ensemble)
+                    logger.debug(
+                        "[DEBUG] Skipping non-list/tuple ensemble: %s", ensemble
+                    )
                 continue
             processed_ensemble = []
             for model_tuple in ensemble:
@@ -225,7 +225,6 @@ class EnsembleEvaluator:
         """
         import pandas as pd
 
-
         if ensemble_indices is None:
             # Default: pick the row with the highest auc_score
             if "auc_score" in results_df.columns:
@@ -261,7 +260,6 @@ class EnsembleEvaluator:
             if not processed_ensembles or not processed_ensembles[0]:
                 logger.warning(f"Skipping row {row_idx}: Parsed ensemble is empty.")
                 continue
-
 
             # Convert mask to feature names for each ensemble
             def mask_to_features(mask, feature_names):

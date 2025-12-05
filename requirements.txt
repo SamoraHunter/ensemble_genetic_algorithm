@@ -423,3 +423,4 @@ xgboost==2.1.1
 # setuptools
 tqdm
 cupy-cuda12x
+black

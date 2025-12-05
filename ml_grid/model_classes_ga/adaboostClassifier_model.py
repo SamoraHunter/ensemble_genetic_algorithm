@@ -16,7 +16,6 @@ from ml_grid.util.param_space import ParamSpace
 logger = logging.getLogger("ensemble_ga")
 
 
-
 def AdaBoostClassifierModelGenerator(
     ml_grid_object: Any, local_param_dict: Dict
 ) -> Tuple[float, AdaBoostClassifier, List[str], int, float, np.ndarray]:

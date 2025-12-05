@@ -406,7 +406,7 @@ class project_score_save_class:
                 ml_grid_object.base_project_dir, "final_grid_score_log.csv"
             )
             line[column_list].to_csv(
-                log_file_path, # type: ignore
+                log_file_path,  # type: ignore
                 mode="a",
                 header=False,
                 index=False,

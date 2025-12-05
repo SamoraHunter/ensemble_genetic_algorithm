@@ -190,7 +190,12 @@ class run:
                             is False
                         ):
                             logger.warning("What is this?")
-                            logger.warning("%s, %s %s", elem.method_name, param, type(elem.parameter_space.get(param)))
+                            logger.warning(
+                                "%s, %s %s",
+                                elem.method_name,
+                                param,
+                                type(elem.parameter_space.get(param)),
+                            )
 
                 except Exception:
                     # logger.debug(e)
@@ -280,7 +285,9 @@ class run:
                             "error thrown in grid_search_crossvalidate on model class list"
                         )
 
-        logger.info("Model error list: nb. errors returned from func: %s", self.model_error_list)
+        logger.info(
+            "Model error list: nb. errors returned from func: %s", self.model_error_list
+        )
         logger.info(self.model_error_list)
 
         return self.model_error_list

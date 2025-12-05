@@ -269,7 +269,6 @@ def train_ann_weight(
 
     device = torch.device(f"cuda:{free_gpu}" if torch.cuda.is_available() else "cpu")
 
-
     # fit model with random sample of global parameter space
     model = BinaryClassification(**sample_parameter_space)
 

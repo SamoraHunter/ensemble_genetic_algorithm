@@ -13,6 +13,7 @@ from ml_grid.util.get_feature_selection_class_ga import feature_selection_method
 
 logger = logging.getLogger("ensemble_ga")
 
+
 def perceptronModelGen_dummy(
     ml_grid_object: Any, local_param_dict: Dict
 ) -> Tuple[float, Perceptron, List[str], int, float, np.ndarray]:
@@ -45,7 +46,6 @@ def perceptronModelGen_dummy(
             - auc_score (float): The ROC AUC score.
             - y_pred (np.ndarray): The model's predictions on the test set.
     """
-
 
     X_train = ml_grid_object.X_train
     X_test = ml_grid_object.X_test
