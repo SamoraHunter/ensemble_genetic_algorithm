@@ -74,7 +74,7 @@ greenlet==3.1.1
     #   -r requirements.in
     #   eventlet
     #   scoop
-imbalanced-learn==0.12.4
+imbalanced-learn==0.14.0
     # via
     #   -r requirements.in
     #   imblearn
@@ -316,7 +316,7 @@ pyzmq==26.2.0
 pre-commit
 pyarrow==19.0.1
     # manually added
-scikit-learn==1.5.2
+scikit-learn==1.7.2
     # via
     #   -r requirements.in
     #   imbalanced-learn
