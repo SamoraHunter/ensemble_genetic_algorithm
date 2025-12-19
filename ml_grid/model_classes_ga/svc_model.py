@@ -6,6 +6,8 @@ from typing import Any, Dict, List, Tuple
 import numpy as np
 from sklearn import metrics
 from sklearn.metrics import matthews_corrcoef
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
 from ml_grid.util.debug_methods_ga import debug_base_learner
@@ -18,7 +20,7 @@ logger = logging.getLogger("ensemble_ga")
 
 def SVC_ModelGenerator(
     ml_grid_object: Any, local_param_dict: Dict
-) -> Tuple[float, SVC, List[str], int, float, np.ndarray]:
+) -> Tuple[float, Any, List[str], int, float, np.ndarray]:
     """Generates, trains, and evaluates a Support Vector Classifier (SVC) model.
 
     This function performs a single trial of training and evaluating an SVC
@@ -102,7 +104,7 @@ def SVC_ModelGenerator(
         sample_parameter_space[key] = random.choice(parameter_space.get(key))
 
     # fit model with random sample of global parameter space
-    model = SVC(**sample_parameter_space)
+    model = make_pipeline(StandardScaler(), SVC(**sample_parameter_space))
 
     try:
         # Train the model--------------------------------------------------------------------
