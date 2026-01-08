@@ -98,7 +98,7 @@ def get_data_split(
         )
 
         # Oversample training set
-        sampling_strategy = 1
+        sampling_strategy = "auto"
         ros = RandomOverSampler(sampling_strategy=sampling_strategy, random_state=1)
         X_train_orig, y_train_orig = ros.fit_resample(X_train_orig, y_train_orig)
         logger.debug(y_train_orig.value_counts())
