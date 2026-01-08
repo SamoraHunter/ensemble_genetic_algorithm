@@ -79,6 +79,19 @@ def get_y_pred_resolver(
             y_pred = get_unweighted_ensemble_predictions(
                 ensemble, ml_grid_object, valid=valid
             )
+        except ValueError as e:
+            if "The dual coefficients or intercepts are not finite" in str(e):
+                if ml_grid_object.verbose >= 1:
+                    logger.warning(f"Caught SVC Error: {e}")
+                    logger.warning("Returning dummy predictions (zeros) to proceed.")
+
+                if valid:
+                    n_samples = len(ml_grid_object.y_test_orig)
+                else:
+                    n_samples = len(ml_grid_object.y_test)
+
+                return np.zeros(n_samples)
+            raise e
         except Exception as e:
             logger.error(
                 "exception on y_pred = get_unweighted_ensemble_predictions(ensemble, ml_grid_object, valid=valid)"
