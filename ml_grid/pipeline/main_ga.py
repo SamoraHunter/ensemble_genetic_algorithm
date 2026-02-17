@@ -524,9 +524,9 @@ class run:
                 #     myfile.close()
 
                 try:
-                    scores = metrics.roc_auc_score(self.y_test_orig, best_pred_orig)
+                    metrics.roc_auc_score(self.y_test_orig, best_pred_orig)
                 except ValueError:
-                    scores = 0.5
+                    pass
                 current_algorithm = best
                 method_name = str(best)
                 pg = "nan"
