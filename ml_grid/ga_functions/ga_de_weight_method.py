@@ -71,7 +71,7 @@ def get_weighted_ensemble_prediction_de_y_pred_valid(
                     logger.error(
                         "%s, %s, %s, %s, %s",
                         X_train.shape,
-                        X_test.shape,
+                        x_test.shape,
                         type(X_train),
                         type(y_train),
                         type(feature_columns),
