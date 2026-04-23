@@ -20,7 +20,7 @@ This page provides an overview of the key files and directories within the **Ens
 This file is crucial for modern Python project management. It defines:
 
 -   **Build System**: Specifies `setuptools` for building the package.
--   **Project Metadata**: Includes the project name (`ensemble-genetic-algorithm`), version, description, authors, license, and Python requirements (`>=3.10`).
+-   **Project Metadata**: Includes the project name (`ensemble-genetic-algorithm`), version, description, authors, license, and Python requirements (`>=3.12`).
 -   **Dependencies**: Lists all core libraries required for the project to run (e.g., `deap`, `scikit-learn`, `torch`, `pandas`).
 -   **Optional Dependencies**: Defines groups of additional dependencies for specific purposes:
     -   `dev`: For development, testing (`pytest`, `pre-commit`), and documentation (`sphinx`).
@@ -32,7 +32,7 @@ This file is crucial for modern Python project management. It defines:
 
 This shell script streamlines the environment setup process. It handles:
 
--   **Python Version Check**: Ensures Python 3.10+ is installed.
+-   **Python Version Check**: Ensures Python 3.12+ is installed.
 -   **Virtual Environment Creation**: Creates a `ga_env` virtual environment.
 -   **Dependency Installation**: Installs project dependencies using `pip install .` or `pip install -e .[option]` based on command-line arguments (`--cpu`, `--gpu`, `--dev`, `--all`).
 -   **Jupyter Kernel Setup**: Registers the virtual environment as a Jupyter kernel.

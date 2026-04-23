@@ -42,10 +42,10 @@ jobs:
           sudo apt-get install -y tzdata
           sudo dpkg-reconfigure -f noninteractive tzdata
 
-      - name: Install Python 3.10, Git, and set CA environment
+      - name: Install Python 3.12, Git, and set CA environment
         run: |
           sudo apt-get update
-          sudo apt-get install -y lsb-release
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y lsb-release software-properties-common gnupg curl git
 
           # Properly and securely add the GPG key for the deadsnakes PPA
           sudo gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys BA6932366A755776
@@ -55,11 +55,16 @@ jobs:
           echo "deb [signed-by=/usr/share/keyrings/deadsnakes-archive-keyring.gpg] http://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/deadsnakes-ppa.list
           
           sudo apt-get update
-          sudo apt-get install -y python3.10 python3.10-venv python3.10-distutils
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y python3.12 python3.12-venv python3.12-dev
 
-          # Set Python 3.10 as default using symbolic links
-          sudo ln -sf /usr/bin/python3.10 /usr/local/bin/python
-          sudo ln -sf /usr/bin/python3.10 /usr/local/bin/python3
+          # Install pip for Python 3.12 (force reinstall to avoid Debian package conflicts)
+          curl -sS https://bootstrap.pypa.io/get-pip.py | sudo python3.12 - --break-system-packages --ignore-installed
+
+          # Set Python 3.12 as default using symbolic links
+          sudo ln -sf /usr/bin/python3.12 /usr/local/bin/python
+          sudo ln -sf /usr/bin/python3.12 /usr/local/bin/python3
+
+          python --version
 
           # Set the certificate path for all subsequent steps in the job
           echo "SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt" >> $GITHUB_ENV

@@ -522,7 +522,7 @@ class pipe:
         if self.X.select_dtypes(include=["object", "string"]).shape[1] > 0:
             raise ValueError("DataFrame contains string (non-numeric) columns.")
 
-        if self.X.applymap(lambda x: isinstance(x, str)).any().any():
+        if self.X.map(lambda x: isinstance(x, str)).any().any():
             raise ValueError("DataFrame contains string values within numeric columns.")
 
         # Reset indices for clean alignment

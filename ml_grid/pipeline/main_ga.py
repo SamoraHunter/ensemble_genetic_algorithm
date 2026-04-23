@@ -177,7 +177,9 @@ class run:
             logger.debug(len(param_grid))
 
             if self.verbose >= 2:
-                logger.info(f"{len(self.model_class_list)} models loaded")
+                logger.info(
+                    f"{len(self.ml_grid_object.model_class_list)} models loaded"
+                )
 
         self.multiprocess = False
 

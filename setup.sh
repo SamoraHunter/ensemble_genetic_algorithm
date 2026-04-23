@@ -89,8 +89,8 @@ print_info "Using Python command: $PYTHON_CMD"
 PY_VERSION=$($PYTHON_CMD -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
 print_info "Python version: $PY_VERSION"
 
-if [[ "$PY_VERSION" < "3.10" ]]; then
-    print_error_and_exit "Python 3.10 or higher is required. Found: $PY_VERSION"
+if [[ "$PY_VERSION" < "3.12" ]]; then
+    print_error_and_exit "Python 3.12 or higher is required. Found: $PY_VERSION"
 fi
 
 # Check if python3-venv package is installed (if using apt-based distro)

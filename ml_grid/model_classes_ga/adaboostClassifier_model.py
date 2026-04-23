@@ -77,9 +77,6 @@ def AdaBoostClassifierModelGenerator(
 
     # Initialise global parameter space----------------------------------------------------------------
     parameter_space = {
-        "algorithm": [
-            "SAMME",
-        ],  # New in version 1.2: base_estimator_ was renamed to estimator_.
         "estimator": [None],
         "learning_rate": log_small,
         "n_estimators": log_large_long,
