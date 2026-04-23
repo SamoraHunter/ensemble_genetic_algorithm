@@ -7,7 +7,7 @@ name = "ensemble-genetic-algorithm"
 version = "0.1.0"
 description = "A project for ensemble methods using genetic algorithms."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 license = {text = "MIT"}
 authors = [
     { name = "Samora Hunter", email = "samorahunter@hotmail.co.uk" },
@@ -15,8 +15,7 @@ authors = [
 classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Operating System :: OS Independent",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
@@ -88,12 +87,13 @@ packages = ["ml_grid"]
 
 [tool.black]
 line-length = 88
-target-version = ["py310"]
+target-version = ["py312"]
 
 [tool.ruff]
 # Set the same line length as Black.
 line-length = 88
-target-version = "py310"
+target-version = "py312"
+exclude = ["legacy"]
 
 [tool.ruff.lint]
 # Enable Pyflakes (F), pycodestyle (E, W), and isort (I) rules.
