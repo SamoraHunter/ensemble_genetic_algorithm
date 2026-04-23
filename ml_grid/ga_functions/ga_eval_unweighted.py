@@ -80,7 +80,11 @@ def get_unweighted_ensemble_predictions_eval(
             model = target_ensemble[i][1]
             model.to(device)
 
-            y_hat = model(test_data.X_data.to(device))
+            y_hat = model(
+                torch.tensor(x_test[feature_columns].values, dtype=torch.float32).to(
+                    device
+                )
+            )
 
             y_hat = torch.round(torch.sigmoid(y_hat)).cpu().detach().numpy()
 

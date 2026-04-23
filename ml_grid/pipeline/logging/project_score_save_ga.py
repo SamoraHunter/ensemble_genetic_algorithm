@@ -8,7 +8,13 @@ from sklearn import metrics
 
 # from sklearn.utils.testing import ignore_warnings
 from sklearn.exceptions import ConvergenceWarning
-from sklearn.metrics import *
+from sklearn.metrics import (
+    accuracy_score,
+    f1_score,
+    matthews_corrcoef,
+    precision_score,
+    recall_score,
+)
 
 from ml_grid.util.global_params import global_parameters
 
