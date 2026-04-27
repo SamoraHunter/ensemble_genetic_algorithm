@@ -7,7 +7,36 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 from numpy import array
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.ensemble import (
+    AdaBoostClassifier,
+    ExtraTreesClassifier,
+    GradientBoostingClassifier,
+    HistGradientBoostingClassifier,
+    RandomForestClassifier,
+)
+
+# Import common models so eval() can find them
+from sklearn.linear_model import (
+    LogisticRegression,
+    PassiveAggressiveClassifier,
+    Perceptron,
+    RidgeClassifier,
+    SGDClassifier,
+)
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC, LinearSVC
+from sklearn.tree import DecisionTreeClassifier
+
+try:
+    from xgboost import XGBClassifier
+except ImportError:
+    pass
+
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+
+from ml_grid.ga_functions.ga_ann_util import BinaryClassification
 
 logger = logging.getLogger("ensemble_ga")
 try:
@@ -189,7 +218,32 @@ class EnsembleEvaluator:
                     continue
                 model_string = model_tuple[1]
                 try:
-                    model_object = eval(model_string)
+                    # Provide a rich context for eval to find sklearn classes
+                    eval_context = {
+                        "LogisticRegression": LogisticRegression,
+                        "Perceptron": Perceptron,
+                        "PassiveAggressiveClassifier": PassiveAggressiveClassifier,
+                        "RidgeClassifier": RidgeClassifier,
+                        "SGDClassifier": SGDClassifier,
+                        "RandomForestClassifier": RandomForestClassifier,
+                        "ExtraTreesClassifier": ExtraTreesClassifier,
+                        "AdaBoostClassifier": AdaBoostClassifier,
+                        "GradientBoostingClassifier": GradientBoostingClassifier,
+                        "HistGradientBoostingClassifier": HistGradientBoostingClassifier,
+                        "XGBClassifier": (
+                            XGBClassifier if "XGBClassifier" in locals() else None
+                        ),
+                        "SVC": SVC,
+                        "LinearSVC": LinearSVC,
+                        "GaussianNB": GaussianNB,
+                        "QuadraticDiscriminantAnalysis": QuadraticDiscriminantAnalysis,
+                        "DecisionTreeClassifier": DecisionTreeClassifier,
+                        "KNeighborsClassifier": KNeighborsClassifier,
+                        "BinaryClassification": BinaryClassification,
+                        "array": array,
+                        "np": np,
+                    }
+                    model_object = eval(model_string, {"__builtins__": {}}, eval_context)
                     new_tuple = list(model_tuple)
                     new_tuple[1] = model_object
                     processed_ensemble.append(tuple(new_tuple))
@@ -226,11 +280,12 @@ class EnsembleEvaluator:
         import pandas as pd
 
         if ensemble_indices is None:
-            # Default: pick the row with the highest auc_score
-            if "auc_score" in results_df.columns:
-                idx = results_df["auc_score"].idxmax()
-            else:
-                idx = 0
+            # Default: pick the row with the highest auc or auc_score
+            idx = 0
+            for col in ["auc", "auc_score"]:
+                if col in results_df.columns:
+                    idx = results_df[col].idxmax()
+                    break
             selected_rows = [idx]
         elif ensemble_indices == "all":
             selected_rows = list(results_df.index)
@@ -337,8 +392,9 @@ class EnsembleEvaluator:
                             "recall": recall_score(y_true, y_pred, zero_division=0),
                             "f1_score": f1_score(y_true, y_pred, zero_division=0),
                         }
-                        if "auc_score" in results_df.columns:
-                            result["auc_score"] = row["auc_score"]
+                        for col in ["auc", "auc_score"]:
+                            if col in results_df.columns:
+                                result[col] = row[col]
                         all_results.append(result)
 
                     except Exception as e:
@@ -356,8 +412,9 @@ class EnsembleEvaluator:
                             "recall": 0.0,
                             "f1_score": 0.0,
                         }
-                        if "auc_score" in results_df.columns:
-                            result["auc_score"] = row["auc_score"]
+                        for col in ["auc", "auc_score"]:
+                            if col in results_df.columns:
+                                result[col] = row[col]
                         all_results.append(result)
 
         return pd.DataFrame(all_results)

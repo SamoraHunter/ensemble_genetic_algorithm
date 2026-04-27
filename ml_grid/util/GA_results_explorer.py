@@ -91,10 +91,10 @@ class GA_results_explorer:
         logger.info("Feature names extracted for all ensembles.")
 
         self.config_params = [
-            "nb_size",
-            "nb_val",
-            "pop_val",
-            "g_val",
+            "nb_size",  # Number of base learners
+            "nb_val",  # Number of base learners (validation)
+            "pop_val",  # Population size (validation)
+            "g_val",  # Generations (validation)
             "g",
             "weighted",
             "use_stored_base_learners",
@@ -102,10 +102,10 @@ class GA_results_explorer:
             "resample",
             "scale",
             "n_features",
-            "param_space_size",
-            "cxpb",
-            "mutpb",
-            "indpb",
+            "param_space_size",  # Size of hyperparameter space
+            "cxpb",  # Crossover probability
+            "mutpb",  # Mutation probability
+            "indpb",  # Individual mutation probability
             "t_size",
         ]
 
@@ -565,72 +565,81 @@ class GA_results_explorer:
             f"📊 Calculating importance for initial features against '{outcome_variable}'..."
         )
 
-        import ast
-
         def decode_flist(flist_row):
-            # If already a list of feature names (all str, not numbers or brackets), return as is
-            if isinstance(flist_row, list) and all(
-                isinstance(x, str) and x not in {",", "[", "]", " "} for x in flist_row
-            ):
-                # Defensive: filter out any non-feature tokens
-                return [x for x in flist_row if x in self.original_feature_names]
-            # If it's a string, try to parse as a list of ints (mask) or as a space-separated 0/1 string
+            """Decodes various string/list representations of feature masks."""
             if isinstance(flist_row, str):
-                # Try to parse as a list (e.g. '[0, 1, 0, 1]')
+                # Handle string representation of a list (e.g., '[[0, 1, 0]]')
                 try:
                     parsed = ast.literal_eval(flist_row)
-                    if isinstance(parsed, list):
+                    # If it's a nested list like [[[0,1,0]]], flatten it
+                    if (
+                        isinstance(parsed, list)
+                        and len(parsed) == 1
+                        and isinstance(parsed[0], list)
+                    ):
+                        flist_row = parsed[0]
+                    elif isinstance(parsed, list):  # Direct list like [0,1,0]
                         flist_row = parsed
-                except Exception:
-                    # If not a list, try to parse as space-separated 0/1 string
-                    try:
-                        mask = [
-                            int(x) for x in flist_row.strip().split() if x in {"0", "1"}
-                        ]
-                        if len(mask) == len(self.original_feature_names):
-                            return [
-                                f
-                                for i, f in enumerate(self.original_feature_names)
-                                if mask[i]
-                            ]
-                    except Exception:
+                    else:  # Not a list, return empty
                         return []
-            # If it's a nested list (e.g., [[0, 1, 1, ...]]), flatten it
-            if (
-                isinstance(flist_row, list)
-                and len(flist_row) == 1
-                and isinstance(flist_row[0], list)
-            ):
-                flist_row = flist_row[0]
-            # If it's a list of ints (mask) and matches the length of original_feature_names
-            if isinstance(flist_row, list) and len(flist_row) == len(
-                self.original_feature_names
-            ):
-                try:
-                    # If the list is a mask of 0/1 integers
-                    if all(isinstance(x, (int, np.integer)) for x in flist_row):
-                        return [
-                            f
-                            for i, f in enumerate(self.original_feature_names)
-                            if flist_row[i]
-                        ]
-                    # If the list is a mask of 0/1 strings
-                    if all(isinstance(x, str) and x in {"0", "1"} for x in flist_row):
-                        return [
-                            f
-                            for i, f in enumerate(self.original_feature_names)
-                            if int(flist_row[i])
-                        ]
                 except Exception:
-                    return []
+                    return []  # Failed to parse string as a list
+
+            # At this point, flist_row should be a list (or not, in which case we return empty)
+            if not isinstance(flist_row, list):
+                return []
+
+            # Handle nested list like [[0, 1, 1, ...]] if it somehow wasn't flattened above
+            if len(flist_row) == 1 and isinstance(flist_row[0], list):
+                flist_row = flist_row[0]
+
+            # If it's a list of ints (mask) and matches the length of original_feature_names
+            if len(flist_row) == len(self.original_feature_names):
+                # Check if it's a binary mask (0s and 1s)
+                if all(
+                    isinstance(x, (int, np.integer)) and x in [0, 1] for x in flist_row
+                ):
+                    return [
+                        f
+                        for i, f in enumerate(self.original_feature_names)
+                        if flist_row[i] == 1
+                    ]
+                # Check if it's a list of feature names (strings)
+                elif all(isinstance(x, str) for x in flist_row):
+                    return [f for f in flist_row if f in self.original_feature_names]
+
+            # If it's a list of indices
+            if all(
+                isinstance(x, (int, np.integer))
+                and 0 <= x < len(self.original_feature_names)
+                for x in flist_row
+            ):
+                return [self.original_feature_names[i] for i in flist_row]
+
             return []
 
         decoded_feature_lists = self.df["f_list"].apply(decode_flist)
 
+        # Filter out rows where decoding failed or resulted in empty lists
+        valid_decoded_features_df = self.df.loc[
+            decoded_feature_lists.apply(lambda x: len(x) > 0)
+        ].copy()
+        valid_decoded_feature_lists = decoded_feature_lists.loc[
+            decoded_feature_lists.apply(lambda x: len(x) > 0)
+        ]
+
+        if valid_decoded_features_df.empty:
+            logger.warning(
+                "No valid features found in the 'f_list' column after decoding for ANOVA. Skipping plot."
+            )
+            return
+
         # 2. Get a flat list of all unique decoded features
         try:
             all_features_flat = [
-                feature for sublist in decoded_feature_lists for feature in sublist
+                feature
+                for sublist in valid_decoded_feature_lists
+                for feature in sublist
             ]
             unique_features = sorted(list(set(all_features_flat)))
             if not unique_features:
@@ -646,8 +655,8 @@ class GA_results_explorer:
 
         # 3. Perform ANOVA for each feature
         anova_results = []
-        temp_df = self.df[[outcome_variable]].copy()
-        temp_df["decoded_f_list"] = decoded_feature_lists
+        temp_df = valid_decoded_features_df[[outcome_variable]].copy()
+        temp_df["decoded_f_list"] = valid_decoded_feature_lists
 
         for feature in unique_features:
             # Create a temporary boolean column: True if feature is in decoded_f_list, else False
@@ -1765,6 +1774,29 @@ class GA_results_explorer:
                 # The pattern looks for a word starting with a capital letter followed by an opening parenthesis.
                 # This is a robust way to find algorithm names without full parsing.
                 algorithms_in_run = re.findall(r"([A-Z]\w+)\(", ensemble_str)
+
+                # Filter out preprocessors, transformers, and pipeline objects
+                # that appear in the string representation but are not the base classifiers.
+                exclude_list = [
+                    "Pipeline",
+                    "StandardScaler",
+                    "MinMaxScaler",
+                    "RobustScaler",
+                    "Normalizer",
+                    "PowerTransformer",
+                    "QuantileTransformer",
+                    "SimpleImputer",
+                    "PCA",
+                    "SelectKBest",
+                    "SelectFromModel",
+                    "OneHotEncoder",
+                    "OrdinalEncoder",
+                    "ColumnTransformer",
+                ]
+                algorithms_in_run = [
+                    alg for alg in algorithms_in_run if alg not in exclude_list
+                ]
+
                 all_algorithms.extend(algorithms_in_run)
             except Exception as e:
                 # This is a fallback, but the regex should be quite safe.
@@ -1924,20 +1956,15 @@ def extract_feature_arrays_from_string(raw_ensemble_string: str) -> List[List[in
         Returns an empty list if parsing fails.
     """
     try:
-        # Use a regular expression to find all substrings that look like a list of numbers.
-        # This pattern finds a '[' followed by digits, commas, and whitespace, ending with a ']'.
-        # It correctly captures both the binary feature vectors and the numpy array predictions.
-        all_list_substrings = re.findall(r"(\[[\d,\s]+\])", raw_ensemble_string)
-
-        # The feature arrays are the first, third, fifth, etc., lists found.
-        # We select them by taking every other element starting from the first (index 0).
-        feature_array_strings = all_list_substrings[0::2]
-
-        # Safely parse each of these clean substrings into a Python list.
-        # This works because each string in feature_array_strings is a valid list literal.
-        feature_arrays = [ast.literal_eval(s) for s in feature_array_strings]
-
-        return feature_arrays
+        # Use a safe eval approach similar to EnsembleEvaluator
+        # This handles 'array' and other tokens without being brittle to ordering
+        safe_context = {"array": lambda x: x, "np": np}
+        parsed = eval(raw_ensemble_string, {"__builtins__": {}}, safe_context)
+        
+        # Best ensemble is often wrapped as [[(weight, model, mask, ...)]]
+        if isinstance(parsed, list) and len(parsed) > 0 and isinstance(parsed[0], list):
+            return [model_tuple[2] for model_tuple in parsed[0] if len(model_tuple) > 2]
+        return []
 
     except Exception as e:
         logger.error("❌ An error occurred during extraction: %s", e)
@@ -1947,7 +1974,4 @@ def extract_feature_arrays_from_string(raw_ensemble_string: str) -> List[List[in
 # --- Example Usage ---
 
 ## The problematic string from the DataFrame.
-# raw_ensemble_string = """[[(0.5833333333333334, "LogisticRegression(C=1, class_weight='balanced', max_iter=5, solver='sag')", [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 0, 0.9537, array([0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0])), (0.6871842709362768, 'Perceptron(eta0=0.1, max_iter=7)', [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 0, 0.9722, array([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]))]]"""
-
-## Call the function with the raw string
-# extracted_arrays = extract_feature_arrays_from_string(raw_ensemble_string)
+# raw_ensemble_string = """[[(0.5833333333333334, "LogisticRegression(C=1, class_weight='balanced', max_iter=5, solver='sag')", [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 0, 0.9537, array([0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0])), (0.6871842709362768, 'Perceptron(eta0=0.1, max_iter=7)', [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 0, 0.9722, array(

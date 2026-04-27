@@ -1,7 +1,6 @@
 # Ensemble Genetic Algorithm
 
 [![GA Project Test](https://github.com/SamoraHunter/ensemble_genetic_algorithm/actions/workflows/notebook-test.yml/badge.svg)](https://github.com/SamoraHunter/ensemble_genetic_algorithm/actions/workflows/notebook-test.yml) [![Build and Deploy Docs](https://github.com/SamoraHunter/ensemble_genetic_algorithm/actions/workflows/docs.yml/badge.svg)](https://samorahunter.github.io/ensemble_genetic_algorithm/)
-[![PyPI version](https://badge.fury.io/py/ensemble-genetic-algorithm.svg)](https://badge.fury.io/py/ensemble-genetic-algorithm)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # Table of Contents
@@ -31,17 +30,9 @@ This project provides a genetic algorithm designed to evolve an optimal ensemble
 
 ## Installation
 
-The recommended way to install the package is from PyPI:
+The package is currently installed from source using the provided `setup.sh` script, which automates virtual environment creation and dependency management.
 
-```bash
-pip install ensemble-genetic-algorithm
-```
-
-**Note on PyTorch**: This package requires PyTorch. For GPU support, it is highly recommended that you first install PyTorch manually by following the official instructions at [pytorch.org](https://pytorch.org/get-started/locally/) to ensure the correct version for your CUDA toolkit is installed.
-
-### Developer Installation
-
-If you wish to contribute to the project, you can install it from a cloned repository. This method gives you access to the `setup.sh` script and development dependencies.
+**Note on PyTorch**: This package requires PyTorch. For GPU support, it is highly recommended that you first install PyTorch manually by following the official instructions at pytorch.org to ensure the correct version for your CUDA toolkit is installed.
 
 ### Prerequisites
 

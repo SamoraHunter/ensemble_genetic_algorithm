@@ -33,6 +33,7 @@ Explore the following wiki pages for detailed information:
 -   **Guides & Tutorials**
     -   {doc}`Interpreting_Results`: How to understand the plots and outputs.
     -   {doc}`Evaluating_Final_Models`: How to validate your final models on unseen data.
+    -   {doc}`Deployment`: How to export and serve your final models.
     -   {doc}`Adding_a_New_Base_Learner`: How to extend the project with new models.
     -   {doc}`Best_Practices`: Tips for running experiments effectively.
 -   **Reference**

@@ -67,6 +67,9 @@ class global_parameters:
     column_sample_n: int
     """Number of columns to sample from the data. 0 means all columns."""
 
+    outcome_var_n: str
+    """The identifier for the outcome variable (e.g., '1' for 'outcome_var_1')."""
+
     # --- Execution & Logging ---
     verbose: int
     """Verbosity level for console output (0-9)."""
@@ -190,6 +193,8 @@ class global_parameters:
 
         self.base_project_dir = "HFE_GA_experiments"
 
+        self.outcome_var_n = "1"
+
         # Default list of model names
         default_model_names = [
             "logisticRegression",
@@ -239,6 +244,15 @@ class global_parameters:
                         logger.warning(
                             "Unknown global parameter '%s' in config file.", key
                         )
+
+            # Also check grid_params for outcome_var_n which is often stored there
+            grid_params_config = user_config.get("grid_params", {})
+            if grid_params_config and "outcome_var_n" in grid_params_config:
+                val = grid_params_config["outcome_var_n"]
+                if isinstance(val, list) and len(val) > 0:
+                    self.outcome_var_n = str(val[0])
+                elif val is not None:
+                    self.outcome_var_n = str(val)
 
         # 3. Apply runtime keyword argument overrides
         for key, value in kwargs.items():
