@@ -79,10 +79,12 @@ def get_y_pred_resolver(
             y_pred = get_unweighted_ensemble_predictions(
                 ensemble, ml_grid_object, valid=valid
             )
-        except ValueError as e:
-            if "The dual coefficients or intercepts are not finite" in str(e):
+        except (ValueError, np.linalg.LinAlgError) as e:
+            if "The dual coefficients or intercepts are not finite" in str(
+                e
+            ) or "not full rank" in str(e):
                 if ml_grid_object.verbose >= 1:
-                    logger.warning(f"Caught SVC Error: {e}")
+                    logger.warning(f"Caught Fitting Error (SVC/QDA): {e}")
                     logger.warning("Returning dummy predictions (zeros) to proceed.")
 
                 if valid:

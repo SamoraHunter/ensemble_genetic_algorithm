@@ -84,9 +84,12 @@ def get_ann_weighted_ensemble_predictions_eval(
             model = target_ensemble[i][1]
             if ml_grid_object.verbose >= 2:
                 logger.debug(f"Fitting model {i+1}")
-            model.fit(X_train[feature_columns], y_train)
-
-            prediction_array.append(model.predict(X_train[feature_columns]))
+            try:
+                model.fit(X_train[feature_columns], y_train)
+                prediction_array.append(model.predict(X_train[feature_columns]))
+            except (ValueError, np.linalg.LinAlgError) as e:
+                logger.warning(f"Fit failed for model {i+1}: {e}")
+                prediction_array.append(np.zeros(len(y_train)))
         else:
             test_data = TestData(torch.FloatTensor(X_train[feature_columns].values))
 

@@ -87,24 +87,12 @@ def get_de_weighted_ensemble_predictions_eval(
         if not isinstance(model, BinaryClassification):
             if ml_grid_object.verbose >= 2:
                 logger.debug(f"Fitting model {i+1}")
-
             try:
                 model.fit(X_train[feature_columns], y_train)
-            except ValueError as e:
-                logger.error(e)
-                logger.error("ValueError on fit")
-                logger.error("feature_columns")
-                logger.error(len(feature_columns))
-                logger.error(
-                    "%s, %s, %s, %s, %s",
-                    X_train.shape,
-                    x_test.shape,
-                    type(X_train),
-                    type(y_train),
-                    type(feature_columns),
-                )
-
-            prediction_array.append(model.predict(x_test[feature_columns]))
+                prediction_array.append(model.predict(x_test[feature_columns]))
+            except (ValueError, np.linalg.LinAlgError) as e:
+                logger.warning(f"Fitting/Prediction failed for model {i+1}: {e}")
+                prediction_array.append(np.zeros(len(x_test)))
         else:
             if ml_grid_object.verbose >= 2:
                 logger.debug(f"Handling torch model prediction for model {i+1}")
