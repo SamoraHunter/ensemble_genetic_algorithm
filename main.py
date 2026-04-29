@@ -131,7 +131,9 @@ def main(config_path: str, plot: bool = False, evaluate: bool = False):
             original_feature_names = list(initial_data.columns)
 
             explorer = GA_results_explorer(
-                df=results_df, original_feature_names=original_feature_names
+                df=results_df,
+                original_feature_names=original_feature_names,
+                global_params_obj=global_params,
             )
 
             explorer.run_all_plots(plot_dir=run_specific_dir)

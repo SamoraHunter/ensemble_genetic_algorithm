@@ -38,8 +38,7 @@ class GA_results_explorer:
         run_details (List[str]): A predefined list of run metadata column names
             to be used in importance analysis.
     """
-
-    def __init__(self, df: pd.DataFrame, original_feature_names: List[str]):
+    def __init__(self, df: pd.DataFrame, original_feature_names: List[str], global_params_obj=None):
         """Initializes the GA_results_explorer object.
 
         This constructor processes the input DataFrame to decode the feature
@@ -51,9 +50,15 @@ class GA_results_explorer:
             original_feature_names: The complete list of original feature
                 names from the dataset, used to map binary feature masks back
                 to their string names.
+            global_params_obj: An instance of global_parameters, providing access
+                to global configuration settings like plotting truncation.
         """
         self.df = df
         self.original_feature_names = original_feature_names
+        self.global_params = global_params_obj
+        if self.global_params is None:
+            from ml_grid.util.global_params import global_parameters
+            self.global_params = global_parameters() # Fallback to default/config.yml
 
         # Extract feature arrays from the 'best_ensemble' column
         self.df["feature_arrays"] = self.df["best_ensemble"].apply(
@@ -138,6 +143,34 @@ class GA_results_explorer:
             "X_test_size",
             "run_time",
         ]
+
+    def _apply_plot_truncation(self, data_to_plot: pd.DataFrame, plot_type: str) -> pd.DataFrame:
+        """
+        Applies truncation to dataframes intended for plotting based on global configuration.
+        Assumes data_to_plot is already sorted by importance/frequency.
+        """
+        max_features = getattr(self.global_params, "max_features_to_plot", 20)
+        expand = getattr(self.global_params, "expand_plots", False)
+
+        num_items = len(data_to_plot)
+
+        if num_items > max_features and not expand:
+            logger.debug(
+                "Truncating %s plot from %d items to top %d. "
+                "To see all items, set 'expand_plots: True' in your config.yml "
+                "or increase 'max_features_to_plot'.",
+                plot_type, num_items, max_features
+            )
+            return data_to_plot.head(max_features)
+
+        if expand and num_items > 1000:  # Arbitrary large number to warn
+            logger.warning(
+                "Plotting %d %s because 'expand_plots' is True. "
+                "This may result in an extremely large image and high memory usage.",
+                num_items, plot_type
+            )
+
+        return data_to_plot
 
     def get_column_names(self, raw_string_vector: str) -> List[str]:
         """Decodes a string representation of a binary feature mask.
@@ -241,6 +274,9 @@ class GA_results_explorer:
         results_df = results_df.sort_values(
             by="F-statistic", ascending=False
         ).reset_index(drop=True)
+
+        # Apply truncation
+        results_df = self._apply_plot_truncation(results_df, "configuration parameter importance")
 
         # --- Plotting ---
         plt.style.use("seaborn-v0_8-whitegrid")
@@ -378,6 +414,9 @@ class GA_results_explorer:
             by="F-statistic", ascending=False
         ).reset_index(drop=True)
 
+        # Apply truncation
+        results_df = self._apply_plot_truncation(results_df, "run detail importance")
+
         # --- Plotting ---
         plt.style.use("seaborn-v0_8-whitegrid")
         plt.figure(figsize=(12, 10))
@@ -488,6 +527,9 @@ class GA_results_explorer:
         results_df = results_df.sort_values(
             by="F-statistic", ascending=False
         ).reset_index(drop=True)
+
+        # Apply truncation
+        results_df = self._apply_plot_truncation(results_df, "combined parameter importance")
 
         # --- Plotting ---
         plt.style.use("seaborn-v0_8-whitegrid")
@@ -636,12 +678,24 @@ class GA_results_explorer:
 
         # 2. Get a flat list of all unique decoded features
         try:
-            all_features_flat = [
+            all_features_series = pd.Series([
                 feature
                 for sublist in valid_decoded_feature_lists
                 for feature in sublist
-            ]
-            unique_features = sorted(list(set(all_features_flat)))
+            ])
+            
+            # If we have too many unique features, only consider those with highest frequency for ANOVA
+            # to avoid extreme execution times when dealing with 30k+ features.
+            max_to_analyze = getattr(self.global_params, 'max_features_to_plot', 20) * 5
+            expand = getattr(self.global_params, 'expand_plots', False)
+            
+            if not expand and all_features_series.nunique() > max_to_analyze:
+                unique_features = all_features_series.value_counts().head(max_to_analyze).index.tolist()
+                logger.debug("Reducing features for ANOVA from %d to top %d by frequency for performance.", 
+                             all_features_series.nunique(), max_to_analyze)
+            else:
+                unique_features = sorted(all_features_series.unique().tolist())
+                
             if not unique_features:
                 logger.warning(
                     "No features found in the 'f_list' column after decoding."
@@ -695,6 +749,9 @@ class GA_results_explorer:
         results_df = results_df.sort_values(
             by="F-statistic", ascending=False
         ).reset_index(drop=True)
+
+        # Apply truncation
+        results_df = self._apply_plot_truncation(results_df, "initial feature importance")
 
         # --- Plotting ---
         plt.style.use("seaborn-v0_8-whitegrid")
@@ -776,12 +833,23 @@ class GA_results_explorer:
 
         # Get a unique list of all features used across all runs and all base learners
         try:
-            all_features_flat = [
+            all_features_series = pd.Series([
                 feature
                 for feature_set in temp_df["all_bl_features"]
                 for feature in feature_set
-            ]
-            unique_features = sorted(list(set(all_features_flat)))
+            ])
+            
+            # Truncate input features for ANOVA loop performance when processing thousands of features
+            max_to_analyze = getattr(self.global_params, 'max_features_to_plot', 20) * 5
+            expand = getattr(self.global_params, 'expand_plots', False)
+
+            if not expand and all_features_series.nunique() > max_to_analyze:
+                unique_features = all_features_series.value_counts().head(max_to_analyze).index.tolist()
+                logger.debug("Reducing BL features for ANOVA from %d to top %d by frequency for performance.", 
+                             all_features_series.nunique(), max_to_analyze)
+            else:
+                unique_features = sorted(all_features_series.unique().tolist())
+
             if not unique_features:
                 logger.warning("No features found in any 'feature_names' entries.")
                 return
@@ -831,6 +899,9 @@ class GA_results_explorer:
         results_df = results_df.sort_values(
             by="F-statistic", ascending=False
         ).reset_index(drop=True)
+
+        # Apply truncation
+        results_df = self._apply_plot_truncation(results_df, "base learner feature importance")
 
         # --- Plotting ---
         plt.style.use("seaborn-v0_8-whitegrid")
@@ -907,7 +978,7 @@ class GA_results_explorer:
             n_rows = math.ceil(len(params_to_plot) / n_cols)
             fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 4.5 * n_rows))
             axes = axes.flatten()
-
+            
             logger.info("📊 Generating distribution plots for %s...", param_type)
             for i, param in enumerate(params_to_plot):
                 ax = axes[i]
@@ -973,6 +1044,9 @@ class GA_results_explorer:
             logger.info("📊 Generating frequency plot for %s...", param_type)
             freq_df = pd.Series(features_flat).value_counts().reset_index()
             freq_df.columns = ["Feature", "Frequency"]
+
+            # Apply truncation
+            freq_df = self._apply_plot_truncation(freq_df, f"{param_type} frequency")
 
             plt.figure(figsize=(12, max(8, len(freq_df) * 0.35)))
             sns.barplot(
@@ -1472,6 +1546,9 @@ class GA_results_explorer:
         freq_df = pd.Series(features_flat).value_counts().reset_index()
         freq_df.columns = ["Feature", "Frequency"]
 
+        # Apply truncation
+        freq_df = self._apply_plot_truncation(freq_df, "feature stability")
+
         # --- 4. Plotting ---
         plt.style.use("seaborn-v0_8-whitegrid")
         # Dynamically adjust figure height based on number of features
@@ -1645,6 +1722,26 @@ class GA_results_explorer:
             return
 
         # 2. Filter for Top Runs and Identify Top N Features
+        # Determine the effective number of features to consider for co-occurrence
+        effective_top_n_features = top_n_features
+        max_features_config = getattr(self.global_params, 'max_features_to_plot', 20)
+        expand_plots_config = getattr(self.global_params, 'expand_plots', False)
+
+        if not expand_plots_config:
+            # If expansion is not permitted, limit by max_features_to_plot
+            if effective_top_n_features > max_features_config:
+                logger.debug(
+                    "Truncating 'top_n_features' for co-occurrence plot from %d to %d "
+                    "due to 'max_features_to_plot' setting and 'expand_plots: False'.",
+                    effective_top_n_features, max_features_config
+                )
+                effective_top_n_features = max_features_config
+        else:
+            # If expand_plots is True, and top_n_features is still its default (15),
+            # then it means the user didn't explicitly set it, so we can use the global max.
+            if top_n_features == 15: # Assuming 15 is the default value for top_n_features
+                effective_top_n_features = max_features_config
+
         threshold = self.df[performance_metric].quantile(1 - (top_percent / 100.0))
         top_runs_df = self.df[self.df[performance_metric] >= threshold]
 
@@ -1655,8 +1752,8 @@ class GA_results_explorer:
             return
 
         # Calculate co-occurrence matrix
-        cooccurrence_matrix = self.calculate_cooccurrence_matrix(
-            top_runs_df, top_n_features, feature_type
+        cooccurrence_matrix = self._calculate_cooccurrence_matrix(
+            top_runs_df, effective_top_n_features, feature_type
         )
 
         # 3. Create Plot
@@ -1689,7 +1786,7 @@ class GA_results_explorer:
         plt.show()
         plt.close()
 
-    def calculate_cooccurrence_matrix(self, top_runs_df, top_n_features, feature_type):
+    def _calculate_cooccurrence_matrix(self, top_runs_df, top_n_features, feature_type):
         """
         Calculate the co-occurrence matrix of top features in the best-performing runs.
 
@@ -1815,6 +1912,9 @@ class GA_results_explorer:
         freq_df = pd.Series(all_algorithms).value_counts().reset_index()
         freq_df.columns = ["Algorithm", "Frequency"]
 
+        # Apply truncation
+        freq_df = self._apply_plot_truncation(freq_df, "algorithm distribution")
+
         # --- Plotting ---
         plt.style.use("seaborn-v0_8-whitegrid")
         plt.figure(figsize=(12, 8))
@@ -1892,7 +1992,7 @@ class GA_results_explorer:
         self.plot_algorithm_distribution_in_ensembles(plot_dir=plot_dir)
 
         # Feature Analysis
-        self.plot_initial_feature_importance(
+        self.plot_initial_feature_importance( # This was already truncated
             outcome_variable=outcome_variable, plot_dir=plot_dir
         )
         self.plot_base_learner_feature_importance(
@@ -1900,7 +2000,7 @@ class GA_results_explorer:
         )
         self.plot_feature_stability(
             performance_metric=outcome_variable, plot_dir=plot_dir
-        )
+        ) # This was already truncated
         self.plot_feature_cooccurrence(
             performance_metric=outcome_variable, plot_dir=plot_dir
         )

@@ -195,6 +195,10 @@ class global_parameters:
 
         self.outcome_var_n = "1"
 
+        self.max_features_to_plot = 60
+
+        self.expand_plots = False
+
         # Default list of model names
         default_model_names = [
             "logisticRegression",

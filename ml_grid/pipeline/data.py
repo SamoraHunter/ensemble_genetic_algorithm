@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from pandas.testing import assert_index_equal
 from sklearn.exceptions import ConvergenceWarning
+from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
 
 from ml_grid.model_classes_ga.logistic_regression_model import (
@@ -530,9 +531,13 @@ class pipe:
         self.y.reset_index(drop=True, inplace=True)
         self._assert_index_alignment(self.X, self.y, "After initial X/y creation")
 
-        # Check for NaNs
+        # Handle NaNs via imputation instead of raising an error
         if self.X.isnull().values.any():
-            raise ValueError("DataFrame contains NaN values.")
+            logger.info("NaNs detected in features. Applying SimpleImputer (mean strategy).")
+            imputer = SimpleImputer(strategy='mean')
+            self.X = pd.DataFrame(
+                imputer.fit_transform(self.X), columns=self.X.columns, index=self.X.index
+            )
 
         logger.info("------------------------")
 

@@ -15,6 +15,7 @@ from sklearn.ensemble import (
     HistGradientBoostingClassifier,
     RandomForestClassifier,
 )
+from sklearn.impute import SimpleImputer
 
 # Import common models so eval() can find them
 from sklearn.linear_model import (
@@ -133,6 +134,20 @@ class EnsembleEvaluator:
         df = pd.read_csv(input_csv_path)
         y = df[outcome_variable]
         X = df.drop(outcome_variable, axis=1)
+
+        # Filter for numeric columns - models require numeric input and imputer fails on strings
+        numeric_cols = X.select_dtypes(include=[np.number]).columns
+        if len(numeric_cols) < X.shape[1]:
+            omitted = list(set(X.columns) - set(numeric_cols))
+            logger.warning(f"Omitting non-numeric columns during evaluation loading: {omitted}")
+            X = X[numeric_cols]
+
+        # Handle NaNs in the evaluation dataset to ensure model refitting succeeds
+        if X.isnull().values.any():
+            logger.info("NaNs detected in evaluation features. Applying SimpleImputer (mean).")
+            imputer = SimpleImputer(strategy='mean')
+            X = pd.DataFrame(imputer.fit_transform(X), columns=X.columns, index=X.index)
+
         self.original_feature_names = list(X.columns)
         if self.debug:
             logger.debug("Splitting data and assigning to ml_grid_object...")
