@@ -8,9 +8,9 @@ from typing import Any, List
 import numpy as np
 import pandas as pd
 import scipy
-from sklearn.impute import SimpleImputer
 import torch
 from sklearn import metrics
+from sklearn.impute import SimpleImputer
 
 from ml_grid.ga_functions.ga_ann_util import BinaryClassification
 from ml_grid.ga_functions.ga_ensemble_weight_finder_de import (
@@ -111,10 +111,16 @@ def find_ensemble_weights_de_eval(
 
         if X_train_slice.isnull().values.any() or x_test_slice.isnull().values.any():
             if ml_grid_object.verbose >= 1:
-                logger.info(f"NaNs detected in features for model {i+1}. Applying SimpleImputer.")
-            imputer = SimpleImputer(strategy='mean')
-            X_train_slice = pd.DataFrame(imputer.fit_transform(X_train_slice), columns=feature_columns)
-            x_test_slice = pd.DataFrame(imputer.transform(x_test_slice), columns=feature_columns)
+                logger.info(
+                    f"NaNs detected in features for model {i+1}. Applying SimpleImputer."
+                )
+            imputer = SimpleImputer(strategy="mean")
+            X_train_slice = pd.DataFrame(
+                imputer.fit_transform(X_train_slice), columns=feature_columns
+            )
+            x_test_slice = pd.DataFrame(
+                imputer.transform(x_test_slice), columns=feature_columns
+            )
 
         if not isinstance(target_ensemble[i][1], BinaryClassification):
             model = target_ensemble[i][1]
@@ -127,7 +133,11 @@ def find_ensemble_weights_de_eval(
             except ValueError as e:
                 logger.error(f"ValueError on fit for model {i+1}: {e}")
                 logger.error("feature_columns length: %s", len(feature_columns))
-                logger.error("X_train slice shape: %s, x_test slice shape: %s", X_train_slice.shape, x_test_slice.shape)
+                logger.error(
+                    "X_train slice shape: %s, x_test slice shape: %s",
+                    X_train_slice.shape,
+                    x_test_slice.shape,
+                )
                 raise e
 
             prediction_array.append(y_pred)

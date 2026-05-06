@@ -38,7 +38,13 @@ class GA_results_explorer:
         run_details (List[str]): A predefined list of run metadata column names
             to be used in importance analysis.
     """
-    def __init__(self, df: pd.DataFrame, original_feature_names: List[str], global_params_obj=None):
+
+    def __init__(
+        self,
+        df: pd.DataFrame,
+        original_feature_names: List[str],
+        global_params_obj=None,
+    ):
         """Initializes the GA_results_explorer object.
 
         This constructor processes the input DataFrame to decode the feature
@@ -58,7 +64,8 @@ class GA_results_explorer:
         self.global_params = global_params_obj
         if self.global_params is None:
             from ml_grid.util.global_params import global_parameters
-            self.global_params = global_parameters() # Fallback to default/config.yml
+
+            self.global_params = global_parameters()  # Fallback to default/config.yml
 
         # Extract feature arrays from the 'best_ensemble' column
         self.df["feature_arrays"] = self.df["best_ensemble"].apply(
@@ -144,7 +151,9 @@ class GA_results_explorer:
             "run_time",
         ]
 
-    def _apply_plot_truncation(self, data_to_plot: pd.DataFrame, plot_type: str) -> pd.DataFrame:
+    def _apply_plot_truncation(
+        self, data_to_plot: pd.DataFrame, plot_type: str
+    ) -> pd.DataFrame:
         """
         Applies truncation to dataframes intended for plotting based on global configuration.
         Assumes data_to_plot is already sorted by importance/frequency.
@@ -159,7 +168,9 @@ class GA_results_explorer:
                 "Truncating %s plot from %d items to top %d. "
                 "To see all items, set 'expand_plots: True' in your config.yml "
                 "or increase 'max_features_to_plot'.",
-                plot_type, num_items, max_features
+                plot_type,
+                num_items,
+                max_features,
             )
             return data_to_plot.head(max_features)
 
@@ -167,7 +178,8 @@ class GA_results_explorer:
             logger.warning(
                 "Plotting %d %s because 'expand_plots' is True. "
                 "This may result in an extremely large image and high memory usage.",
-                num_items, plot_type
+                num_items,
+                plot_type,
             )
 
         return data_to_plot
@@ -276,7 +288,9 @@ class GA_results_explorer:
         ).reset_index(drop=True)
 
         # Apply truncation
-        results_df = self._apply_plot_truncation(results_df, "configuration parameter importance")
+        results_df = self._apply_plot_truncation(
+            results_df, "configuration parameter importance"
+        )
 
         # --- Plotting ---
         plt.style.use("seaborn-v0_8-whitegrid")
@@ -529,7 +543,9 @@ class GA_results_explorer:
         ).reset_index(drop=True)
 
         # Apply truncation
-        results_df = self._apply_plot_truncation(results_df, "combined parameter importance")
+        results_df = self._apply_plot_truncation(
+            results_df, "combined parameter importance"
+        )
 
         # --- Plotting ---
         plt.style.use("seaborn-v0_8-whitegrid")
@@ -678,24 +694,33 @@ class GA_results_explorer:
 
         # 2. Get a flat list of all unique decoded features
         try:
-            all_features_series = pd.Series([
-                feature
-                for sublist in valid_decoded_feature_lists
-                for feature in sublist
-            ])
-            
+            all_features_series = pd.Series(
+                [
+                    feature
+                    for sublist in valid_decoded_feature_lists
+                    for feature in sublist
+                ]
+            )
+
             # If we have too many unique features, only consider those with highest frequency for ANOVA
             # to avoid extreme execution times when dealing with 30k+ features.
-            max_to_analyze = getattr(self.global_params, 'max_features_to_plot', 20) * 5
-            expand = getattr(self.global_params, 'expand_plots', False)
-            
+            max_to_analyze = getattr(self.global_params, "max_features_to_plot", 20) * 5
+            expand = getattr(self.global_params, "expand_plots", False)
+
             if not expand and all_features_series.nunique() > max_to_analyze:
-                unique_features = all_features_series.value_counts().head(max_to_analyze).index.tolist()
-                logger.debug("Reducing features for ANOVA from %d to top %d by frequency for performance.", 
-                             all_features_series.nunique(), max_to_analyze)
+                unique_features = (
+                    all_features_series.value_counts()
+                    .head(max_to_analyze)
+                    .index.tolist()
+                )
+                logger.debug(
+                    "Reducing features for ANOVA from %d to top %d by frequency for performance.",
+                    all_features_series.nunique(),
+                    max_to_analyze,
+                )
             else:
                 unique_features = sorted(all_features_series.unique().tolist())
-                
+
             if not unique_features:
                 logger.warning(
                     "No features found in the 'f_list' column after decoding."
@@ -751,7 +776,9 @@ class GA_results_explorer:
         ).reset_index(drop=True)
 
         # Apply truncation
-        results_df = self._apply_plot_truncation(results_df, "initial feature importance")
+        results_df = self._apply_plot_truncation(
+            results_df, "initial feature importance"
+        )
 
         # --- Plotting ---
         plt.style.use("seaborn-v0_8-whitegrid")
@@ -833,20 +860,29 @@ class GA_results_explorer:
 
         # Get a unique list of all features used across all runs and all base learners
         try:
-            all_features_series = pd.Series([
-                feature
-                for feature_set in temp_df["all_bl_features"]
-                for feature in feature_set
-            ])
-            
+            all_features_series = pd.Series(
+                [
+                    feature
+                    for feature_set in temp_df["all_bl_features"]
+                    for feature in feature_set
+                ]
+            )
+
             # Truncate input features for ANOVA loop performance when processing thousands of features
-            max_to_analyze = getattr(self.global_params, 'max_features_to_plot', 20) * 5
-            expand = getattr(self.global_params, 'expand_plots', False)
+            max_to_analyze = getattr(self.global_params, "max_features_to_plot", 20) * 5
+            expand = getattr(self.global_params, "expand_plots", False)
 
             if not expand and all_features_series.nunique() > max_to_analyze:
-                unique_features = all_features_series.value_counts().head(max_to_analyze).index.tolist()
-                logger.debug("Reducing BL features for ANOVA from %d to top %d by frequency for performance.", 
-                             all_features_series.nunique(), max_to_analyze)
+                unique_features = (
+                    all_features_series.value_counts()
+                    .head(max_to_analyze)
+                    .index.tolist()
+                )
+                logger.debug(
+                    "Reducing BL features for ANOVA from %d to top %d by frequency for performance.",
+                    all_features_series.nunique(),
+                    max_to_analyze,
+                )
             else:
                 unique_features = sorted(all_features_series.unique().tolist())
 
@@ -901,7 +937,9 @@ class GA_results_explorer:
         ).reset_index(drop=True)
 
         # Apply truncation
-        results_df = self._apply_plot_truncation(results_df, "base learner feature importance")
+        results_df = self._apply_plot_truncation(
+            results_df, "base learner feature importance"
+        )
 
         # --- Plotting ---
         plt.style.use("seaborn-v0_8-whitegrid")
@@ -978,7 +1016,7 @@ class GA_results_explorer:
             n_rows = math.ceil(len(params_to_plot) / n_cols)
             fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 4.5 * n_rows))
             axes = axes.flatten()
-            
+
             logger.info("📊 Generating distribution plots for %s...", param_type)
             for i, param in enumerate(params_to_plot):
                 ax = axes[i]
@@ -1724,8 +1762,8 @@ class GA_results_explorer:
         # 2. Filter for Top Runs and Identify Top N Features
         # Determine the effective number of features to consider for co-occurrence
         effective_top_n_features = top_n_features
-        max_features_config = getattr(self.global_params, 'max_features_to_plot', 20)
-        expand_plots_config = getattr(self.global_params, 'expand_plots', False)
+        max_features_config = getattr(self.global_params, "max_features_to_plot", 20)
+        expand_plots_config = getattr(self.global_params, "expand_plots", False)
 
         if not expand_plots_config:
             # If expansion is not permitted, limit by max_features_to_plot
@@ -1733,13 +1771,16 @@ class GA_results_explorer:
                 logger.debug(
                     "Truncating 'top_n_features' for co-occurrence plot from %d to %d "
                     "due to 'max_features_to_plot' setting and 'expand_plots: False'.",
-                    effective_top_n_features, max_features_config
+                    effective_top_n_features,
+                    max_features_config,
                 )
                 effective_top_n_features = max_features_config
         else:
             # If expand_plots is True, and top_n_features is still its default (15),
             # then it means the user didn't explicitly set it, so we can use the global max.
-            if top_n_features == 15: # Assuming 15 is the default value for top_n_features
+            if (
+                top_n_features == 15
+            ):  # Assuming 15 is the default value for top_n_features
                 effective_top_n_features = max_features_config
 
         threshold = self.df[performance_metric].quantile(1 - (top_percent / 100.0))
@@ -1992,7 +2033,7 @@ class GA_results_explorer:
         self.plot_algorithm_distribution_in_ensembles(plot_dir=plot_dir)
 
         # Feature Analysis
-        self.plot_initial_feature_importance( # This was already truncated
+        self.plot_initial_feature_importance(  # This was already truncated
             outcome_variable=outcome_variable, plot_dir=plot_dir
         )
         self.plot_base_learner_feature_importance(
@@ -2000,7 +2041,7 @@ class GA_results_explorer:
         )
         self.plot_feature_stability(
             performance_metric=outcome_variable, plot_dir=plot_dir
-        ) # This was already truncated
+        )  # This was already truncated
         self.plot_feature_cooccurrence(
             performance_metric=outcome_variable, plot_dir=plot_dir
         )
@@ -2060,7 +2101,7 @@ def extract_feature_arrays_from_string(raw_ensemble_string: str) -> List[List[in
         # This handles 'array' and other tokens without being brittle to ordering
         safe_context = {"array": lambda x: x, "np": np}
         parsed = eval(raw_ensemble_string, {"__builtins__": {}}, safe_context)
-        
+
         # Best ensemble is often wrapped as [[(weight, model, mask, ...)]]
         if isinstance(parsed, list) and len(parsed) > 0 and isinstance(parsed[0], list):
             return [model_tuple[2] for model_tuple in parsed[0] if len(model_tuple) > 2]

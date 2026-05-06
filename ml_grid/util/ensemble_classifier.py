@@ -1,4 +1,5 @@
 import warnings
+
 import numpy as np
 import torch
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -15,10 +16,26 @@ class SklearnEnsembleClassifier(BaseEstimator, ClassifierMixin):
         self.ensemble_arch = ensemble_arch
         self.feature_names = feature_names
         self.fitted_models = []
+        self._all_req_features = None
+
+    @property
+    def all_req_features(self):
+        """Exposes the union of all features required by the base learners."""
+        # Safely handle models loaded from disk without the internal attribute
+        val = getattr(self, "_all_req_features", None)
+        if val is None and self.fitted_models:
+            val = sorted(list(set().union(*(set(m[1]) for m in self.fitted_models))))
+            self._all_req_features = val
+        return val
+
+    @all_req_features.setter
+    def all_req_features(self, value):
+        self._all_req_features = value
 
     def fit(self, X, y):
         self.classes_ = np.unique(y)
         self.fitted_models = []
+        all_req_features_set = set()
         for model_tuple in self.ensemble_arch:
             # Use index-based access to handle variable tuple lengths safely
             # Standard format: (weight, model_object, mask, score, predictions, ...)
@@ -33,7 +50,9 @@ class SklearnEnsembleClassifier(BaseEstimator, ClassifierMixin):
                 and isinstance(mask[0], str)
             ):
                 active_features = mask
-            elif len(mask) != len(self.feature_names) or not all(isinstance(x, (int, np.integer)) and x in [0, 1] for x in mask):
+            elif len(mask) != len(self.feature_names) or not all(
+                isinstance(x, (int, np.integer)) and x in [0, 1] for x in mask
+            ):
                 # Assume list of indices if length doesn't match feature space or contains non-binary values
                 active_features = [self.feature_names[i] for i in mask]
             else:
@@ -46,6 +65,7 @@ class SklearnEnsembleClassifier(BaseEstimator, ClassifierMixin):
                 if not isinstance(model, BinaryClassification):
                     model.fit(X[active_features], y)
                 self.fitted_models.append((model, active_features, weight))
+                all_req_features_set.update(active_features)
             except Exception as e:
                 warnings.warn(
                     f"Base learner {type(model).__name__} failed to fit and will be excluded. "
@@ -53,13 +73,21 @@ class SklearnEnsembleClassifier(BaseEstimator, ClassifierMixin):
                 )
 
         if not self.fitted_models:
-            raise ValueError("No base learners in the ensemble could be successfully fitted.")
+            raise ValueError(
+                "No base learners in the ensemble could be successfully fitted."
+            )
+
+        self.all_req_features = sorted(list(all_req_features_set))
+        # Set standard sklearn attribute for broader compatibility
+        self.feature_names_in_ = np.array(self.all_req_features)
 
         return self
 
     def _check_X(self, X):
-        all_req_features = set().union(*(set(m[1]) for m in self.fitted_models))
-        missing = [f for f in all_req_features if f not in X.columns]
+        req = self.all_req_features
+        if req is None:
+            return
+        missing = [f for f in req if f not in X.columns]
         if missing:
             raise ValueError(f"Input DataFrame is missing required features: {missing}")
 
@@ -78,7 +106,9 @@ class SklearnEnsembleClassifier(BaseEstimator, ClassifierMixin):
                 # Ensure base learner predictions are flattened to 1D
                 all_preds.append(np.asarray(model.predict(X[features])).ravel())
             weights.append(weight)
-        return np.round(np.average(all_preds, axis=0, weights=weights)).astype(int).ravel()
+        return (
+            np.round(np.average(all_preds, axis=0, weights=weights)).astype(int).ravel()
+        )
 
     def predict_proba(self, X):
         self._check_X(X)

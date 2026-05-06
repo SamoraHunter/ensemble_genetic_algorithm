@@ -424,3 +424,4 @@ xgboost==2.1.1
 tqdm
 cupy-cuda12x
 black
+shap

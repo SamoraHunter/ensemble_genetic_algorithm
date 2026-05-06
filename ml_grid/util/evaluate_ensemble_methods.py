@@ -139,13 +139,17 @@ class EnsembleEvaluator:
         numeric_cols = X.select_dtypes(include=[np.number]).columns
         if len(numeric_cols) < X.shape[1]:
             omitted = list(set(X.columns) - set(numeric_cols))
-            logger.warning(f"Omitting non-numeric columns during evaluation loading: {omitted}")
+            logger.warning(
+                f"Omitting non-numeric columns during evaluation loading: {omitted}"
+            )
             X = X[numeric_cols]
 
         # Handle NaNs in the evaluation dataset to ensure model refitting succeeds
         if X.isnull().values.any():
-            logger.info("NaNs detected in evaluation features. Applying SimpleImputer (mean).")
-            imputer = SimpleImputer(strategy='mean')
+            logger.info(
+                "NaNs detected in evaluation features. Applying SimpleImputer (mean)."
+            )
+            imputer = SimpleImputer(strategy="mean")
             X = pd.DataFrame(imputer.fit_transform(X), columns=X.columns, index=X.index)
 
         self.original_feature_names = list(X.columns)
@@ -258,7 +262,9 @@ class EnsembleEvaluator:
                         "array": array,
                         "np": np,
                     }
-                    model_object = eval(model_string, {"__builtins__": {}}, eval_context)
+                    model_object = eval(
+                        model_string, {"__builtins__": {}}, eval_context
+                    )
                     new_tuple = list(model_tuple)
                     new_tuple[1] = model_object
                     processed_ensemble.append(tuple(new_tuple))

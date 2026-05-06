@@ -533,10 +533,14 @@ class pipe:
 
         # Handle NaNs via imputation instead of raising an error
         if self.X.isnull().values.any():
-            logger.info("NaNs detected in features. Applying SimpleImputer (mean strategy).")
-            imputer = SimpleImputer(strategy='mean')
+            logger.info(
+                "NaNs detected in features. Applying SimpleImputer (mean strategy)."
+            )
+            imputer = SimpleImputer(strategy="mean")
             self.X = pd.DataFrame(
-                imputer.fit_transform(self.X), columns=self.X.columns, index=self.X.index
+                imputer.fit_transform(self.X),
+                columns=self.X.columns,
+                index=self.X.index,
             )
 
         logger.info("------------------------")
