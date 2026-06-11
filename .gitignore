@@ -1,4 +1,4 @@
-# Byte-compiled / optimized / DLL files
+ # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
@@ -145,3 +145,5 @@ venv.bak/
 *~
 docs/_build/
 docs/source/*.rst
+run_ci.sh
+.INSTRUCTIONS.md
