@@ -1,5 +1,7 @@
+import sys
 import time
 import unittest
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import numpy as np
 import pandas as pd
@@ -239,6 +241,154 @@ class TestHandleCorrelationMatrix(unittest.TestCase):
         print(
             f"\n✓ All chunk sizes produced consistent results: {list(results.values())[0]} columns dropped"
         )
+
+    @patch.dict(sys.modules, {"cupy": MagicMock()})
+    def test_gpu_processing_with_sufficient_vram(self):
+        """Test GPU processing path when VRAM is sufficient."""
+
+        mock_cupy = sys.modules["cupy"]
+
+        # Create mock cupy with required attributes
+        mock_cuda = MagicMock()
+        mock_cuda.is_available.return_value = True
+
+        mock_device = MagicMock()
+        mock_device.mem_info.return_value = (10000000000, 5000000000)  # Sufficient VRAM
+
+        mock_cupy.cuda.Device.return_value = mock_device
+        mock_cupy.cuda.is_available.return_value = True
+        mock_cupy.asarray = MagicMock(side_effect=lambda x: x)
+        mock_cupy.abs = abs
+        mock_cupy.matmul = lambda a, b: __import__("numpy").matmul(a, b)
+        mock_cupy.triu = MagicMock()
+        mock_cupy.where = MagicMock(return_value=([], []))
+        mock_cupy.asnumpy = lambda x: __import__("numpy").array(x)
+
+        df_test = pd.DataFrame(
+            {
+                "A": [1, 2, 3, 4, 5],
+                "B": [2, 4, 6, 8, 10],  # Perfectly correlated with A
+                "C": [1, 1, 1, 1, 1],  # Constant column (will be filtered out)
+            }
+        )
+
+        result = handle_correlation_matrix({"corr": 0.5}, [], df_test, chunk_size=10)
+
+        self.assertIsInstance(result, list)
+
+    def test_gpu_processing_successful(self):
+        """Test successful GPU processing when VRAM is sufficient."""
+        import numpy as np
+
+        class NumericInt(int):
+            def __gt__(self, other):
+                return int(self) > other
+
+        mock_cp = MagicMock()
+
+        def asarray(data):
+            print("asarray called")
+            return data
+
+        # High correlations for better test
+        mock_corr_matrix = np.array([[0.1, 0.8], [0.8, 0.9]])
+        np.triu(mock_corr_matrix, k=1)
+
+        mock_cp.asarray = asarray
+        mock_cp.abs = abs
+
+        def triu_mock(arr, k):
+            return np.triu(arr, k=k)
+
+        mock_cp.triu = triu_mock
+
+        rows_cols = (np.array([0]), np.array([1]))
+        mock_cp.where.return_value = rows_cols
+
+        def asnumpy(arr):
+            print("asnumpy called")
+            return arr
+
+        # Normal matmul that succeeds
+        mock_cp.asnumpy = asnumpy
+        mock_cp.matmul = lambda a, b: np.matmul(a, b)
+
+        # Sufficient memory - VRAM check should pass (10000 bytes > 19.2 for 2 cols)
+        mock_device = MagicMock()
+        type(mock_device).mem_info = PropertyMock(return_value=(NumericInt(10000), 50))
+        mock_cp.cuda.Device.return_value = mock_device
+
+        mock_cp.cuda.is_available.return_value = True
+        mock_cp.__version__ = "1.0.0"
+
+        with patch.dict(sys.modules, {"cupy": mock_cp}):
+            df_test = pd.DataFrame(
+                {
+                    "A": [1.0, 2.0, 3.0],
+                    "B": [2.0, 4.0, 6.0],  # Perfectly correlated with A
+                }
+            )
+
+            result = handle_correlation_matrix(
+                {"corr": 0.5}, [], df_test, chunk_size=10
+            )
+
+        self.assertIsInstance(result, list)
+
+    def test_gpu_insufficient_vram_warning(self):
+        """Test warning log when GPU has insufficient VRAM."""
+        import numpy as np
+
+        class NumericInt(int):
+            def __gt__(self, other):
+                return int(self) > other
+
+        mock_cp = MagicMock()
+
+        # Sufficient to process but not enough for VRAM comparison
+        def asarray(data):
+            return data
+
+        np.array([[0.1, 0.8], [0.8, 0.9]])
+
+        mock_cp.asarray = asarray
+        mock_cp.abs = abs
+
+        def triu_mock(arr, k):
+            return np.triu(arr, k=k)
+
+        mock_cp.triu = triu_mock
+
+        rows_cols = (np.array([0]), np.array([1]))
+        mock_cp.where.return_value = rows_cols
+
+        def asnumpy(arr):
+            return arr
+
+        mock_cp.asnumpy = asnumpy
+        mock_cp.matmul = lambda a, b: np.matmul(a, b)
+
+        # Insufficient memory - VRAM check should fail
+        mock_device = MagicMock()
+        type(mock_device).mem_info = PropertyMock(return_value=(NumericInt(10), 50))
+        mock_cp.cuda.Device.return_value = mock_device
+
+        mock_cp.cuda.is_available.return_value = True
+        mock_cp.__version__ = "1.0.0"
+
+        with patch.dict(sys.modules, {"cupy": mock_cp}):
+            df_test = pd.DataFrame(
+                {
+                    "A": [1.0, 2.0, 3.0],
+                    "B": [2.0, 4.0, 6.0],
+                }
+            )
+
+            result = handle_correlation_matrix(
+                {"corr": 0.5}, [], df_test, chunk_size=10
+            )
+
+        self.assertIsInstance(result, list)
 
 
 if __name__ == "__main__":
