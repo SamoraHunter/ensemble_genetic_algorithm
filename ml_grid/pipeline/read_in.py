@@ -83,34 +83,52 @@ class read_sample:
         necessary_columns = ["outcome_var_1", "age", "male"]
         read_csv_args = {}
 
-        if test_sample_n > 0:
-            total_rows = sum(1 for line in open(self.filename))
-            if test_sample_n < total_rows:
-                read_csv_args["skiprows"] = np.random.choice(
-                    np.arange(1, total_rows), total_rows - test_sample_n, replace=False
-                )
+        if test_sample_n > 0 or column_sample_n > 0:
+            try:
+                if test_sample_n > 0:
+                    total_rows = sum(1 for line in open(self.filename))
+                    if test_sample_n < total_rows:
+                        read_csv_args["skiprows"] = np.random.choice(
+                            np.arange(1, total_rows),
+                            total_rows - test_sample_n,
+                            replace=False,
+                        )
 
-        if column_sample_n > 0:
-            all_columns = pd.read_csv(self.filename, nrows=1).columns.tolist()
-            if column_sample_n < len(all_columns):
-                # Ensure necessary columns are included if they exist
-                selected_necessary = [
-                    col for col in necessary_columns if col in all_columns
-                ]
-                remaining_columns = [
-                    col for col in all_columns if col not in selected_necessary
-                ]
+                if column_sample_n > 0:
+                    try:
+                        all_columns = pd.read_csv(
+                            self.filename, nrows=1
+                        ).columns.tolist()
+                        if column_sample_n < len(all_columns):
+                            # Ensure necessary columns are included if they exist
+                            selected_necessary = [
+                                col for col in necessary_columns if col in all_columns
+                            ]
+                            remaining_columns = [
+                                col
+                                for col in all_columns
+                                if col not in selected_necessary
+                            ]
 
-                # Calculate how many more columns to sample
-                n_additional_cols = column_sample_n - len(selected_necessary)
-                n_additional_cols = max(0, n_additional_cols)
+                            # Calculate how many more columns to sample
+                            n_additional_cols = column_sample_n - len(
+                                selected_necessary
+                            )
+                            n_additional_cols = max(0, n_additional_cols)
 
-                # Sample additional columns
-                selected_additional = random.sample(
-                    remaining_columns, min(len(remaining_columns), n_additional_cols)
-                )
+                            # Sample additional columns
+                            selected_additional = random.sample(
+                                remaining_columns,
+                                min(len(remaining_columns), n_additional_cols),
+                            )
 
-                read_csv_args["usecols"] = selected_necessary + selected_additional
+                            read_csv_args["usecols"] = (
+                                selected_necessary + selected_additional
+                            )
+                    except Exception as e:
+                        self.logger.error("Error during column sampling: %s", e)
+            except Exception as e:
+                self.logger.error("Error during sampling setup: %s", e)
 
         try:
             self.raw_input_data = pd.read_csv(self.filename, **read_csv_args)

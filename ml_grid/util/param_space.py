@@ -18,17 +18,29 @@ class ParamSpace:
     param_dict: Dict[str, Union[np.ndarray, List[bool]]]
     """A dictionary containing numpy arrays and lists for hyperparameter ranges."""
 
-    def __init__(self, size: str):
+    def __init__(self, size: Union[str, int]):
         """
         Initializes the ParamSpace with a specific size.
 
         Args:
             size: The size of the parameter space to generate.
-                Valid options are 'medium', 'xsmall', 'xwide'.
+                Valid string options are 'medium', 'xsmall', 'xwide'.
+                Integer values are interpreted as param_space_size and use default mapping.
         """
         self.param_dict = None
 
-        if size == "medium":
+        if isinstance(size, int):
+            self.param_dict = {
+                "log_small": np.logspace(-1, -5, 3),
+                "bool_param": [True, False],
+                "log_large": np.logspace(0, 2, 3).astype(int),
+                "log_large_long": np.floor(np.logspace(0, 3.1, 5)).astype(int),
+                "log_med_long": np.floor(np.logspace(0, 1.5, 5)).astype(int),
+                "log_med": np.floor(np.logspace(0, 1.5, 3)).astype(int),
+                "log_zero_one": np.logspace(0.0, 1.0, 3) / 10,
+                "lin_zero_one": np.linspace(0.0, 1.0, 3) / 10,
+            }
+        elif size == "medium":
 
             nstep = 3
             self.param_dict = {
@@ -42,7 +54,7 @@ class ParamSpace:
                 "lin_zero_one": np.linspace(0.0, 1.0, nstep) / 10,
             }
 
-        if size == "xsmall":
+        elif size == "xsmall":
 
             nstep = 2
             self.param_dict = {
@@ -56,7 +68,7 @@ class ParamSpace:
                 "lin_zero_one": np.linspace(0.0, 1.0, nstep) / 10,
             }
 
-        if size == "xwide":
+        elif size == "xwide":
 
             nstep = 2
             self.param_dict = {

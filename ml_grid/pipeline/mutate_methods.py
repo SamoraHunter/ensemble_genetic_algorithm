@@ -21,20 +21,21 @@ def baseLearnerGenerator(ml_grid_object):
 def mutateEnsemble(individual, ml_grid_object):
     try:
         logger.debug("original individual of size %s:", len(individual[0]) - 1)
-        n = random.randint(0, len(individual[0]) - 1)
-        logger.debug("Mutating individual at index %s", n)
-        try:
-            individual[0].pop(n)
-            logger.debug("Successfully popped %s from individual", n)
-        except IndexError as e:
-            logger.error(
-                "Failed to pop %s from individual of length %s, popping zero",
-                n,
-                len(individual[0]),
-            )
-            individual[0].pop(0)
+        if len(individual[0]) > 0:
+            n = random.randint(0, len(individual[0]) - 1)
+            logger.debug("Mutating individual at index %s", n)
+            try:
+                individual[0].pop(n)
+                logger.debug("Successfully popped %s from individual", n)
+            except IndexError as e:
+                logger.error(
+                    "Failed to pop %s from individual of length %s, popping zero",
+                    n,
+                    len(individual[0]),
+                )
+                individual[0].pop(0)
 
-            logger.error(e)
+                logger.error(e)
 
         individual[0].append(baseLearnerGenerator(ml_grid_object))
 

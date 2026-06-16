@@ -58,9 +58,9 @@ def store_model(
     with open(model_store_path, "r") as f:
         model_store_data = json.load(f)
 
-    idx = len(model_store_data["models"]) + 1
+    idx = int(len(model_store_data["models"]) + 1)
 
-    time_stamp = time.time_ns()
+    time_stamp = int(time.time_ns())
 
     if ml_grid_object.verbose >= 11:
         logger.debug("saving model type: %s", model_type)
@@ -87,13 +87,13 @@ def store_model(
 
     model_store_entry = {
         "index": idx,
-        "mcc_score": mccscore,
+        "mcc_score": float(mccscore),
         "model": model,
         "feature_list": feature_list,
-        "model_train_time": model_train_time,
-        "auc_score": auc_score,
-        "y_pred": list(y_pred),
-        "model_type": model_type,
+        "model_train_time": int(model_train_time),
+        "auc_score": float(auc_score),
+        "y_pred": y_pred.tolist(),
+        "model_type": str(model_type),
     }
 
     model_store_data["models"].update({idx: model_store_entry})

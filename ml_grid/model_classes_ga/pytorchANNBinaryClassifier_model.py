@@ -31,12 +31,15 @@ logger = logging.getLogger("ensemble_ga")
 def predict_with_fallback(
     model: nn.Module, X_batch: torch.Tensor, y_batch: torch.Tensor
 ) -> torch.Tensor:
-    """Predicts using the model, with a fallback to zero logits on error.
+    """Predicts using the model, with a fallback to zero logits on error or NaN.
 
     This function attempts to get a prediction from the model. If any exception
     occurs during the forward pass, it catches the error, prints a warning,
     and returns a tensor of zero logits with the correct shape, allowing
     the training loop to continue without crashing.
+
+    Additionally, if the model's output contains NaN values, this function
+    detects them and falls back to zero logits as well.
 
     Args:
         model (nn.Module): The PyTorch model to use for prediction.
@@ -45,10 +48,12 @@ def predict_with_fallback(
 
     Returns:
         torch.Tensor: The model's output tensor or a tensor of zero logits
-        if an exception occurred.
+        if an exception occurred or NaN values were detected.
     """
     try:
         y_pred = model(X_batch)
+        if torch.isnan(y_pred).any():
+            raise ValueError("Model output contains NaN values")
     except Exception as e:
         logger.warning(f"Model prediction failed with error: {e}. Using fallback.")
         # Fallback: return zero logits with the correct output shape.

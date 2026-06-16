@@ -1149,6 +1149,14 @@ class GA_results_explorer:
             temp_df.dropna(
                 subset=["avg_jaccard_similarity", outcome_variable], inplace=True
             )
+
+            # Check if we have any valid data points for plotting
+            if temp_df.empty:
+                logger.warning(
+                    "No valid ensemble diversity data to plot. All ensembles have fewer than 2 base learners or missing outcome variable."
+                )
+                return
+
         else:
             bl_cols = [col for col in self.df.columns if col.startswith("BL_")]
             if len(bl_cols) < 2:
@@ -1210,6 +1218,13 @@ class GA_results_explorer:
             temp_df.dropna(
                 subset=["avg_jaccard_similarity", outcome_variable], inplace=True
             )
+
+            # Check if we have any valid data points for plotting
+            if temp_df.empty:
+                logger.warning(
+                    "No valid ensemble diversity data to plot. All ensembles have fewer than 2 base learners or missing outcome variable."
+                )
+                return
 
         # --- Plotting ---
         plt.figure(figsize=(10, 7))

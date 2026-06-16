@@ -53,38 +53,34 @@ def validate_subsample(param_space: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         The (potentially modified) dictionary of hyperparameters.
     """
-    try:
-        if "subsample" in param_space:
-            subsample = param_space["subsample"]
-            if isinstance(subsample, list):
-                for i in range(len(subsample)):
-                    if (
-                        not isinstance(subsample[i], float)
-                        or subsample[i] <= 0.0
-                        or subsample[i] > 1.0
-                    ):
-                        param_space["subsample"][i] = max(
-                            0.01, min(float(subsample[i]), 1.0)
-                        )  # Change default value to 0.01
-                        logger.warning(
-                            "Invalid value for subsample[%s]. Setting it to a value within the valid range.",
-                            i,
-                        )
-            else:
+    if "subsample" in param_space:
+        subsample = param_space["subsample"]
+        if isinstance(subsample, list):
+            for i in range(len(subsample)):
+                try:
+                    val = float(subsample[i])
+                except (ValueError, TypeError):
+                    val = 0.01
                 if (
-                    not isinstance(subsample, float)
-                    or subsample <= 0.0
-                    or subsample > 1.0
+                    not isinstance(subsample[i], float)
+                    or subsample[i] <= 0.0
+                    or subsample[i] > 1.0
                 ):
-                    param_space["subsample"] = max(
-                        0.01, min(float(subsample), 1.0)
-                    )  # Change default value to 0.01
+                    param_space["subsample"][i] = max(0.01, min(val, 1.0))
                     logger.warning(
-                        "Invalid value for subsample. Setting it to a value within the valid range."
+                        "Invalid value for subsample[%s]. Setting it to a value within the valid range.",
+                        i,
                     )
-    except Exception as e:
-        logger.error("Error occurred. Input param_space: %s", param_space)
-        raise e
+        else:
+            try:
+                val = float(subsample)
+            except (ValueError, TypeError):
+                val = 0.01
+            if not isinstance(subsample, float) or subsample <= 0.0 or subsample > 1.0:
+                param_space["subsample"] = max(0.01, min(val, 1.0))
+                logger.warning(
+                    "Invalid value for subsample. Setting it to a value within the valid range."
+                )
     return param_space
 
 
