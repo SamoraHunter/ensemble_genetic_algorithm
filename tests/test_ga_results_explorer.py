@@ -177,11 +177,18 @@ def test_plot_base_learner_feature_importance_success():
                 "[[(0.5, 'Model1', [1, 0, 1], 0, 0.9, None)]]",
                 "[[(0.6, 'Model2', [0, 1, 1], 0, 0.8, None)]]",
                 "[[(0.7, 'Model3', [1, 1, 0], 0, 0.95, None)]]",
+                "[[(0.5, 'Model4', [1, 1, 1], 0, 0.88, None)]]",
+                "[[(0.6, 'Model5', [0, 0, 1], 0, 0.75, None)]]",
+                "[[(0.7, 'Model6', [1, 0, 0], 0, 0.82, None)]]",
+                "[[(0.5, 'Model7', [1, 1, 0], 0, 0.90, None)]]",
+                "[[(0.6, 'Model8', [0, 1, 0], 0, 0.77, None)]]",
+                "[[(0.7, 'Model9', [0, 0, 0], 0, 0.70, None)]]",
+                "[[(0.5, 'Model10', [1, 1, 1], 0, 0.94, None)]]",
             ],
             "original_feature_names": json.dumps(
                 ["feature_a", "feature_b", "feature_c"]
             ),
-            "auc": [0.85, 0.78, 0.92],
+            "auc": [0.85, 0.78, 0.92, 0.88, 0.75, 0.82, 0.90, 0.77, 0.70, 0.94],
         }
     )
 
@@ -192,7 +199,7 @@ def test_plot_base_learner_feature_importance_success():
         global_params_obj=global_params,
     )
 
-    assert len(explorer.df["feature_names"]) == 3
+    assert len(explorer.df["feature_names"]) == 10
 
 
 def test_plot_base_learner_feature_importance_success_full():
@@ -224,11 +231,18 @@ def test_plot_base_learner_feature_importance_success_full():
                 "[[(0.5, 'Model1', [1, 0, 1], 0, 0.9, None)]]",
                 "[[(0.6, 'Model2', [0, 1, 1], 0, 0.8, None)]]",
                 "[[(0.7, 'Model3', [1, 1, 0], 0, 0.95, None)]]",
+                "[[(0.5, 'Model4', [1, 1, 1], 0, 0.88, None)]]",
+                "[[(0.6, 'Model5', [0, 0, 1], 0, 0.75, None)]]",
+                "[[(0.7, 'Model6', [1, 0, 0], 0, 0.82, None)]]",
+                "[[(0.5, 'Model7', [1, 1, 0], 0, 0.90, None)]]",
+                "[[(0.6, 'Model8', [0, 1, 0], 0, 0.77, None)]]",
+                "[[(0.7, 'Model9', [0, 0, 0], 0, 0.70, None)]]",
+                "[[(0.5, 'Model10', [1, 1, 1], 0, 0.94, None)]]",
             ],
             "original_feature_names": json.dumps(
                 ["feature_a", "feature_b", "feature_c"]
             ),
-            "auc": [0.85, 0.78, 0.92],
+            "auc": [0.85, 0.78, 0.92, 0.88, 0.75, 0.82, 0.90, 0.77, 0.70, 0.94],
         }
     )
 
@@ -239,7 +253,7 @@ def test_plot_base_learner_feature_importance_success_full():
         global_params_obj=global_params,
     )
 
-    assert len(explorer.df["feature_names"]) == 3
+    assert len(explorer.df["feature_names"]) == 10
 
     result = explorer.plot_base_learner_feature_importance(outcome_variable="auc")
 
@@ -262,11 +276,18 @@ def test_plot_base_learner_feature_importance_with_plot_dir():
                 "[[(0.5, 'Model1', [1, 0, 1], 0, 0.9, None)]]",
                 "[[(0.6, 'Model2', [0, 1, 1], 0, 0.8, None)]]",
                 "[[(0.7, 'Model3', [1, 1, 0], 0, 0.95, None)]]",
+                "[[(0.5, 'Model4', [1, 1, 1], 0, 0.88, None)]]",
+                "[[(0.6, 'Model5', [0, 0, 1], 0, 0.75, None)]]",
+                "[[(0.7, 'Model6', [1, 0, 0], 0, 0.82, None)]]",
+                "[[(0.5, 'Model7', [1, 1, 0], 0, 0.90, None)]]",
+                "[[(0.6, 'Model8', [0, 1, 0], 0, 0.77, None)]]",
+                "[[(0.7, 'Model9', [0, 0, 0], 0, 0.70, None)]]",
+                "[[(0.5, 'Model10', [1, 1, 1], 0, 0.94, None)]]",
             ],
             "original_feature_names": json.dumps(
                 ["feature_a", "feature_b", "feature_c"]
             ),
-            "auc": [0.85, 0.78, 0.92],
+            "auc": [0.85, 0.78, 0.92, 0.88, 0.75, 0.82, 0.90, 0.77, 0.70, 0.94],
         }
     )
 
@@ -666,12 +687,18 @@ def test_plot_config_anova_with_plot_dir_success():
                 "[[(0.5, 'Model2', [1, 0, 1], 0, 0.8, None)]]",
                 "[[(0.6, 'Model3', [1, 1, 0], 0, 0.95, True)]]",
                 "[[(0.6, 'Model4', [1, 1, 1], 0, 0.92, None)]]",
+                "[[(0.5, 'Model5', [1, 0, 1], 0, 0.82, None)]]",
+                "[[(0.6, 'Model6', [1, 1, 0], 0, 0.91, True)]]",
+                "[[(0.5, 'Model7', [1, 0, 1], 0, 0.85, None)]]",
+                "[[(0.6, 'Model8', [1, 1, 0], 0, 0.93, True)]]",
+                "[[(0.5, 'Model9', [1, 0, 1], 0, 0.87, None)]]",
+                "[[(0.6, 'Model10', [1, 1, 0], 0, 0.89, True)]]",
             ],
             "original_feature_names": json.dumps(
                 ["feature_a", "feature_b", "feature_c"]
             ),
-            "auc": [0.85, 0.78, 0.92, 0.88],
-            "pop_val": [10, 10, 20, 20],
+            "auc": [0.85, 0.78, 0.92, 0.88, 0.82, 0.91, 0.85, 0.93, 0.87, 0.89],
+            "pop_val": [10, 10, 20, 20, 10, 20, 10, 20, 10, 20],
         }
     )
 
@@ -1220,13 +1247,31 @@ def test_plot_combined_anova_with_multiple_params_and_run_details():
                 "[[(0.5, 'Model1', [1, 0, 1], 0, 0.9, None)]]",
                 "[[(0.6, 'Model2', [0, 1, 1], 0, 0.8, False)]]",
                 "[[(0.7, 'Model3', [1, 1, 0], 0, 0.95, True)]]",
+                "[[(0.5, 'Model4', [1, 1, 1], 0, 0.88, None)]]",
+                "[[(0.6, 'Model5', [0, 0, 1], 0, 0.75, False)]]",
+                "[[(0.7, 'Model6', [1, 0, 0], 0, 0.82, True)]]",
+                "[[(0.5, 'Model7', [1, 1, 0], 0, 0.90, None)]]",
+                "[[(0.6, 'Model8', [0, 1, 0], 0, 0.77, False)]]",
+                "[[(0.7, 'Model9', [0, 0, 0], 0, 0.70, True)]]",
+                "[[(0.5, 'Model10', [1, 1, 1], 0, 0.94, None)]]",
             ],
             "original_feature_names": json.dumps(
                 ["feature_a", "feature_b", "feature_c"]
             ),
-            "auc": [0.85, 0.78, 0.92],
-            "weighted": [True, False, True],
-            "sex": ["M", "F", "M"],
+            "auc": [0.85, 0.78, 0.92, 0.88, 0.75, 0.82, 0.90, 0.77, 0.70, 0.94],
+            "weighted": [
+                True,
+                False,
+                True,
+                False,
+                True,
+                False,
+                True,
+                False,
+                True,
+                False,
+            ],
+            "sex": ["M", "F", "M", "F", "M", "F", "M", "F", "M", "F"],
         }
     )
 
