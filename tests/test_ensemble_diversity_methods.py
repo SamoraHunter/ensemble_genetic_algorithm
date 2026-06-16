@@ -137,6 +137,149 @@ class TestEnsembleDiversity(unittest.TestCase):
         self.assertEqual(penalized_auc, auc * 0.75)
         self.assertEqual(penalized_mcc, mcc * 0.75)
 
+    def test_apply_diversity_penalty_threshold_method(self):
+        """Test threshold penalty method."""
+        auc, mcc = 0.9, 0.8
+
+        # High similarity below threshold -> no penalty
+        below_threshold_params = {
+            "penalty_method": "threshold",
+            "penalty_strength": 0.5,
+            "similarity_threshold": 0.7,
+        }
+        penalized_auc, penalized_mcc = apply_diversity_penalty(
+            auc, mcc, 1.0, below_threshold_params
+        )
+        self.assertEqual(penalized_auc, auc)
+        self.assertEqual(penalized_mcc, mcc)
+
+        # High similarity above threshold -> penalty applied
+        params_above_threshold = {
+            "penalty_method": "threshold",
+            "penalty_strength": 0.5,
+            "similarity_threshold": 0.3,
+        }
+        penalized_auc, penalized_mcc = apply_diversity_penalty(
+            auc, mcc, 0.0, params_above_threshold
+        )
+        # similarity=1.0, threshold=0.3, excess=0.7, factor=1-0.5*0.7=0.65
+        self.assertEqual(penalized_auc, auc * 0.65)
+        self.assertEqual(penalized_mcc, mcc * 0.65)
+
+    def test_apply_diversity_penalty_unknown_method(self):
+        """Test fallback for unknown penalty method."""
+        auc, mcc = 0.9, 0.8
+        params = {"penalty_method": "unknown"}
+        penalized_auc, penalized_mcc = apply_diversity_penalty(auc, mcc, 0.5, params)
+        self.assertEqual(penalized_auc, auc)
+        self.assertEqual(penalized_mcc, mcc)
+
+    def test_apply_diversity_penalty_multiple_methods(self):
+        """Test quadratic and exponential penalty methods."""
+        auc, mcc = 0.9, 0.8
+
+        # Quadratic method
+        params_quadratic = {"penalty_method": "quadratic", "penalty_strength": 0.5}
+        penalized_auc, penalized_mcc = apply_diversity_penalty(
+            auc, mcc, 0.0, params_quadratic
+        )
+        # similarity=1.0, factor=1-0.5*1^2=0.5
+        self.assertEqual(penalized_auc, auc * 0.5)
+        self.assertEqual(penalized_mcc, mcc * 0.5)
+
+        # Exponential method
+        import numpy as np
+
+        params_exponential = {"penalty_method": "exponential", "penalty_strength": 0.5}
+        penalized_auc, penalized_mcc = apply_diversity_penalty(
+            auc, mcc, 0.0, params_exponential
+        )
+        expected_factor = np.exp(-0.5 * 1.0)
+        self.assertAlmostEqual(penalized_auc, auc * expected_factor)
+        self.assertAlmostEqual(penalized_mcc, mcc * expected_factor)
+
+    def test_measure_diversity_wrapper(self):
+        """Test the measure_diversity_wrapper function."""
+        from ml_grid.util.ensemble_diversity_methods import (
+            measure_diversity_wrapper,
+        )
+
+        result = measure_diversity_wrapper(self.partial_ensemble, method="jaccard")
+        self.assertIsInstance(result, float)
+
+    def test_measure_diversity_unknown_method(self):
+        """Test EnsembleDiversityMeasurer with unknown method raises ValueError."""
+        measurer = EnsembleDiversityMeasurer(method="unknown_method")
+        with self.assertRaises(ValueError) as context:
+            measurer.measure_binary_vector_diversity(self.partial_ensemble)
+        self.assertIn("Unknown method", str(context.exception))
+
+    def test_measure_diversity_comprehensive_method(self):
+        """Test comprehensive method weight combination."""
+        from ml_grid.util.ensemble_diversity_methods import (
+            EnsembleDiversityMeasurer,
+        )
+
+        # Test with custom weights
+        custom_weights = [0.4, 0.3, 0.2, 0.1]
+        measurer = EnsembleDiversityMeasurer(
+            method="comprehensive", weights=custom_weights
+        )
+        self.assertEqual(measurer.weights, custom_weights)
+
+    def test_apply_diversity_penalty_custom_params(self):
+        """Test apply_diversity_penalty with custom min_score_factor."""
+        auc, mcc = 0.9, 0.8
+        params = {
+            "penalty_method": "linear",
+            "penalty_strength": 0.5,
+            "min_score_factor": 0.2,
+        }
+        # When diversity=0, similarity=1, factor would be 0.5 but min is 0.2
+        penalized_auc, penalized_mcc = apply_diversity_penalty(auc, mcc, 0.0, params)
+        self.assertEqual(penalized_auc, auc * 0.5)
+        self.assertEqual(penalized_mcc, mcc * 0.5)
+
+    def test_apply_diversity_penalty_low_min_score_factor(self):
+        """Test that min_score_factor can be exceeded with higher penalty."""
+        auc, mcc = 0.9, 0.8
+        params = {
+            "penalty_method": "linear",
+            "penalty_strength": 3.0,
+            "min_score_factor": 0.1,
+        }
+        # With strength=3 and similarity=1, factor would be 1-3*1=-2 but min is 0.1
+        penalized_auc, penalized_mcc = apply_diversity_penalty(auc, mcc, 0.0, params)
+        self.assertEqual(penalized_auc, auc * 0.1)
+        self.assertEqual(penalized_mcc, mcc * 0.1)
+
+    def test_measure_diversity_wrapper_comprehensive(self):
+        """Test measure_diversity_wrapper with comprehensive method."""
+        from ml_grid.util.ensemble_diversity_methods import (
+            measure_diversity_wrapper,
+        )
+
+        result = measure_diversity_wrapper(
+            self.partial_ensemble, method="comprehensive"
+        )
+        self.assertIsInstance(result, float)
+        self.assertGreaterEqual(result, 0)
+        self.assertLessEqual(result, 1)
+
+    def test_measure_diversity_all_methods(self):
+        """Test all diversity measurement methods."""
+        from ml_grid.util.ensemble_diversity_methods import (
+            EnsembleDiversityMeasurer,
+        )
+
+        methods = ["jaccard", "hamming", "disagreement", "q_statistic", "kappa"]
+        for method in methods:
+            measurer = EnsembleDiversityMeasurer(method=method)
+            result = measurer.measure_binary_vector_diversity(self.partial_ensemble)
+            self.assertIsInstance(result, float)
+            self.assertGreaterEqual(result, 0)
+            self.assertLessEqual(result, 1)
+
     def test_diversity_with_single_member(self):
         """Test that diversity is 0 for an ensemble with one member."""
         self.assertEqual(
