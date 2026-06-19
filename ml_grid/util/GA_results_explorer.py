@@ -294,7 +294,7 @@ class GA_results_explorer:
 
         # --- Plotting ---
         plt.style.use("seaborn-v0_8-whitegrid")
-        plt.figure(figsize=(12, 10))
+        fig, ax = plt.subplots(figsize=(12, 10))
 
         # Create the bar plot
         barplot = sns.barplot(
@@ -303,21 +303,22 @@ class GA_results_explorer:
             data=results_df,
             palette="viridis",
             orient="h",
+            ax=ax,
         )
 
         # Set plot title and labels
-        plt.title(
+        ax.set_title(
             f"Importance of Configuration Parameters on {outcome_variable.upper()} (ANOVA F-test)",
             fontsize=16,
             fontweight="bold",
             pad=20,
         )
-        plt.xlabel("F-statistic (Higher = More Important)", fontsize=12)
-        plt.ylabel("Hyperparameter", fontsize=12)
+        ax.set_xlabel("F-statistic (Higher = More Important)", fontsize=12)
+        ax.set_ylabel("Hyperparameter", fontsize=12)
 
         # Add data labels (F-statistic values) to the bars for clarity
         for patch in barplot.patches:
-            plt.text(
+            ax.text(
                 patch.get_width() * 1.01,  # x-coordinate
                 patch.get_y() + patch.get_height() / 2,  # y-coordinate
                 f"{patch.get_width():.2f}",  # Text label
@@ -326,12 +327,12 @@ class GA_results_explorer:
                 color="dimgray",
             )
 
-        plt.tight_layout()
+        fig.tight_layout()
         if plot_dir:
             try:
                 if not os.path.exists(plot_dir):
                     os.makedirs(plot_dir)
-                plt.savefig(
+                fig.savefig(
                     os.path.join(plot_dir, f"config_anova_{outcome_variable}.png"),
                     bbox_inches="tight",
                 )
@@ -341,6 +342,7 @@ class GA_results_explorer:
             except Exception as e:
                 logger.warning("Could not save plot to '%s': %s", plot_dir, e)
         plt.show()
+        plt.close(fig)
 
         # Print the detailed results table
         logger.info(
@@ -549,8 +551,9 @@ class GA_results_explorer:
 
         # --- Plotting ---
         plt.style.use("seaborn-v0_8-whitegrid")
-        # Increase figure height to accommodate all parameters
-        plt.figure(figsize=(14, 16))
+        fig, ax = plt.subplots(
+            figsize=(14, 16)
+        )
 
         # Create the bar plot, using 'hue' to color-code the bars by 'Type'
         sns.barplot(
@@ -563,35 +566,35 @@ class GA_results_explorer:
             palette={
                 "Hyperparameter": "#3498db",
                 "Run Detail": "#f1c40f",
-            },  # Custom colours
+            },
+            ax=ax,
         )
 
         # Set plot title and labels
-        plt.title(
+        ax.set_title(
             f"Combined Importance of All Parameters on {outcome_variable.upper()} (ANOVA F-test)",
             fontsize=18,
             fontweight="bold",
             pad=20,
         )
-        plt.xlabel("F-statistic (Higher = More Impact)", fontsize=14)
-        plt.ylabel("Parameter / Run Detail", fontsize=14)
-        plt.tick_params(axis="y", labelsize=12)
-        plt.tick_params(axis="x", labelsize=12)
+        ax.set_xlabel("F-statistic (Higher = More Impact)", fontsize=14)
+        ax.set_ylabel("Parameter / Run Detail", fontsize=14)
+        ax.tick_params(axis="y", labelsize=12)
+        ax.tick_params(axis="x", labelsize=12)
 
         # Enhance the legend
-        plt.legend(title="Parameter Type", fontsize=12, title_fontsize=14)
+        ax.legend(title="Parameter Type", fontsize=12, title_fontsize=14)
 
-        plt.tight_layout()
+        fig.tight_layout()
 
         if plot_dir:
-            plt.savefig(
+            fig.savefig(
                 os.path.join(plot_dir, f"combined_anova_{outcome_variable}.png"),
                 dpi=300,
                 bbox_inches="tight",
             )
-
         plt.show()
-        plt.close()
+        plt.close(fig)
 
         # Print the detailed results table
         logger.info(
@@ -780,32 +783,33 @@ class GA_results_explorer:
             results_df, "initial feature importance"
         )
 
-        # --- Plotting ---
+       # --- Plotting ---
         plt.style.use("seaborn-v0_8-whitegrid")
-        plt.figure(figsize=(12, max(8, len(results_df) * 0.4)))  # Dynamic height
+        fig, ax = plt.subplots(figsize=(12, max(8, len(results_df) * 0.4)))
 
         sns.barplot(
-            x="F-statistic", y="Feature", data=results_df, palette="crest", orient="h"
+            x="F-statistic", y="Feature", data=results_df, palette="crest", orient="h", ax=ax
         )
 
-        plt.title(
+        ax.set_title(
             f"Importance of Initial Features on {outcome_variable.upper()} (ANOVA F-test)",
             fontsize=16,
             fontweight="bold",
             pad=20,
         )
-        plt.xlabel("F-statistic (Higher = More Impact)", fontsize=12)
-        plt.ylabel("Initial Feature", fontsize=12)
+        ax.set_xlabel("F-statistic (Higher = More Impact)", fontsize=12)
+        ax.set_ylabel("Initial Feature", fontsize=12)
 
-        plt.tight_layout()
+        fig.tight_layout()
 
         if plot_dir is not None:
-            plot_path = os.path.join(plot_dir, "initial_feature_importance.png")
-            plt.savefig(plot_path)
+            plot_path = os.path.join(plot_dir, "base_learner_feature_importance.png")
+            fig.savefig(plot_path)
             logger.info("✅ Feature importance plot saved to: %s", plot_path)
+            plt.close(fig)
 
         plt.show()
-        plt.close()
+        plt.close(fig)
 
         # 5. Print the results table
         logger.info(
@@ -943,31 +947,33 @@ class GA_results_explorer:
 
         # --- Plotting ---
         plt.style.use("seaborn-v0_8-whitegrid")
-        plt.figure(figsize=(12, max(8, len(results_df) * 0.4)))  # Dynamic height
-
-        sns.barplot(
-            x="F-statistic", y="Feature", data=results_df, palette="rocket", orient="h"
+        fig, ax = plt.subplots(
+            figsize=(12, max(8, len(results_df) * 0.4))
         )
 
-        plt.title(
+        sns.barplot(
+            x="F-statistic", y="Feature", data=results_df, palette="rocket", orient="h", ax=ax
+        )
+
+        ax.set_title(
             f"Importance of Base Learner Features on {outcome_variable.upper()} (ANOVA F-test)",
             fontsize=16,
             fontweight="bold",
             pad=20,
         )
-        plt.xlabel("F-statistic (Higher = More Impact)", fontsize=12)
-        plt.ylabel("Base Learner Feature", fontsize=12)
+        ax.set_xlabel("F-statistic (Higher = More Impact)", fontsize=12)
+        ax.set_ylabel("Base Learner Feature", fontsize=12)
 
-        plt.tight_layout()
+        fig.tight_layout()
 
         if plot_dir is not None:
             plot_path = os.path.join(plot_dir, "base_learner_feature_importance.png")
-            plt.savefig(plot_path)
+            fig.savefig(plot_path)
             logger.info("✅ Feature importance plot saved to: %s", plot_path)
-            plt.close()
+            plt.close(fig)
 
         plt.show()
-        plt.close()
+        plt.close(fig)
 
         # 6. Print the results table
         logger.info(
@@ -1015,7 +1021,10 @@ class GA_results_explorer:
             n_cols = min(3, len(params_to_plot))
             n_rows = math.ceil(len(params_to_plot) / n_cols)
             fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 4.5 * n_rows))
-            axes = axes.flatten()
+            if n_rows == 1 and n_cols == 1:
+                axes = [axes]
+            else:
+                axes = axes.flatten()
 
             logger.info("📊 Generating distribution plots for %s...", param_type)
             for i, param in enumerate(params_to_plot):
