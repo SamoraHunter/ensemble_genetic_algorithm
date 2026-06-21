@@ -551,9 +551,7 @@ class GA_results_explorer:
 
         # --- Plotting ---
         plt.style.use("seaborn-v0_8-whitegrid")
-        fig, ax = plt.subplots(
-            figsize=(14, 16)
-        )
+        fig, ax = plt.subplots(figsize=(14, 16))
 
         # Create the bar plot, using 'hue' to color-code the bars by 'Type'
         sns.barplot(
@@ -783,12 +781,17 @@ class GA_results_explorer:
             results_df, "initial feature importance"
         )
 
-       # --- Plotting ---
+        # --- Plotting ---
         plt.style.use("seaborn-v0_8-whitegrid")
         fig, ax = plt.subplots(figsize=(12, max(8, len(results_df) * 0.4)))
 
         sns.barplot(
-            x="F-statistic", y="Feature", data=results_df, palette="crest", orient="h", ax=ax
+            x="F-statistic",
+            y="Feature",
+            data=results_df,
+            palette="crest",
+            orient="h",
+            ax=ax,
         )
 
         ax.set_title(
@@ -947,12 +950,15 @@ class GA_results_explorer:
 
         # --- Plotting ---
         plt.style.use("seaborn-v0_8-whitegrid")
-        fig, ax = plt.subplots(
-            figsize=(12, max(8, len(results_df) * 0.4))
-        )
+        fig, ax = plt.subplots(figsize=(12, max(8, len(results_df) * 0.4)))
 
         sns.barplot(
-            x="F-statistic", y="Feature", data=results_df, palette="rocket", orient="h", ax=ax
+            x="F-statistic",
+            y="Feature",
+            data=results_df,
+            palette="rocket",
+            orient="h",
+            ax=ax,
         )
 
         ax.set_title(
