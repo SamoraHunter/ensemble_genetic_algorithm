@@ -147,3 +147,4 @@ docs/_build/
 docs/source/*.rst
 run_ci.sh
 .INSTRUCTIONS.md
+.skills/*
