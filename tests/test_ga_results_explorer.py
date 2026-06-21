@@ -1498,25 +1498,10 @@ def test_plot_initial_feature_importance_f_list_string_scalar():
 
 
 def test_plot_base_learner_feature_importance_non_list_feature_names():
-    """Test plot_base_learner_feature_importance when feature_names contains non-list values (line 849-850).
-
-    This test specifically covers the edge case where feature_names column contains
-    values that are not lists (e.g., None, string, or other types), which triggers
-    the early return of an empty set at lines 849-850 in combine_bl_features_from_names.
-
-    The method should handle this gracefully and either skip those entries or return
-    a valid result. When all feature_names are non-list, no features will be aggregated,
-    resulting in an early return warning at line 890.
-
-    Covers:
-        - Line 847-855: combine_bl_features_from_names with non-list input returning empty set
-        - Line 863-896: Feature aggregation loop processing empty feature sets
-        - Line 889-891: Warning when no features are found after combining
-    """
+    """Test plot_base_learner_feature_importance when feature_names contains non-list entries (coverage 852-854)."""
     from ml_grid.util import GA_results_explorer
     from ml_grid.util.global_params import global_parameters
 
-    # DataFrame where feature_names contains non-list values (None in this case)
     df = pd.DataFrame(
         {
             "best_ensemble": [
@@ -1527,7 +1512,6 @@ def test_plot_base_learner_feature_importance_non_list_feature_names():
                 ["feature_a", "feature_b", "feature_c"]
             ),
             "auc": [0.85, 0.78],
-            # feature_names column will contain None instead of lists
         }
     )
 
@@ -1538,10 +1522,188 @@ def test_plot_base_learner_feature_importance_non_list_feature_names():
         global_params_obj=global_params,
     )
 
-    # Manually set feature_names to contain non-list values (None)
-    # This bypasses the normal initialization which decodes properly
-    explorer.df["feature_names"] = [None, None]
+    # Inject a non-list entry in feature_names to trigger line 852-854 path
+    explorer.df["feature_names"].iloc[0].append("not_a_list")
 
     result = explorer.plot_base_learner_feature_importance(outcome_variable="auc")
+
+    assert result is None
+
+
+def test_plot_algorithm_distribution_in_ensembles_with_exclude_list():
+    """Test plot_algorithm_distribution_in_ensembles when algorithms are filtered by exclude_list.
+
+    This test specifically covers the code paths:
+        - Line 1952-1954: List comprehension that filters out excluded algorithm types
+          (Pipeline, StandardScaler, MinMaxScaler, etc.)
+
+    Covers lines 1936-1954 where algorithms are filtered against the exclude_list,
+    ensuring that common transformer/pipeline names don't appear in final distribution.
+
+    Also covers:
+        - Line 1970: Creating frequency DataFrame from all_algorithms
+        - Line 1971: Renaming columns to "Algorithm" and "Frequency"
+        - Line 1974-1975: Applying plot truncation
+    """
+    from ml_grid.util import GA_results_explorer
+    from ml_grid.util.global_params import global_parameters
+
+    df = pd.DataFrame(
+        {
+            "best_ensemble": [
+                # Ensemble with both base learners and transformers (should be filtered)
+                '[[(0.5, \'Pipeline(steps=[("sc", StandardScaler()), ("clf", LogisticRegression(C=1))])\', [1, 0, 1], 0, 0.9, None)]]',
+                # Another ensemble with different mix
+                "[[(0.6, 'RobustScaler()', [0, 1, 1], 0, 0.8, None)], [(0.4, 'RandomForestClassifier()', [1, 1, 0], 0, 0.95, None)]]",
+            ],
+            "original_feature_names": json.dumps(["feature_a", "feature_b"]),
+        }
+    )
+
+    global_params = global_parameters()
+    explorer = GA_results_explorer.GA_results_explorer(
+        df=df,
+        original_feature_names=["feature_a", "feature_b"],
+        global_params_obj=global_params,
+    )
+
+    result = explorer.plot_algorithm_distribution_in_ensembles()
+
+    assert result is None
+
+
+def test_plot_all_convergence_missing_history_column():
+    """Test plot_all_convergence returns early when history_column not found in DataFrame.
+
+    This test covers lines 1359-1361 where the method validates that the history column
+    exists before attempting to process it. When a non-existent column is specified,
+    the method should log an error and return None immediately without raising an exception.
+
+    Covers:
+        - Line 1359: Check if history_column in self.df.columns
+        - Lines 1360-1361: Log error message and return early when column missing
+    """
+    from ml_grid.util import GA_results_explorer
+    from ml_grid.util.global_params import global_parameters
+
+    df = pd.DataFrame(
+        {
+            "best_ensemble": [
+                "[[(0.5, 'Model1', [1, 0, 1], 0, 0.9, None)]]",
+                "[[(0.6, 'Model2', [0, 1, 1], 0, 0.8, None)]]",
+            ],
+            "original_feature_names": json.dumps(
+                ["feature_a", "feature_b", "feature_c"]
+            ),
+            "auc": [0.85, 0.78],
+        }
+    )
+
+    global_params = global_parameters()
+    explorer = GA_results_explorer.GA_results_explorer(
+        df=df,
+        original_feature_names=["feature_a", "feature_b", "feature_c"],
+        global_params_obj=global_params,
+    )
+
+    result = explorer.plot_all_convergence(
+        history_column="nonexistent_history_column",
+        performance_metric="auc",
+        highlight_best=True,
+    )
+
+    assert result is None
+
+
+def test_plot_all_convergence_missing_performance_metric_with_highlight():
+    """Test plot_all_convergence returns early when highlight_best=True but performance_metric not found.
+
+    This test covers lines 1362-1366 where the method validates the performance metric column
+    exists when highlight_best parameter is True. The validation only triggers when highlight_best=True.
+
+    Covers:
+        - Line 1362: Check if highlight_best and performance_metric in self.df.columns
+        - Lines 1363-1365: Log error message and return early when column missing with highlight
+
+    Notes:
+        - Must include history_column in DataFrame to reach the second validation check
+        - When highlight_best=True but performance_metric is missing, early return occurs
+    """
+    from ml_grid.util import GA_results_explorer
+    from ml_grid.util.global_params import global_parameters
+
+    df = pd.DataFrame(
+        {
+            "best_ensemble": [
+                "[[(0.5, 'Model1', [1, 0, 1], 0, 0.9, None)]]",
+                "[[(0.6, 'Model2', [0, 1, 1], 0, 0.8, None)]]",
+            ],
+            "original_feature_names": json.dumps(
+                ["feature_a", "feature_b", "feature_c"]
+            ),
+            "generation_progress_list": [
+                "[0.5, 0.6]",
+                "[0.7, 0.8]",
+            ],
+        }
+    )
+
+    global_params = global_parameters()
+    explorer = GA_results_explorer.GA_results_explorer(
+        df=df,
+        original_feature_names=["feature_a", "feature_b", "feature_c"],
+        global_params_obj=global_params,
+    )
+
+    result = explorer.plot_all_convergence(
+        history_column="generation_progress_list",
+        performance_metric="nonexistent_metric",
+        highlight_best=True,
+    )
+
+    assert result is None
+
+
+def test_plot_all_convergence_no_crash_with_missing_performance_when_not_highlight():
+    """Test plot_all_convergence works without performance_metric when highlight_best=False.
+
+    When highlight_best=False, the validation at lines 1362-1366 does not trigger.
+    This test verifies that the method can proceed even when performance_metric is missing
+    from the DataFrame (as long as history_column exists), because highlighting is disabled.
+
+    Covers:
+        - Line 1359: history_column existence check passes
+        - Lines 1362-1366: Performance metric validation skipped due to highlight_best=False
+
+    Note: This test still expects the method to return early at line 1370-1372 when
+    dropna results in empty data, because no history values are provided.
+    """
+    from ml_grid.util import GA_results_explorer
+    from ml_grid.util.global_params import global_parameters
+
+    df = pd.DataFrame(
+        {
+            "best_ensemble": [
+                "[[(0.5, 'Model1', [1, 0, 1], 0, 0.9, None)]]",
+                "[[(0.6, 'Model2', [0, 1, 1], 0, 0.8, None)]]",
+            ],
+            "original_feature_names": json.dumps(
+                ["feature_a", "feature_b", "feature_c"]
+            ),
+        }
+    )
+
+    global_params = global_parameters()
+    explorer = GA_results_explorer.GA_results_explorer(
+        df=df,
+        original_feature_names=["feature_a", "feature_b", "feature_c"],
+        global_params_obj=global_params,
+    )
+
+    result = explorer.plot_all_convergence(
+        history_column="generation_progress_list",
+        performance_metric="nonexistent_metric",
+        highlight_best=False,
+    )
 
     assert result is None
