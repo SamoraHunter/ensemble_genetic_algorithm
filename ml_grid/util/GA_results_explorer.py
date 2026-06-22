@@ -257,8 +257,8 @@ class GA_results_explorer:
                     anova_table = sm.stats.anova_lm(model, typ=2)
 
                     # Extract F-statistic and p-value for the parameter from the anova table
-                    f_value = anova_table["F"][0]
-                    p_value = anova_table["PR(>F)"][0]
+                    f_value = anova_table["F"].iloc[0]
+                    p_value = anova_table["PR(>F)"].iloc[0]
 
                     anova_results.append(
                         {"Parameter": param, "F-statistic": f_value, "p-value": p_value}
@@ -522,8 +522,8 @@ class GA_results_explorer:
                         all_results.append(
                             {
                                 "Parameter": param_name,
-                                "F-statistic": anova_table["F"][0],
-                                "p-value": anova_table["PR(>F)"][0],
+                                "F-statistic": anova_table["F"].iloc[0],
+                                "p-value": anova_table["PR(>F)"].iloc[0],
                                 "Type": param_type,  # Assign the type for color-coding
                             }
                         )
@@ -756,11 +756,20 @@ class GA_results_explorer:
                 model = ols(formula, data=temp_df).fit()
                 anova_table = sm.stats.anova_lm(model, typ=2)
 
+                # Verify ANOVA produced valid results
+                if pd.isna(anova_table["F"].iloc[0]) or pd.isna(
+                    anova_table["PR(>F)"].iloc[0]
+                ):
+                    logger.warning(
+                        "Could not perform ANOVA for '%s': NaN in anova_table", feature
+                    )
+                    continue
+
                 anova_results.append(
                     {
                         "Feature": feature,
-                        "F-statistic": anova_table["F"][0],
-                        "p-value": anova_table["PR(>F)"][0],
+                        "F-statistic": anova_table["F"].iloc[0],
+                        "p-value": anova_table["PR(>F)"].iloc[0],
                     }
                 )
             except Exception as e:
@@ -923,11 +932,22 @@ class GA_results_explorer:
                 formula = f"{outcome_variable} ~ C(has_feature)"
                 model = ols(formula, data=temp_df).fit()
                 anova_table = sm.stats.anova_lm(model, typ=2)
+
+                # Verify ANOVA produced valid results
+                if pd.isna(anova_table["F"].iloc[0]) or pd.isna(
+                    anova_table["PR(>F)"].iloc[0]
+                ):
+                    logger.warning(
+                        "Could not perform ANOVA for '%s': NaN result in anova_table",
+                        feature,
+                    )
+                    continue
+
                 anova_results.append(
                     {
                         "Feature": feature,
-                        "F-statistic": anova_table["F"][0],
-                        "p-value": anova_table["PR(>F)"][0],
+                        "F-statistic": anova_table["F"].iloc[0],
+                        "p-value": anova_table["PR(>F)"].iloc[0],
                     }
                 )
             except Exception as e:

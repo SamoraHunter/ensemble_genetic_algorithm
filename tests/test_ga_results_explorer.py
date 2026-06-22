@@ -264,6 +264,11 @@ def test_plot_base_learner_feature_importance_with_plot_dir():
     """Test plot_base_learner_feature_importance with plot_dir provided.
 
     This test covers the lines 963-970 where plot_path is constructed and saved.
+
+    Test data has two groups of 5 rows:
+    - Group 1: [1,0,1] (feature_a + feature_c) with high AUC (~0.92)
+    - Group 2: [0,1,1] (feature_b + feature_c) with low AUC (~0.78)
+    This gives ANOVA clear separation for feature_a and feature_b.
     """
     import tempfile
 
@@ -273,21 +278,32 @@ def test_plot_base_learner_feature_importance_with_plot_dir():
     df = pd.DataFrame(
         {
             "best_ensemble": [
-                "[[(0.5, 'Model1', [1, 0, 1], 0, 0.9, None)]]",
-                "[[(0.6, 'Model2', [0, 1, 1], 0, 0.8, None)]]",
-                "[[(0.7, 'Model3', [1, 1, 0], 0, 0.95, None)]]",
-                "[[(0.5, 'Model4', [1, 1, 1], 0, 0.88, None)]]",
-                "[[(0.6, 'Model5', [0, 0, 1], 0, 0.75, None)]]",
-                "[[(0.7, 'Model6', [1, 0, 0], 0, 0.82, None)]]",
-                "[[(0.5, 'Model7', [1, 1, 0], 0, 0.90, None)]]",
-                "[[(0.6, 'Model8', [0, 1, 0], 0, 0.77, None)]]",
-                "[[(0.7, 'Model9', [0, 0, 0], 0, 0.70, None)]]",
-                "[[(0.5, 'Model10', [1, 1, 1], 0, 0.94, None)]]",
+                "[[(0.5, 'Model1', [1, 0, 1], 0, 0.92, None)]]",
+                "[[(0.6, 'Model2', [1, 0, 1], 0, 0.94, None)]]",
+                "[[(0.7, 'Model3', [1, 0, 1], 0, 0.90, None)]]",
+                "[[(0.5, 'Model4', [1, 0, 1], 0, 0.95, None)]]",
+                "[[(0.6, 'Model5', [1, 0, 1], 0, 0.93, None)]]",
+                "[[(0.7, 'Model6', [0, 1, 1], 0, 0.78, None)]]",
+                "[[(0.5, 'Model7', [0, 1, 1], 0, 0.76, None)]]",
+                "[[(0.6, 'Model8', [0, 1, 1], 0, 0.79, None)]]",
+                "[[(0.7, 'Model9', [0, 1, 1], 0, 0.75, None)]]",
+                "[[(0.5, 'Model10', [0, 1, 1], 0, 0.80, None)]]",
             ],
             "original_feature_names": json.dumps(
                 ["feature_a", "feature_b", "feature_c"]
             ),
-            "auc": [0.85, 0.78, 0.92, 0.88, 0.75, 0.82, 0.90, 0.77, 0.70, 0.94],
+            "auc": [
+                0.92,
+                0.94,
+                0.90,
+                0.95,
+                0.93,
+                0.78,
+                0.76,
+                0.79,
+                0.75,
+                0.80,
+            ],
         }
     )
 
@@ -674,7 +690,13 @@ def test_plot_combined_anova_missing_outcome():
 
 
 def test_plot_config_anova_with_plot_dir_success():
-    """Test plot_config_anova_feature_importances with plot_dir provided."""
+    """Test plot_config_anova_feature_importances with plot_dir provided.
+
+    Test data has two groups of 5 rows:
+    - Group 1 (pop_val=10): low AUC (~0.73)
+    - Group 2 (pop_val=20): high AUC (~0.92)
+    This gives ANOVA clear separation with meaningful variance.
+    """
     import tempfile
 
     from ml_grid.util import GA_results_explorer
@@ -686,19 +708,19 @@ def test_plot_config_anova_with_plot_dir_success():
                 "[[(0.5, 'Model1', [1, 0, 1], 0, 0.9, None)]]",
                 "[[(0.5, 'Model2', [1, 0, 1], 0, 0.8, None)]]",
                 "[[(0.6, 'Model3', [1, 1, 0], 0, 0.95, True)]]",
-                "[[(0.6, 'Model4', [1, 1, 1], 0, 0.92, None)]]",
-                "[[(0.5, 'Model5', [1, 0, 1], 0, 0.82, None)]]",
-                "[[(0.6, 'Model6', [1, 1, 0], 0, 0.91, True)]]",
-                "[[(0.5, 'Model7', [1, 0, 1], 0, 0.85, None)]]",
-                "[[(0.6, 'Model8', [1, 1, 0], 0, 0.93, True)]]",
-                "[[(0.5, 'Model9', [1, 0, 1], 0, 0.87, None)]]",
-                "[[(0.6, 'Model10', [1, 1, 0], 0, 0.89, True)]]",
+                "[[(0.6, 'Model4', [1, 1, 1], 0, 0.72, None)]]",
+                "[[(0.5, 'Model5', [1, 0, 1], 0, 0.75, None)]]",
+                "[[(0.6, 'Model6', [1, 1, 0], 0, 0.93, True)]]",
+                "[[(0.5, 'Model7', [1, 0, 1], 0, 0.88, None)]]",
+                "[[(0.6, 'Model8', [1, 1, 0], 0, 0.92, True)]]",
+                "[[(0.5, 'Model9', [1, 0, 1], 0, 0.74, None)]]",
+                "[[(0.6, 'Model10', [1, 1, 0], 0, 0.91, True)]]",
             ],
             "original_feature_names": json.dumps(
                 ["feature_a", "feature_b", "feature_c"]
             ),
-            "auc": [0.85, 0.78, 0.92, 0.88, 0.82, 0.91, 0.85, 0.93, 0.87, 0.89],
-            "pop_val": [10, 10, 20, 20, 10, 20, 10, 20, 10, 20],
+            "auc": [0.73, 0.72, 0.75, 0.74, 0.76, 0.91, 0.92, 0.93, 0.91, 0.92],
+            "pop_val": [10, 10, 10, 10, 10, 20, 20, 20, 20, 20],
         }
     )
 
@@ -1237,28 +1259,50 @@ def test_plot_combined_anova_with_readonly_plot_dir():
 
 
 def test_plot_combined_anova_with_multiple_params_and_run_details():
-    """Test plot_combined_anova_feature_importances with sufficient data for valid ANOVA."""
+    """Test plot_combined_anova_variable_importances with sufficient data for valid ANOVA.
+
+    Test data has 12 rows with strictly alternating True/False and M/F, creating
+    clean groups with meaningful AUC separation:
+    - Group 1 (weighted=False, sex=M): low AUC (~0.68)
+    - Group 2 (weighted=True, sex=F): high AUC (~0.93)
+    This gives ANOVA clear separation for both variables.
+    """
     from ml_grid.util import GA_results_explorer
     from ml_grid.util.global_params import global_parameters
 
     df = pd.DataFrame(
         {
             "best_ensemble": [
-                "[[(0.5, 'Model1', [1, 0, 1], 0, 0.9, None)]]",
-                "[[(0.6, 'Model2', [0, 1, 1], 0, 0.8, False)]]",
-                "[[(0.7, 'Model3', [1, 1, 0], 0, 0.95, True)]]",
-                "[[(0.5, 'Model4', [1, 1, 1], 0, 0.88, None)]]",
-                "[[(0.6, 'Model5', [0, 0, 1], 0, 0.75, False)]]",
-                "[[(0.7, 'Model6', [1, 0, 0], 0, 0.82, True)]]",
-                "[[(0.5, 'Model7', [1, 1, 0], 0, 0.90, None)]]",
-                "[[(0.6, 'Model8', [0, 1, 0], 0, 0.77, False)]]",
-                "[[(0.7, 'Model9', [0, 0, 0], 0, 0.70, True)]]",
-                "[[(0.5, 'Model10', [1, 1, 1], 0, 0.94, None)]]",
+                "[[(0.5, 'Model1', [1, 0, 1], 0, 0.92, None)]]",
+                "[[(0.6, 'Model2', [0, 1, 1], 0, 0.68, False)]]",
+                "[[(0.7, 'Model3', [1, 1, 0], 0, 0.94, True)]]",
+                "[[(0.5, 'Model4', [1, 1, 1], 0, 0.65, False)]]",
+                "[[(0.6, 'Model5', [0, 0, 1], 0, 0.91, True)]]",
+                "[[(0.7, 'Model6', [1, 0, 0], 0, 0.70, False)]]",
+                "[[(0.5, 'Model7', [1, 1, 0], 0, 0.93, True)]]",
+                "[[(0.6, 'Model8', [0, 1, 0], 0, 0.67, False)]]",
+                "[[(0.7, 'Model9', [0, 0, 0], 0, 0.95, True)]]",
+                "[[(0.5, 'Model10', [1, 1, 1], 0, 0.66, False)]]",
+                "[[(0.6, 'Model11', [1, 0, 1], 0, 0.92, True)]]",
+                "[[(0.7, 'Model12', [0, 1, 1], 0, 0.69, False)]]",
             ],
             "original_feature_names": json.dumps(
                 ["feature_a", "feature_b", "feature_c"]
             ),
-            "auc": [0.85, 0.78, 0.92, 0.88, 0.75, 0.82, 0.90, 0.77, 0.70, 0.94],
+            "auc": [
+                0.92,
+                0.68,
+                0.94,
+                0.65,
+                0.91,
+                0.70,
+                0.93,
+                0.67,
+                0.95,
+                0.66,
+                0.92,
+                0.69,
+            ],
             "weighted": [
                 True,
                 False,
@@ -1270,8 +1314,10 @@ def test_plot_combined_anova_with_multiple_params_and_run_details():
                 False,
                 True,
                 False,
+                True,
+                False,
             ],
-            "sex": ["M", "F", "M", "F", "M", "F", "M", "F", "M", "F"],
+            "sex": ["M", "F", "M", "F", "M", "F", "M", "F", "M", "F", "M", "F"],
         }
     )
 
