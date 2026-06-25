@@ -148,3 +148,7 @@ docs/source/*.rst
 run_ci.sh
 .INSTRUCTIONS.md
 .skills/*
+.devcontainer/devcontainer.json
+.devcontainer/devcontainer-lock.json
+.secrets
+.actrc
