@@ -17,17 +17,19 @@ This project provides a robust framework for evolving machine learning ensembles
 
 To get started with the project, please refer to the {doc}`Installation`.
 
+**New in v1.0+**: Check out our new [API Reference](./API-Reference.md) for comprehensive documentation of all public classes and methods.
+
 ## Documentation
 
 Explore the following wiki pages for detailed information:
 
 -   **Getting Started**
-    -   {doc}`Installation`: How to set up your development environment.
+    -   {doc}`Installation`: How to set up your development environment (Python >=3.12).
     -   {doc}`Usage`: How to run experiments using `main.py` and `config.yml`.
     -   {doc}`Data_Preparation_Guide`: The required format for your input data.
 -   **Core Concepts**
     -   {doc}`Architectural_Overview`: A high-level look at the project's components.
-    -   {doc}`Genetic_Algorithm_Deep_Dive`: An explanation of the evolutionary process.
+    -   {doc}`Technical-Deep-Dive`: In-depth technical details and implementation architecture (includes performance benchmarks).
     -   {doc}`Configuration_Guide`: A detailed guide to the `config.yml` file.
     -   {doc}`Hyperparameter_Reference`: A reference for all configurable parameters.
 -   **Guides & Tutorials**
@@ -37,6 +39,7 @@ Explore the following wiki pages for detailed information:
     -   {doc}`Adding_a_New_Base_Learner`: How to extend the project with new models.
     -   {doc}`Best_Practices`: Tips for running experiments effectively.
 -   **Reference**
+    -   {doc}`API-Reference`: Complete API reference with all public classes and methods.
     -   {doc}`Troubleshooting`: Solutions for common errors.
     -   {doc}`Project-Structure`: An overview of the repository's file layout.
 

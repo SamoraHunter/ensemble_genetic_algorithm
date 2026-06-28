@@ -1,3 +1,22 @@
+"""
+Module providing a simple Perceptron model for dummy/baseline purposes.
+
+This module implements the perceptronModelGen_dummy function which creates a basic
+Perceptron classifier with fixed hyperparameters. It is primarily intended to be
+used by DummyModelGenerator to provide a consistent, pre-trained model object that
+can serve as a placeholder or baseline in ensemble models.
+
+The process includes:
+1.  Applying ANOVA-based feature selection.
+2.  Scaling the feature data using StandardScaler.
+3.  Training a Perceptron model with a randomly chosen max_iter from a small,
+    predefined list.
+4.  Evaluating the model's performance on the test set.
+
+This baseline model helps establish a performance floor for comparing against
+evolved ensembles during genetic algorithm optimization.
+"""
+
 import logging
 import random
 import time

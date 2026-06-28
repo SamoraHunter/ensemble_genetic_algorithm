@@ -18,6 +18,19 @@ from ml_grid.util.param_space import ParamSpace
 logger = logging.getLogger("ensemble_ga")
 
 
+"""
+Module providing SVC model generation with ANOVA feature selection and random search hyperparameter tuning.
+
+This module implements the SVC_ModelGenerator function which creates, trains, and evaluates Support Vector
+Classifier models. It uses ANOVA-based feature selection to preprocess data and performs random search over
+a comprehensive parameter space including kernel types, regularization (C), gamma, degree, and other SVM-specific
+hyperparameters.
+
+The generated models are evaluated using Matthews Correlation Coefficient (MCC) and ROC AUC scores, with optional
+model storage functionality for downstream analysis.
+"""
+
+
 def SVC_ModelGenerator(
     ml_grid_object: Any, local_param_dict: Dict
 ) -> Tuple[float, Any, List[str], int, float, np.ndarray]:
@@ -80,22 +93,22 @@ def SVC_ModelGenerator(
     # Initialise global parameter space----------------------------------------------------------------
 
     parameter_space = {
-        "C": log_small,
-        "break_ties": bool_param,
-        "cache_size": [200],
-        "class_weight": [None, "balanced"]
+        "C": log_small,  # Regularization parameter for SVM
+        "break_ties": bool_param,  # Whether to break ties in decision function predictions
+        "cache_size": [200],  # Size of the kernel cache in KB
+        "class_weight": [None, "balanced"]  # Class weight configuration for imbalanced data
         + [{0: w} for w in [1, 2, 4, 6, 10]],  # enumerate class weight
-        "coef0": log_small,
-        "decision_function_shape": ["ovr"],  # , 'ovo'
-        "degree": log_med,
-        "gamma": ["scale", "auto"],
-        "kernel": ["rbf", "linear", "poly", "sigmoid"],
-        "max_iter": log_large_long,
-        "probability": [False],
-        "random_state": [None],
-        "shrinking": bool_param,
-        "tol": log_small,
-        "verbose": [False],
+        "coef0": log_small,  # Kernel coefficient for poly and sigmoid kernels
+        "decision_function_shape": ["ovr"],  # Decision function shape (hardcoded to 'ovr' for one-vs-rest)
+        "degree": log_med,  # Degree of polynomial kernel
+        "gamma": ["scale", "auto"],  # Kernel coefficient for rbf, poly, and sigmoid kernels
+        "kernel": ["rbf", "linear", "poly", "sigmoid"],  # SVM kernel type
+        "max_iter": log_large_long,  # Maximum number of iterations allowed
+        "probability": [False],  # Whether to enable probability estimates
+        "random_state": [None],  # Random state for reproducible results
+        "shrinking": bool_param,  # Whether to use the shrinking heuristic
+        "tol": log_small,  # Tolerance for stopping criterion
+        "verbose": [False],  # Enable verbose output
     }
 
     # Select a random sample from the global parameter space

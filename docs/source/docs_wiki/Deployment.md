@@ -47,7 +47,7 @@ joblib.dump(my_ensemble, "deployed_ensemble_model.joblib")
 
 To run the model on another server, the target environment requires the following:
 
--   **Python 3.10+**
+-   **Python**: >=3.12 (matches `pyproject.toml` requirement)
 -   **Core Libraries**: `numpy`, `pandas`, `scikit-learn`, `joblib`.
 -   **PyTorch**: Required if your ensemble includes neural network base learners (`BinaryClassification`).
 -   **Project Package**: The `ensemble-genetic-algorithm` package must be installed so the environment can resolve the custom class definitions during deserialization.

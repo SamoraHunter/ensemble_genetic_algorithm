@@ -1,3 +1,22 @@
+"""ElasticNet model generator for multi-class classification.
+
+This module provides an ElasticNet model generator that uses a OneVsRestClassifier
+to handle multi-class problems by training a separate binary classifier for each class.
+The underlying model is a linear ElasticNet regressor configured with ANOVA-based
+feature selection and random hyperparameter search.
+
+The generated model serves as a baseline placeholder, typically used by
+DummyModelGenerator when a simple reference model is needed for comparison.
+
+Module-level patterns:
+    - ANOVA feature selection (via get_feature_selection_class_ga)
+    - Random hyperparameter sampling from predefined distributions
+    - Model storage and evaluation using mccscore, auc_score, and timing metrics
+
+See Also:
+    elasticNeuralNetworkModelGenerator: Main function for generating the model.
+"""
+
 import logging
 import random
 import time

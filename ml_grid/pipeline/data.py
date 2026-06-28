@@ -138,25 +138,28 @@ class pipe:
     """The training features DataFrame."""
 
     X_test: pd.DataFrame
-    """The testing features DataFrame (for GA evaluation)."""
+    """The testing features DataFrame used for GA model evaluation."""
 
     y_train: pd.Series
-    """The training target Series."""
+    """The training target variable Series."""
 
     y_test: pd.Series
-    """The testing target Series (for GA evaluation)."""
+    """The testing target variable Series used for GA model evaluation."""
 
     X_test_orig: pd.DataFrame
-    """The hold-out validation features DataFrame."""
+    """The hold-out validation features DataFrame (original data)."""
 
     y_test_orig: pd.Series
-    """The hold-out validation target Series."""
+    """The hold-out validation target variable Series (original data)."""
 
     model_class_list: List
     """A list of model generator functions to be used (for GA)."""
 
     feature_transformation_log: pd.DataFrame
     """A DataFrame that logs the changes to the feature set at each pipeline step."""
+
+    _feature_log_list: List[Dict]
+    """A private list used internally to accumulate feature transformation log entries before compiling into a DataFrame."""
 
     def __init__(
         self,
@@ -189,6 +192,12 @@ class pipe:
             testing: If True, runs in a testing mode (e.g., smaller grids).
             multiprocessing_ensemble: If True, enables multiprocessing for
                 ensemble generation.
+
+        Raises:
+            NoFeaturesError: If no features remain after safety net activation or
+                feature selection.
+            ValueError: If the input data contains non-numeric values.
+            AssertionError: If indices of feature and target DataFrames do not align.
         """
 
         self.testing = testing
@@ -224,7 +233,7 @@ class pipe:
         )
 
         # Initialize feature transformation log
-        self._feature_log_list = []
+        self._feature_log_list: List[Dict] = []
 
         # Execute pipeline with error handling
         pipeline_error = None
@@ -268,13 +277,23 @@ class pipe:
     def _assert_index_alignment(
         self, df1: pd.DataFrame, df2: pd.Series, step_name: str
     ):
-        """Helper function to assert that DataFrame and Series indices are equal."""
-        try:
-            assert_index_equal(df1.index, df2.index)
-            logger.debug(f"Index alignment PASSED at: {step_name}")
-        except AssertionError:
-            logger.error(f"Index alignment FAILED at: {step_name}")
-            raise
+        """Helper function to assert that DataFrame and Series indices are equal.
+
+        This is a validation helper used internally during pipeline steps to ensure
+        data integrity. It prevents issues caused by misaligned train/test split data,
+        which can occur after major operations like `_split_data` or
+        `_select_features_by_importance`. By verifying index alignment, it ensures
+        that each row in the feature DataFrame corresponds correctly to the target
+        variable Series.
+
+        Args:
+            df1: The DataFrame whose index will be compared.
+            df2: The Series whose index will be compared to df1.
+            step_name: A descriptive string identifying the pipeline step for logging.
+
+        Raises:
+            AssertionError: If the indices of df1 and df2 do not match.
+        """
 
     def _load_data(self, file_name: str, test_sample_n: int, column_sample_n: int):
         """Loads data from the source file."""
@@ -455,7 +474,12 @@ class pipe:
         ]
 
     def _apply_safety_net(self):
-        """Retains a minimal set of features if all have been pruned."""
+        """Retains a minimal set of features if all have been pruned.
+
+        Raises:
+            NoFeaturesError: If no features can be retained even after activating
+                the safety net.
+        """
         if not self.final_column_list:
             logger.warning("All features pruned! Activating safety retention...")
 
@@ -635,7 +659,12 @@ class pipe:
             )
 
     def _select_features_by_importance(self):
-        """Selects features based on importance scores if configured."""
+        """Selects features based on importance scores if configured.
+
+        Raises:
+            NoFeaturesError: If feature importance selection removes all features
+                or results in an empty feature set.
+        """
         target_n_features = self.local_param_dict.get("n_features")
 
         if target_n_features != "all" and self.X_train.shape[1] > 1:
@@ -720,7 +749,12 @@ class pipe:
             raise
 
     def _compile_and_log_feature_transformations(self, error_occurred: bool = False):
-        """Compiles the feature transformation log and displays it."""
+        """Compiles the feature transformation log and displays it.
+
+        Args:
+            error_occurred: If True, logs the feature transformation table regardless
+                of verbosity level for debugging purposes.
+        """
         # Ensure y_train is a pandas Series for consistency before exiting
         if hasattr(self, "y_train") and not isinstance(self.y_train, pd.Series):
             self.y_train = pd.Series(self.y_train, index=self.X_train.index)

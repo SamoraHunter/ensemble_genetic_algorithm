@@ -1,4 +1,3 @@
-0,0 +1,111 @@
 # Example Usage Notebook Guide
 
 This guide provides a detailed walkthrough of the `notebooks/example_usage.ipynb` Jupyter notebook. This notebook serves as a comprehensive, end-to-end example of how to configure and run an experiment using the **Ensemble Genetic Algorithm** project.
@@ -89,3 +88,71 @@ To adapt the notebook for your own research, you will primarily need to modify t
 4.  **Tune `ga_params` and `grid_params`**: Adjust the search space for the genetic algorithm and data processing steps as needed.
 
 By following this structure, you can systematically run, analyze, and validate complex ensemble models for your specific classification problem.
+
+---
+
+## Example: Simple Programmatic Usage
+
+For users who prefer to integrate the GA pipeline directly into Python scripts or applications, here is a minimal example:
+
+```python
+from datetime import datetime
+import os
+import pathlib
+from tqdm import tqdm
+from ml_grid.pipeline import data, main_ga
+from ml_grid.util.global_params import global_parameters
+from ml_grid.util.grid_param_space_ga import Grid
+
+# Initialize with configuration file
+config_path = 'config.yml'
+global_params = global_parameters(config_path=config_path)
+
+# Create a unique experiment directory for results
+timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+run_dir = os.path.join(global_params.base_project_dir, timestamp)
+pathlib.Path(run_dir).mkdir(parents=True, exist_ok=True)
+global_params.base_project_dir = run_dir
+
+# Define search space
+grid = Grid(
+    global_params=global_params,
+    config_path=config_path
+)
+
+# Main experiment loop using main_ga.run() entry point
+for i in tqdm(range(global_params.n_iter)):
+    local_param_dict = next(grid.settings_list_iterator)
+    
+    ml_grid_object = data.pipe(
+        global_params=global_params,
+        file_name=global_params.input_csv_path,
+        local_param_dict=local_param_dict,
+        param_space_index=i,
+    )
+    
+    # GA entry point - runs genetic algorithm evolution
+    main_ga.run(
+        ml_grid_object, 
+        local_param_dict=local_param_dict, 
+        global_params=global_params
+    ).execute()
+```
+
+---
+
+## Performance Considerations
+
+-   **Start Small**: Begin with `n_iter=3-5` to verify your pipeline works before scaling up.
+-   **Use Testing Mode**: Set `testing: True` in `config.yml` for a faster, smaller grid search space.
+-   **Model Caching**: For subsequent runs after the initial comprehensive experiment, set `use_stored_base_learners: True` to reuse trained models and dramatically reduce runtime.
+
+---
+
+## Next Steps
+
+After completing your experiment:
+
+1.  Review the generated plots in the output directory
+2.  Analyze results using {doc}`Interpreting_Results`
+3.  Validate final models on hold-out data via {doc}`Evaluating_Final_Models`

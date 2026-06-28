@@ -1,6 +1,6 @@
 import logging
 import traceback
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
 from sklearn.model_selection import ParameterGrid
@@ -33,12 +33,28 @@ logger = logging.getLogger("ensemble_ga")
 class run:
     """Orchestrates a grid search cross-validation for a list of predefined models.
 
-    This class initializes a suite of model classes, each with its own
-    hyperparameter space. It then prepares arguments for each model to be
-    passed to a grid search function. The `execute` method iterates through
-    these models and runs the grid search, handling errors and logging
-    the outcomes. This class is designed for a more traditional grid search
-    approach, as opposed to the genetic algorithm pipeline.
+    This is a legacy module providing traditional grid search functionality,
+    separate from the GA (Genetic Algorithm) pipeline. It initializes a suite
+    of model classes, each with its own hyperparameter space, and executes
+    grid search using hardcoded model configurations rather than dynamic
+    extensibility.
+
+    Attributes:
+        global_params: An instance of the `global_parameters` class.
+        verbose: The verbosity level, inherited from global_params.
+        error_raise: A flag to determine if errors should be raised, from `global_params`.
+        ml_grid_object: The main experiment object, containing data splits and configurations.
+        sub_sample_param_space_pct: The percentage of the parameter space to sample for a random grid search.
+        parameter_space_size: The size of the parameter space to use (e.g., 'medium', 'xsmall').
+        model_class_list: A list of the instantiated model classes to be evaluated.
+        pg_list: A list containing the size of the parameter grid for each model.
+        mean_parameter_space_val: The mean size of the parameter grids across all evaluated models.
+        sub_sample_parameter_val: The number of parameter combinations to sample for random search.
+        arg_list: A list of argument tuples for the `grid_search_crossvalidate` function, where each tuple contains:
+            (algorithm_implementation, parameter_space, method_name, ml_grid_object, sub_sample_parameter_val).
+        multiprocess: A flag to enable or disable multiprocessing (currently disabled).
+        local_param_dict: A dictionary of local parameters for the current run.
+        model_error_list: A list to store any errors encountered during model evaluation.
     """
 
     global_params: global_parameters
@@ -71,25 +87,35 @@ class run:
     sub_sample_parameter_val: int
     """The number of parameter combinations to sample for random search."""
 
-    arg_list: List[tuple]
-    """A list of argument tuples for the `grid_search_crossvalidate` function."""
+    arg_list: List[Tuple[Any, Dict[str, Any], str, Any, int]]
+    """A list of argument tuples for the `grid_search_crossvalidate` function, where each tuple contains:
+        (algorithm_implementation, parameter_space, method_name, ml_grid_object, sub_sample_parameter_val)."""
 
     multiprocess: bool
     """A flag to enable or disable multiprocessing (currently disabled)."""
 
-    local_param_dict: Dict
+    local_param_dict: Dict[str, Any]
     """A dictionary of local parameters for the current run."""
 
     model_error_list: List[List]
     """A list to store any errors encountered during model evaluation."""
 
-    def __init__(self, ml_grid_object: Any, local_param_dict: Dict):
+    def __init__(self, ml_grid_object: Any, local_param_dict: Dict[str, Any]):
         """Initializes the grid search runner.
 
-        This constructor sets up the environment, loads global parameters, and a
-        initializes a list of all model classes that will be subjected to
-        grid search. It calculates the size of each model's parameter space
-        and prepares the arguments for the `grid_search_crossvalidate` function.
+        This constructor sets up the environment, loads global parameters, and
+        initializes a list of hardcoded model classes ( LogisticRegression_class,
+        knn_classifiers_class, quadratic_discriminant_analysis_class, SVC_class,
+        XGB_class_class, mlp_classifier_class, RandomForestClassifier_class,
+        GradientBoostingClassifier_class, kerasClassifier_class, GaussianNB_class,
+        adaboost_class) that will be subjected to grid search. It calculates the
+        size of each model's parameter space and prepares the arguments for the
+        `grid_search_crossvalidate` function.
+
+        Note:
+            This class uses a hardcoded list of models rather than dynamic
+            extensibility, making it suitable for traditional grid search but
+            not for flexible pipeline configurations.
 
         Args:
             ml_grid_object: The main experiment object, containing data splits

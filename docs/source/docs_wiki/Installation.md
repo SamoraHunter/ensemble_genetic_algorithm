@@ -6,7 +6,7 @@ This guide provides detailed instructions on how to set up the **Ensemble Geneti
 
 Before you begin, ensure you have the following installed on your system:
 
--   **Python**: Version 3.10 or higher.
+-   **Python**: Version 3.12 or higher (required for `pyproject.toml` compatibility).
 -   **Git**: For cloning the repository.
 -   **(Optional) NVIDIA GPU with CUDA**: If you plan to use GPU-accelerated computations, ensure you have a compatible NVIDIA GPU and the CUDA Toolkit installed.
 
@@ -36,7 +36,7 @@ If you prefer to set up the environment manually, follow these steps. This proje
     ```bash
     pip install .[dev]
     ```
-    If you need GPU support and have the necessary CUDA setup, you would typically install `torch` with CUDA support manually or via the `setup.sh --gpu` option. The `pyproject.toml` currently lists `torch==2.0.1` as a core dependency, which might default to a CPU version depending on your `pip` configuration.
+    If you need GPU support and have the necessary CUDA setup, you would typically install `torch` with CUDA support manually or via the `setup.sh --gpu` option. The `pyproject.toml` currently lists `torch==2.0.1` as a core dependency,    which might default to a CPU version depending on your `pip` configuration. The package requires PyTorch, and for GPU support, it is highly recommended that you first install PyTorch manually by following the official instructions at pytorch.org to ensure the correct version for your CUDA toolkit is installed.
 
 ## Using the Setup Script (Alternative)
 

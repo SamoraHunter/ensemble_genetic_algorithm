@@ -33,6 +33,7 @@ def get_weighted_ensemble_prediction_de_y_pred_valid(
             `X_test_orig`, etc.) and configuration like `verbose`.
         valid: If True, predict on the validation set by refitting models.
             If False, use pre-computed predictions. Defaults to False.
+
     Returns:
         The final weighted ensemble predictions, rounded to the nearest integer
         (typically 0 or 1 for classification tasks).

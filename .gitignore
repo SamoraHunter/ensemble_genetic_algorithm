@@ -152,3 +152,4 @@ run_ci.sh
 .devcontainer/devcontainer-lock.json
 .secrets
 .actrc
+doc_status.json

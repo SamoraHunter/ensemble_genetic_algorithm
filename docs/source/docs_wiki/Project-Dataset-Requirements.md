@@ -8,3 +8,8 @@ For the **Ensemble Genetic Algorithm** project to function correctly, your input
 
 For a practical example of the expected feature column naming conventions and overall data structure, please refer to the synthetic dataset generated for the unit tests within this project, or explore the `pat2vec` project:
 https://github.com/SamoraHunter/pat2vec/tree/main
+
+## Environment Requirements
+
+- **Python**: >=3.12 (matches `pyproject.toml` requirement)
+- **Operating System**: Linux
