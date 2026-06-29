@@ -1901,7 +1901,11 @@ class GA_results_explorer:
         for _, row in top_runs_df.iterrows():
             feature_arrays = row["feature_arrays"]
             # Load the specific original feature names for this run
-            run_original_feature_names = json.loads(row["original_feature_names"])
+            original_names = row["original_feature_names"]
+            if isinstance(original_names, str):
+                run_original_feature_names = json.loads(original_names)
+            else:
+                run_original_feature_names = original_names
             for feature_array in feature_arrays:
                 feature_names.extend(
                     [
@@ -1922,7 +1926,11 @@ class GA_results_explorer:
         # Iterate over the top runs and update the co-occurrence matrix
         for _, row in top_runs_df.iterrows():
             feature_arrays = row["feature_arrays"]
-            run_original_feature_names = json.loads(row["original_feature_names"])
+            original_names = row["original_feature_names"]
+            if isinstance(original_names, str):
+                run_original_feature_names = json.loads(original_names)
+            else:
+                run_original_feature_names = original_names
             for feature_array in feature_arrays:
                 features = [
                     f
