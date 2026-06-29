@@ -1902,9 +1902,17 @@ class GA_results_explorer:
             feature_arrays = row["feature_arrays"]
             # Load the specific original feature names for this run
             original_names = row["original_feature_names"]
-            if isinstance(original_names, str):
-                run_original_feature_names = json.loads(original_names)
+            if pd.isna(original_names):
+                # Fall back to self.original_feature_names when CSV has NaN
+                run_original_feature_names = self.original_feature_names.copy()
+            elif isinstance(original_names, str):
+                try:
+                    run_original_feature_names = json.loads(original_names)
+                except (json.JSONDecodeError, TypeError):
+                    # Use fallback if JSON parsing fails
+                    run_original_feature_names = self.original_feature_names.copy()
             else:
+                # Handle list or other non-string types
                 run_original_feature_names = original_names
             for feature_array in feature_arrays:
                 feature_names.extend(
@@ -1920,16 +1928,24 @@ class GA_results_explorer:
             pd.Series(feature_names).value_counts().head(top_n_features).index.tolist()
         )
 
-        # Create a co-occurrence matrix
+       # Create a co-occurrence matrix
         cooccurrence_matrix = pd.DataFrame(0, index=top_features, columns=top_features)
 
         # Iterate over the top runs and update the co-occurrence matrix
         for _, row in top_runs_df.iterrows():
             feature_arrays = row["feature_arrays"]
             original_names = row["original_feature_names"]
-            if isinstance(original_names, str):
-                run_original_feature_names = json.loads(original_names)
+            if pd.isna(original_names):
+                # Fall back to self.original_feature_names when CSV has NaN
+                run_original_feature_names = self.original_feature_names.copy()
+            elif isinstance(original_names, str):
+                try:
+                    run_original_feature_names = json.loads(original_names)
+                except (json.JSONDecodeError, TypeError):
+                    # Use fallback if JSON parsing fails
+                    run_original_feature_names = self.original_feature_names.copy()
             else:
+                # Handle list or other non-string types
                 run_original_feature_names = original_names
             for feature_array in feature_arrays:
                 features = [
