@@ -115,6 +115,7 @@ class GA_results_explorer:
             "scale",
             "n_features",
             "param_space_size",  # Size of hyperparameter space
+            "cx_type",  # Crossover operator type
             "cxpb",  # Crossover probability
             "mutpb",  # Mutation probability
             "indpb",  # Individual mutation probability

@@ -273,7 +273,7 @@ def evaluate_weighted_ensemble_auc(
     #                        'age', 'sex', 'bmi','ethnicity', 'bloods', 'diagnostic_order',
     #                       'drug_order', 'annotation_n', 'meta_sp_annotation_n',
     #                       'X_train_size', 'X_test_orig_size', 'X_test_size',
-    #                    'run_time', 'cxpb', 'mutpb', 'indpb', 't_size']
+    #                   'run_time', 'cx_type', 'cxpb', 'mutpb', 'indpb', 't_size']
 
     df = pd.DataFrame(data=df_data, columns=column_headers)
     df.to_csv(

@@ -18,6 +18,12 @@ from sklearn import metrics
 # from ml_grid.ga_functions.ga_plots.ga_progress import plot_generation_progress_fitness
 from ml_grid.ga_functions.ga_plots.ga_progress import plot_generation_progress_fitness
 from ml_grid.pipeline.ensemble_generator_ga import ensembleGenerator
+from ml_grid.pipeline.crossover_methods import (
+    cxBlend,
+    cxOrdered,
+    cxOnePoint,
+    cxUniform,
+)
 from ml_grid.pipeline.evaluate_methods_ga import (
     evaluate_weighted_ensemble_auc,
     get_y_pred_resolver,
@@ -269,10 +275,34 @@ class run:
                     "population", self.tools.initRepeat, list, self.toolbox.individual
                 )
 
-                self.toolbox.register("mate", self.tools.cxTwoPoint)
-                self.toolbox.register(
-                    "mutate", self.tools.mutFlipBit, indpb=local_param_dict.get("indpb")
-                )
+                cx_type = local_param_dict.get("cx_type", "twopoint")
+
+                if cx_type == "twopoint":
+                    self.toolbox.register("mate", self.tools.cxTwoPoint)
+                elif cx_type == "onepoint":
+                    self.toolbox.register("mate", cxOnePoint)
+                elif cx_type == "uniform":
+                    uniform_indpb = local_param_dict.get("indpb", 0.5)
+                    self.toolbox.register("mate", cxUniform, indpb=uniform_indpb)
+                elif cx_type == "blend":
+                    self.toolbox.register("mate", cxBlend)
+                elif cx_type == "ordered":
+                    self.toolbox.register("mate", cxOrdered)
+                else:
+                    logger.warning(
+                        f"Unknown crossover type '{cx_type}', defaulting to 'twopoint'"
+                    )
+                    self.toolbox.register("mate", self.tools.cxTwoPoint)
+
+                if cx_type == "uniform":
+                    uniform_indpb = local_param_dict.get("indpb", 0.5)
+                    self.toolbox.register(
+                        "mutate", self.tools.mutFlipBit, indpb=uniform_indpb
+                    )
+                else:
+                    self.toolbox.register(
+                        "mutate", self.tools.mutFlipBit, indpb=local_param_dict.get("indpb")
+                    )
                 self.toolbox.register("mutateFunction", mutateEnsemble)
                 self.toolbox.register("mutateEnsemble", self.toolbox.mutateFunction)
                 self.toolbox.register(

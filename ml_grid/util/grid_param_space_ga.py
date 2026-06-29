@@ -108,6 +108,7 @@ class Grid:
             "corr": [0.9, 0.99],  # Correlation thresholds for removing columns
             # "feature_selection_method": ["markov_blanket"],
             "feature_selection_method": ["anova"],
+            "cx_type": ["twopoint"],  # Crossover operator type: twopoint, onepoint, uniform, blend, ordered
             "cxpb": [0.5, 0.75, 0.25],  # Crossover probability
             "mutpb": [0.2, 0.4, 0.8],  # Mutation probability
             "indpb": [0.025, 0.05, 0.075],  # Probability of individual mutation

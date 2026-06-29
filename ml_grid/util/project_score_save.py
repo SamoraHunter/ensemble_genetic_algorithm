@@ -108,6 +108,7 @@ class project_score_save_class:
             "X_test_orig_size",
             "X_test_size",
             "run_time",
+            "cx_type",
             "cxpb",
             "mutpb",
             "indpb",
