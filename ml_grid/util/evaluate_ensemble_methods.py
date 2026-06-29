@@ -49,6 +49,14 @@ from ml_grid.pipeline.evaluate_methods_y_pred_resolver import (  # noqa: E402
     get_y_pred_resolver_eval,
 )
 
+try:
+    from ml_grid.pipeline.data_clean_up import clean_up_class
+except ImportError as e:
+    logger.error(
+        "Error: Could not import clean_up_class from 'ml_grid': %s", e
+    )
+    clean_up_class = None
+
 
 # --- Helper Class to Mimic MLGridObject ---
 class _MLGridObject:
@@ -151,6 +159,10 @@ class EnsembleEvaluator:
             )
             imputer = SimpleImputer(strategy="mean")
             X = pd.DataFrame(imputer.fit_transform(X), columns=X.columns, index=X.index)
+
+        # Remove duplicated column names to prevent model fit failures
+        if clean_up_class is not None:
+            X = clean_up_class().handle_duplicated_columns(X)
 
         self.original_feature_names = list(X.columns)
         if self.debug:

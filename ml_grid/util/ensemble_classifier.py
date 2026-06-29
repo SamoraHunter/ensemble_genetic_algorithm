@@ -15,6 +15,9 @@ class SklearnEnsembleClassifier(BaseEstimator, ClassifierMixin):
     def __init__(self, ensemble_arch, feature_names):
         self.ensemble_arch = ensemble_arch
         self.feature_names = feature_names
+        # Store original feature names from the ensemble for proper mask decoding
+        # This is needed when X_train has different column order than training data
+        self.original_feature_names_used = feature_names.copy() if isinstance(feature_names, list) else list(feature_names)
         self.fitted_models = []
         self._all_req_features = None
 
@@ -43,23 +46,34 @@ class SklearnEnsembleClassifier(BaseEstimator, ClassifierMixin):
             model = model_tuple[1]
             mask = model_tuple[2]
 
-            # Handle mask (binary/int array or list of names)
+           # Handle mask (binary/int array or list of names)
             if (
                 isinstance(mask, (list, tuple, np.ndarray))
                 and len(mask) > 0
                 and isinstance(mask[0], str)
             ):
                 active_features = mask
-            elif len(mask) != len(self.feature_names) or not all(
+            elif not all(
                 isinstance(x, (int, np.integer)) and x in [0, 1] for x in mask
             ):
-                # Assume list of indices if length doesn't match feature space or contains non-binary values
+                # If mask is NOT binary, assume it contains indices
                 active_features = [self.feature_names[i] for i in mask]
             else:
                 # Translate binary/int mask to names
-                active_features = [
-                    self.feature_names[i] for i, val in enumerate(mask) if val == 1
-                ]
+                # Handle both same-length and different-length masks
+                if len(mask) == len(self.feature_names):
+                    # Exact match: use enumerate with mask positions
+                    active_features = [
+                        self.feature_names[i] for i, val in enumerate(mask) if val == 1
+                    ]
+                else:
+                    # Length mismatch: mask was created from a different feature set.
+                    # The mask is binary (0/1) with original positions. We need to
+                    # only select features that exist in self.feature_names.
+                    active_features = []
+                    for i, val in enumerate(mask):
+                        if val == 1 and i < len(self.feature_names):
+                            active_features.append(self.feature_names[i])
 
             try:
                 if not isinstance(model, BinaryClassification):
