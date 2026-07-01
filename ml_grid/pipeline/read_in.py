@@ -1,4 +1,5 @@
 import logging
+import os
 import random
 
 import numpy as np
@@ -26,6 +27,17 @@ class read:
                 Defaults to False.
         """
         self.logger = logging.getLogger("ensemble_ga")
+
+        # Check if file exists before attempting to read
+        if not os.path.exists(input_filename):
+            self.logger.error(
+                f"Input file not found: '{input_filename}'. "
+                f"Current working directory: '{os.getcwd()}'. "
+                f"Please verify the path is correct and the file exists."
+            )
+            self.raw_input_data = pd.DataFrame()
+            return
+
         self.logger.info("Init main >read on %s", input_filename)
         if use_polars:
             try:
@@ -78,6 +90,17 @@ class read_sample:
         """
         self.filename = input_filename
         self.logger = logging.getLogger("ensemble_ga")
+
+        # Check if file exists before attempting to read
+        if not os.path.exists(input_filename):
+            self.logger.error(
+                f"Input file not found: '{input_filename}'. "
+                f"Current working directory: '{os.getcwd()}'. "
+                f"Please verify the path is correct and the file exists."
+            )
+            self.raw_input_data = pd.DataFrame()
+            return
+
         self.logger.info("Init main > read_sample on %s", self.filename)
 
         necessary_columns = ["outcome_var_1", "age", "male"]
@@ -130,6 +153,7 @@ class read_sample:
             except Exception as e:
                 self.logger.error("Error during sampling setup: %s", e)
 
+        # Note: The file existence check is done in __init__ before this point
         try:
             self.raw_input_data = pd.read_csv(self.filename, **read_csv_args)
         except Exception as e:
