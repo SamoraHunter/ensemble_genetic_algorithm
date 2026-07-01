@@ -47,7 +47,8 @@ dependencies = [
     "pyarrow",
     "tqdm",
     "PyYAML",
-    "cupy-cuda12x"
+    "cupy-cuda12x",
+    "shap"
 ]
 
 [project.urls]
@@ -59,6 +60,7 @@ Repository = "https://github.com/SamoraHunter/ensemble_genetic_algorithm"
 [project.optional-dependencies]
 dev = [
     "pytest",
+    "pytest-dependency",
     "pre-commit",
     "black",
     "ruff",

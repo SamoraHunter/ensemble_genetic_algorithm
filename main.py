@@ -29,7 +29,7 @@ def initialize_logger(config_path: str) -> logging.Logger:
     """
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     run_specific_dir = os.path.join(
-        "experiments", timestamp
+        "HFE_GA_experiments", timestamp
     )  # Store experiments in a dedicated folder
     pathlib.Path(run_specific_dir).mkdir(parents=True, exist_ok=True)
 
