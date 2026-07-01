@@ -7,13 +7,13 @@ import shutil
 
 def pytest_runtest_teardown(item):
     """Clean up experiment directories created during test execution.
-    
+
     This fixture removes timestamped experiment directories (e.g., 2026-06-28_21-35-03)
     that are created during test runs. It specifically targets:
     - Directories matching the pattern YYYY-MM-DD_HH-MM-SS in the experiments folder
     """
     cwd = os.getcwd()
-    
+
     # Look for experiment directories with timestamp pattern in workspaces folder
     experiments_dir = os.path.join(cwd, "experiments")
     if os.path.exists(experiments_dir):

@@ -1,7 +1,5 @@
 import logging
-from typing import Any
-from typing import Dict
-from typing import List
+from typing import Any, Dict, List
 
 from sklearn.metrics import make_scorer, roc_auc_score
 
@@ -92,7 +90,7 @@ class global_parameters:
 
     model_list: List[Any]
     """A list of model generator classes to use as base learners.
-    
+
     Each element should be a model generator class from MODEL_REGISTRY.
     Can be configured via YAML config file using string names which are
     automatically resolved to their corresponding classes during loading.
@@ -263,7 +261,7 @@ class global_parameters:
             "MLPClassifier",
             "Pytorch_binary_class",
         ]
-        
+
         # Resolve model names to classes
         self.model_list: List[Any] = [
             self.MODEL_REGISTRY[name]

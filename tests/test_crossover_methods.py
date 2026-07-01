@@ -4,8 +4,8 @@ import unittest
 
 from ml_grid.pipeline.crossover_methods import (
     cxBlend,
-    cxOrdered,
     cxOnePoint,
+    cxOrdered,
     cxUniform,
     get_crossover_operator,
 )
@@ -45,7 +45,7 @@ class TestGetCrossoverOperator(unittest.TestCase):
         """Test that invalid cx_type raises ValueError."""
         with self.assertRaises(ValueError) as context:
             get_crossover_operator("invalid_type")
-        
+
         self.assertIn("Unknown crossover type", str(context.exception))
         self.assertIn("onepoint", str(context.exception))
 
@@ -57,13 +57,13 @@ class TestCrossoverOperators(unittest.TestCase):
         """Test one-point crossover function."""
         ind1 = [1, 2, 3, 4, 5]
         ind2 = [6, 7, 8, 9, 10]
-        
+
         result = cxOnePoint(ind1, ind2)
-        
+
         # Check that both parents were modified
         self.assertEqual(result[0], ind1)
         self.assertEqual(result[1], ind2)
-        
+
         # Verify crossover happened (at least one element should be different)
         # Note: Due to randomness, this might not always pass in a single test run
         # but will pass most of the time with these specific values
@@ -72,9 +72,9 @@ class TestCrossoverOperators(unittest.TestCase):
         """Test uniform crossover function."""
         ind1 = [0, 1, 2, 3, 4]
         ind2 = [5, 6, 7, 8, 9]
-        
+
         result = cxUniform(ind1, ind2, indpb=0.5)
-        
+
         # Check that both parents were modified
         self.assertEqual(result[0], ind1)
         self.assertEqual(result[1], ind2)
@@ -83,13 +83,13 @@ class TestCrossoverOperators(unittest.TestCase):
         """Test blend crossover function."""
         ind1 = [0.0, 1.0, 2.0, 3.0, 4.0]
         ind2 = [5.0, 6.0, 7.0, 8.0, 9.0]
-        
+
         result = cxBlend(ind1, ind2)
-        
+
         # Check that both parents were modified
         self.assertEqual(result[0], ind1)
         self.assertEqual(result[1], ind2)
-        
+
         # Blend crossover can produce values slightly outside parent range due to blending
         # Just verify they are reasonable floats
         for val in ind1:
@@ -100,13 +100,13 @@ class TestCrossoverOperators(unittest.TestCase):
         # cxOrdered requires permutations (each element appears exactly once)
         ind1 = [0, 1, 2, 3, 4]
         ind2 = [4, 3, 2, 1, 0]
-        
+
         result = cxOrdered(ind1, ind2)
-        
+
         # Check that both parents were modified
         self.assertEqual(result[0], ind1)
         self.assertEqual(result[1], ind2)
-        
+
         # Each child should still contain exactly the same elements as parents
         self.assertCountEqual(set(ind1), {0, 1, 2, 3, 4})
         self.assertCountEqual(set(ind2), {0, 1, 2, 3, 4})
@@ -118,7 +118,7 @@ class TestCrossoverOperatorNames(unittest.TestCase):
     def test_operator_consistency(self):
         """Test that operator names are consistent."""
         operators = ["onepoint", "uniform", "blend", "ordered"]
-        
+
         for op_name in operators:
             func = get_crossover_operator(op_name)
             # The function name should contain the operator type
