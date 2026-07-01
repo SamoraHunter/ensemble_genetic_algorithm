@@ -96,12 +96,20 @@ def SVC_ModelGenerator(
         "C": log_small,  # Regularization parameter for SVM
         "break_ties": bool_param,  # Whether to break ties in decision function predictions
         "cache_size": [200],  # Size of the kernel cache in KB
-        "class_weight": [None, "balanced"]  # Class weight configuration for imbalanced data
+        "class_weight": [
+            None,
+            "balanced",
+        ]  # Class weight configuration for imbalanced data
         + [{0: w} for w in [1, 2, 4, 6, 10]],  # enumerate class weight
         "coef0": log_small,  # Kernel coefficient for poly and sigmoid kernels
-        "decision_function_shape": ["ovr"],  # Decision function shape (hardcoded to 'ovr' for one-vs-rest)
+        "decision_function_shape": [
+            "ovr"
+        ],  # Decision function shape (hardcoded to 'ovr' for one-vs-rest)
         "degree": log_med,  # Degree of polynomial kernel
-        "gamma": ["scale", "auto"],  # Kernel coefficient for rbf, poly, and sigmoid kernels
+        "gamma": [
+            "scale",
+            "auto",
+        ],  # Kernel coefficient for rbf, poly, and sigmoid kernels
         "kernel": ["rbf", "linear", "poly", "sigmoid"],  # SVM kernel type
         "max_iter": log_large_long,  # Maximum number of iterations allowed
         "probability": [False],  # Whether to enable probability estimates
