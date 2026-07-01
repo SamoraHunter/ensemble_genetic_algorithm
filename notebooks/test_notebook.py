@@ -5,6 +5,7 @@ import pytest
 from nbconvert.preprocessors import ExecutePreprocessor
 
 
+@pytest.mark.dependency()
 def test_example_usage_notebook():
     """
     Reads, executes, and checks the example_usage notebook for errors.
@@ -31,6 +32,7 @@ def test_example_usage_notebook():
         pytest.fail(f"Error executing notebook {notebook_path.name}: \n{e}")
 
 
+@pytest.mark.dependency(depends=["test_example_usage_notebook"])
 def test_post_hoc_evaluation_notebook():
     """
     Reads, executes, and checks the post_hoc_evaluation notebook for errors.
