@@ -52,9 +52,7 @@ from ml_grid.pipeline.evaluate_methods_y_pred_resolver import (  # noqa: E402
 try:
     from ml_grid.pipeline.data_clean_up import clean_up_class
 except ImportError as e:
-    logger.error(
-        "Error: Could not import clean_up_class from 'ml_grid': %s", e
-    )
+    logger.error("Error: Could not import clean_up_class from 'ml_grid': %s", e)
     clean_up_class = None
 
 
@@ -177,7 +175,10 @@ class EnsembleEvaluator:
             logger.debug("Data splits assigned successfully.")
 
     def _parse_ensemble(
-        self, ensemble_record: Any, debug: bool = False
+        self,
+        ensemble_record: Any,
+        debug: bool = False,
+        original_feature_names: Optional[List[str]] = None,
     ) -> List[List[Tuple]]:
         """Parses a 'best_ensemble' record into a list of processed ensembles.
 
@@ -187,6 +188,9 @@ class EnsembleEvaluator:
         Args:
             ensemble_record: The raw 'best_ensemble' entry from a DataFrame row.
             debug: If True, enables verbose debug printing for the parsing process.
+            original_feature_names: Optional feature names used during GA training.
+                If provided, binary masks will be converted to feature names instead
+                of kept as binary indices.
 
         Returns:
             A list of ensembles, where each ensemble is a list of model tuples.
@@ -218,6 +222,10 @@ class EnsembleEvaluator:
         if debug:
             logger.debug("[DEBUG] ensembles after eval: %s", ensembles)
         processed_ensembles = []
+        if debug:
+            logger.debug(
+                f"[DEBUG] Processing {len(ensembles)} ensemble(s), first: {str(ensembles)[:200]}"
+            )
         # If ensembles is a Series, extract first value
         if hasattr(ensembles, "iloc") and not isinstance(ensembles, (list, tuple)):
             if debug:
@@ -286,7 +294,50 @@ class EnsembleEvaluator:
                             f"Could not eval model string: '{model_string}'. Error: {e}"
                         )
                     continue
-            processed_ensembles.append(processed_ensemble)
+
+            # Convert binary masks to feature names if original_feature_names provided
+            if original_feature_names is not None and processed_ensemble:
+
+                def mask_to_features(mask):
+                    """Convert binary/int mask or indices to feature names."""
+                    if isinstance(mask, (list, tuple, np.ndarray)) and len(mask) > 0:
+                        # If already strings, return filtered to valid features
+                        if isinstance(mask[0], str):
+                            result = [f for f in mask if f in original_feature_names]
+                            if len(result) < len(mask) and debug:
+                                logger.debug(
+                                    f"[DEBUG] Mask {mask}: Filtered from {len(mask)} to {len(result)} feature names"
+                                )
+                            return result
+                        # Binary/integer mask: convert to feature names based on position
+                        result = []
+                        for i, val in enumerate(mask):
+                            if int(val) == 1 and i < len(original_feature_names):
+                                result.append(original_feature_names[i])
+                            elif debug:
+                                logger.debug(
+                                    f"[DEBUG] Mask {mask}: Skipping index {i} (val={int(val)}, total_features={len(original_feature_names)})"
+                                )
+                        return result
+                    if debug:
+                        logger.debug(
+                            f"[DEBUG] Mask {mask}: Not a list/tuple/array, returning as-is"
+                        )
+                    return list(mask)
+
+                processed_ensemble_converted = []
+                for model_tuple in processed_ensemble:
+                    if len(model_tuple) >= 3:
+                        mask = model_tuple[2]
+                        new_tuple = list(model_tuple)
+                        new_tuple[2] = mask_to_features(mask)
+                        processed_ensemble_converted.append(tuple(new_tuple))
+                    else:
+                        processed_ensemble_converted.append(model_tuple)
+                # Use converted version when original_feature_names provided
+                processed_ensembles.append(processed_ensemble_converted)
+            else:
+                processed_ensembles.append(processed_ensemble)
         return processed_ensembles
 
     def _run_evaluation_from_df(
@@ -354,15 +405,22 @@ class EnsembleEvaluator:
                 # mask can be a list/array of 0/1 or bool, or indices
                 if isinstance(mask, (list, tuple, np.ndarray)):
                     # If mask is bool or 0/1 and same length as features
-                    if len(mask) == len(feature_names) and all(
-                        isinstance(x, (int, np.integer, bool, np.bool_)) for x in mask
+                    # CRITICAL FIX: Check all values are strictly 0 or 1 before treating as binary mask
+                    # A mask like [0,1,5] has integer values but should be treated as INDICES
+                    if (
+                        len(mask) == len(feature_names)
+                        and all(
+                            isinstance(x, (int, np.integer, bool, np.bool_))
+                            for x in mask
+                        )
+                        and all(int(x) in {0, 1} for x in mask)
                     ):
                         return [
                             fname
                             for fname, m in zip(feature_names, mask)
                             if int(m) == 1
                         ]
-                    # If mask is indices
+                    # If mask is indices (all integers within valid range)
                     elif all(
                         isinstance(x, (int, np.integer)) and 0 <= x < len(feature_names)
                         for x in mask

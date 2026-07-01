@@ -17,7 +17,11 @@ class SklearnEnsembleClassifier(BaseEstimator, ClassifierMixin):
         self.feature_names = feature_names
         # Store original feature names from the ensemble for proper mask decoding
         # This is needed when X_train has different column order than training data
-        self.original_feature_names_used = feature_names.copy() if isinstance(feature_names, list) else list(feature_names)
+        self.original_feature_names_used = (
+            feature_names.copy()
+            if isinstance(feature_names, list)
+            else list(feature_names)
+        )
         self.fitted_models = []
         self._all_req_features = None
 
@@ -46,18 +50,24 @@ class SklearnEnsembleClassifier(BaseEstimator, ClassifierMixin):
             model = model_tuple[1]
             mask = model_tuple[2]
 
-           # Handle mask (binary/int array or list of names)
+            # Handle mask (binary/int array or list of names)
             if (
                 isinstance(mask, (list, tuple, np.ndarray))
                 and len(mask) > 0
                 and isinstance(mask[0], str)
             ):
-                active_features = mask
+                # Mask already contains feature names - filter to valid features only
+                active_features = [f for f in mask if f in self.feature_names]
             elif not all(
                 isinstance(x, (int, np.integer)) and x in [0, 1] for x in mask
             ):
                 # If mask is NOT binary, assume it contains indices
-                active_features = [self.feature_names[i] for i in mask]
+                # Filter to valid indices only
+                active_features = [
+                    self.feature_names[i]
+                    for i in mask
+                    if 0 <= i < len(self.feature_names)
+                ]
             else:
                 # Translate binary/int mask to names
                 # Handle both same-length and different-length masks
@@ -75,6 +85,14 @@ class SklearnEnsembleClassifier(BaseEstimator, ClassifierMixin):
                         if val == 1 and i < len(self.feature_names):
                             active_features.append(self.feature_names[i])
 
+            # Check if we have any valid features before attempting fit
+            if not active_features:
+                warnings.warn(
+                    f"Base learner {type(model).__name__} has no valid features and will be excluded. "
+                    f"Original mask: {mask}, Valid feature_names: {self.feature_names}"
+                )
+                continue
+
             try:
                 if not isinstance(model, BinaryClassification):
                     model.fit(X[active_features], y)
@@ -86,9 +104,35 @@ class SklearnEnsembleClassifier(BaseEstimator, ClassifierMixin):
                     f"Error: {e}"
                 )
 
-        if not self.fitted_models:
+        # Check for empty ensemble before trying to build skip report
+        original_ensemble_length = len(self.ensemble_arch)
+        if original_ensemble_length == 0:
             raise ValueError(
-                "No base learners in the ensemble could be successfully fitted."
+                "No base learners in the ensemble could be successfully fitted. "
+                "The ensemble architecture is empty - no models were provided for fitting. "
+                "This typically happens when: (1) best_ensemble CSV data was corrupted or missing, "
+                "(2) GA experiment failed to complete, or (3) feature masks are invalid. "
+                "Check the run logs for errors like 'No features found' or 'outcome_var_X not in columns'."
+            )
+
+        if not self.fitted_models:
+            # Build a helpful error message with all skipped models
+            skipped = []
+
+            # Iterate over original count to capture details even after filtering
+            for i in range(original_ensemble_length):
+                try:
+                    model_tuple = self.ensemble_arch[i]
+                    mask = model_tuple[2] if len(model_tuple) > 2 else None
+                    skipped.append(f"{type(model_tuple[1]).__name__}: mask={mask}")
+                except (IndexError, TypeError):
+                    # Handle malformed tuples gracefully
+                    skipped.append(f"Model_{i}: malformed tuple")
+
+            raise ValueError(
+                f"No base learners in the ensemble could be successfully fitted. "
+                f"All {original_ensemble_length} models were skipped due to feature mismatches or fitting errors. "
+                f"Skipped models: {'; '.join(skipped) if skipped else 'Details unavailable'}"
             )
 
         self.all_req_features = sorted(list(all_req_features_set))
