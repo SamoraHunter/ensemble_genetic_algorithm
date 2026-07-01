@@ -1928,7 +1928,7 @@ class GA_results_explorer:
             pd.Series(feature_names).value_counts().head(top_n_features).index.tolist()
         )
 
-       # Create a co-occurrence matrix
+        # Create a co-occurrence matrix
         cooccurrence_matrix = pd.DataFrame(0, index=top_features, columns=top_features)
 
         # Iterate over the top runs and update the co-occurrence matrix
