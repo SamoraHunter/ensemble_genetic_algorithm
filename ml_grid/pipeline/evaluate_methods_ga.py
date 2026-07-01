@@ -188,21 +188,30 @@ def evaluate_weighted_ensemble_auc(
     diversity_metric = measure_diversity_wrapper(individual, method="comprehensive")
 
     diversity_parameter = local_param_dict.get(
-        "div_p"
+        "div_p", 0
     )  # user specified, if >0, div score used.
+
+    # Extract GA parameters for logging
+    cx_type = local_param_dict.get("cx_type", "twopoint")
+    cxpb = local_param_dict.get("cxpb", 0.5)
+    mutpb = local_param_dict.get("mutpb", 0.2)
+    indpb = local_param_dict.get("indpb", 0.05)
+    t_size = local_param_dict.get("t_size", 3)
 
     diversity_params = {
         "penalty_method": "linear",  # or "quadratic", "exponential", "threshold"
-        "penalty_strength": local_param_dict.get(
-            "div_p", 0.3
-        ),  # User specified penalty magnitude.
+        "penalty_strength": 0.3,  # User specified penalty magnitude.
         "min_score_factor": 0.1,  # Prevent scores going below 10%
         "similarity_threshold": 0.7,  # For threshold method
     }
 
-    auc_div, mcc_div = apply_diversity_penalty(
-        auc, mcc, diversity_metric, diversity_params
-    )
+    if diversity_parameter > 0:
+        auc_div, mcc_div = apply_diversity_penalty(
+            auc, mcc, diversity_metric, diversity_params
+        )
+    else:
+        auc_div = auc
+        mcc_div = mcc
 
     # blank init with headers in main log_store_dataframe_path
     ensemble_model_list = []
@@ -244,9 +253,14 @@ def evaluate_weighted_ensemble_auc(
             recall,
             accuracy,
             ensemble_model_list,
-            feature_map_vector,
+            feature_count_list,
             auc_score_list,
             mcc_score_list,
+            cx_type,
+            cxpb,
+            mutpb,
+            indpb,
+            t_size,
         ]
     ]
     column_headers = [
@@ -265,15 +279,12 @@ def evaluate_weighted_ensemble_auc(
         "feature_count_list",
         "auc_score_list",
         "mcc_score_list",
+        "cx_type",
+        "cxpb",
+        "mutpb",
+        "indpb",
+        "t_size",
     ]
-
-    #     column_headers = ['nb_size', 'f_list', 'auc','mcc','f1','precision','recall','accuracy', 'nb_val', 'pop_val', 'g_val', 'g', 'weighted', 'use_stored_base_learners', 'store_base_learners',
-    #        'resample', 'scale', 'n_features', 'param_space_size', 'n_unique_out',
-    #        'outcome_var_n', 'div_p', 'percent_missing', 'corr',
-    #                        'age', 'sex', 'bmi','ethnicity', 'bloods', 'diagnostic_order',
-    #                       'drug_order', 'annotation_n', 'meta_sp_annotation_n',
-    #                       'X_train_size', 'X_test_orig_size', 'X_test_size',
-    #                   'run_time', 'cx_type', 'cxpb', 'mutpb', 'indpb', 't_size']
 
     df = pd.DataFrame(data=df_data, columns=column_headers)
     df.to_csv(

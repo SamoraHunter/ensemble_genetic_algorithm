@@ -16,8 +16,7 @@ See Also:
 """
 
 import logging
-import random
-from typing import Any, List
+from typing import Any
 
 logger = logging.getLogger("ensemble_ga")
 
@@ -42,6 +41,7 @@ def cxOnePoint(ind1: Any, ind2: Any) -> tuple:
         This wraps DEAP's cxOnePoint to provide a consistent interface.
     """
     from deap import tools
+
     return tools.cxOnePoint(ind1, ind2)
 
 
@@ -66,6 +66,7 @@ def cxUniform(ind1: Any, ind2: Any, indpb: float = 0.5) -> tuple:
         default probability parameter.
     """
     from deap import tools
+
     return tools.cxUniform(ind1, ind2, indpb=indpb)
 
 
@@ -90,6 +91,7 @@ def cxBlend(ind1: Any, ind2: Any, alpha: float = 0.5) -> tuple:
         This wraps DEAP's cxBlend to provide a consistent interface.
     """
     from deap import tools
+
     return tools.cxBlend(ind1, ind2, alpha=alpha)
 
 
@@ -112,6 +114,7 @@ def cxOrdered(ind1: Any, ind2: Any) -> tuple:
         This wraps DEAP's cxOrdered to provide a consistent interface.
     """
     from deap import tools
+
     return tools.cxOrdered(ind1, ind2)
 
 
@@ -132,30 +135,31 @@ def get_crossover_operator(cx_type: str):
 
     Raises:
         ValueError: If the specified cx_type is not recognized.
-    
+
     Examples:
         >>> cx_func = get_crossover_operator('onepoint')
         >>> child1, child2 = cx_func(parent1, parent2)
-        
+
         >>> cx_func = get_crossover_operator('uniform')
         >>> child1, child2 = cx_func(parent1, parent2)
     """
     cx_operators = {
-        'onepoint': cxOnePoint,
-        'uniform': cxUniform,
-        'blend': cxBlend,
-        'ordered': cxOrdered,
-        'twopoint': None,  # Special case for DEAP's built-in
+        "onepoint": cxOnePoint,
+        "uniform": cxUniform,
+        "blend": cxBlend,
+        "ordered": cxOrdered,
+        "twopoint": None,  # Special case for DEAP's built-in
     }
-    
+
     if cx_type not in cx_operators:
         raise ValueError(
             f"Unknown crossover type '{cx_type}'. "
             f"Valid options are: {', '.join(cx_operators.keys())}"
         )
-    
-    if cx_type == 'twopoint':
+
+    if cx_type == "twopoint":
         from deap import tools
+
         return tools.cxTwoPoint
-    
+
     return cx_operators[cx_type]

@@ -17,13 +17,13 @@ from sklearn import metrics
 
 # from ml_grid.ga_functions.ga_plots.ga_progress import plot_generation_progress_fitness
 from ml_grid.ga_functions.ga_plots.ga_progress import plot_generation_progress_fitness
-from ml_grid.pipeline.ensemble_generator_ga import ensembleGenerator
 from ml_grid.pipeline.crossover_methods import (
     cxBlend,
-    cxOrdered,
     cxOnePoint,
+    cxOrdered,
     cxUniform,
 )
+from ml_grid.pipeline.ensemble_generator_ga import ensembleGenerator
 from ml_grid.pipeline.evaluate_methods_ga import (
     evaluate_weighted_ensemble_auc,
     get_y_pred_resolver,
@@ -301,14 +301,16 @@ class run:
                     )
                 else:
                     self.toolbox.register(
-                        "mutate", self.tools.mutFlipBit, indpb=local_param_dict.get("indpb")
+                        "mutate",
+                        self.tools.mutFlipBit,
+                        indpb=local_param_dict.get("indpb", 0.05),
                     )
                 self.toolbox.register("mutateFunction", mutateEnsemble)
                 self.toolbox.register("mutateEnsemble", self.toolbox.mutateFunction)
                 self.toolbox.register(
                     "select",
                     self.tools.selTournament,
-                    tournsize=local_param_dict.get("t_size"),
+                    tournsize=local_param_dict.get("t_size", 3),
                 )
 
                 start = time.time()
