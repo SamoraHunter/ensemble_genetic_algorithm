@@ -164,6 +164,13 @@ class SklearnEnsembleClassifier(BaseEstimator, ClassifierMixin):
                 # Ensure base learner predictions are flattened to 1D
                 all_preds.append(np.asarray(model.predict(X[features])).ravel())
             weights.append(weight)
+
+        # Handle edge case where weights sum to zero (normalize if needed)
+        weights = np.array(weights)
+        if np.sum(weights) == 0:
+            # Use equal weights if all weights are zero
+            weights = np.ones(len(weights)) / len(weights)
+
         return (
             np.round(np.average(all_preds, axis=0, weights=weights)).astype(int).ravel()
         )
@@ -197,5 +204,10 @@ class SklearnEnsembleClassifier(BaseEstimator, ClassifierMixin):
             weights.append(weight)
 
         # Use evolved weights for the final prediction probabilities
+        weights = np.array(weights)
+        if np.sum(weights) == 0:
+            # Use equal weights if all weights are zero
+            weights = np.ones(len(weights)) / len(weights)
+
         p1 = np.average(all_probs, axis=0, weights=weights).ravel()
         return np.vstack([1 - p1, p1]).T
