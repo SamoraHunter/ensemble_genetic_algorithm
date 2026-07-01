@@ -117,6 +117,8 @@ class project_score_save_class:
             "generation_progress_list",
             "best_ensemble",
             "original_feature_names",
+            "t_fits",
+            "n_fits",
         ]
 
         # column_list = column_list + ["BL_" + str(x) for x in range(0, 64)]
@@ -266,6 +268,7 @@ class project_score_save_class:
                 "X_test_orig_size",
                 "X_test_size",
                 "run_time",
+                "cx_type",
                 "cxpb",
                 "mutpb",
                 "indpb",
@@ -274,11 +277,16 @@ class project_score_save_class:
                 "generation_progress_list",
                 "best_ensemble",
                 "original_feature_names",
+                "t_fits",
+                "n_fits",
             ]
 
             # column_list = column_list + ["BL_" + str(x) for x in range(0, 64)]
 
             line = pd.DataFrame(data=None, columns=column_list)
+
+            # Write the valid parameter (indicates if validation set was used)
+            line["valid"] = [valid]
 
             if valid:
                 y_true = self.y_test_orig
@@ -296,18 +304,28 @@ class project_score_save_class:
             accuracy = accuracy_score(y_true, best_pred_orig)
 
             # get info from current settings iter...local_param_dict ml_grid_object
-            for key in ml_grid_object.local_param_dict:
-
+            # Use sorted iteration to ensure deterministic column ordering
+            sorted_keys = sorted(ml_grid_object.local_param_dict.keys())
+            for key in sorted_keys:
                 if key != "data":
                     if key in column_list:
                         line[key] = [ml_grid_object.local_param_dict.get(key)]
                 else:
-                    for key_1 in ml_grid_object.local_param_dict.get("data"):
-
+                    # Handle nested 'data' dict with sorted keys too
+                    data_dict = ml_grid_object.local_param_dict.get("data", {})
+                    sorted_data_keys = sorted(data_dict.keys())
+                    for key_1 in sorted_data_keys:
                         if key_1 in column_list:
                             line[key_1] = [
                                 ml_grid_object.local_param_dict.get("data").get(key_1)
                             ]
+
+            # Explicitly write GA parameters to ensure correct order and prevent
+            # column alignment issues when new parameters are added
+            ga_params_order = ["cx_type", "cxpb", "mutpb", "indpb", "t_size"]
+            for param in ga_params_order:
+                if param not in line:  # Only set if not already written above
+                    line[param] = [ml_grid_object.local_param_dict.get(param)]
 
             current_f = list(self.X_test.columns)
             current_f_vector = []
