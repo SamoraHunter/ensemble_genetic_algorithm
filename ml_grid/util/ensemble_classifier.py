@@ -159,14 +159,14 @@ class SklearnEnsembleClassifier(BaseEstimator, ClassifierMixin):
 
     def predict(self, X):
         self._check_X(X)
-        
+
         # Check if fit was called before predict
         if not self.fitted_models:
             raise ValueError(
                 "This ensemble has not been fitted yet. "
                 "Call .fit(X_train, y_train) before calling .predict()."
             )
-        
+
         all_preds = []
         weights = []
         for model, features, weight in self.fitted_models:
@@ -183,18 +183,16 @@ class SklearnEnsembleClassifier(BaseEstimator, ClassifierMixin):
 
         # Handle edge case where weights sum to zero or very close to zero (normalize if needed)
         weights = np.array(weights, dtype=float)
-        
+
         weight_sum = np.sum(weights)
-        
+
         # Use equal weights if all weights are zero or empty
         if np.isclose(weight_sum, 0) or len(weights) == 0:
             if len(weights) > 0:
                 weights = np.ones(len(weights)) / len(weights)
 
         result = np.average(all_preds, axis=0, weights=weights)
-        return (
-            np.round(result).astype(int).ravel()
-        )
+        return np.round(result).astype(int).ravel()
 
     def predict_proba(self, X):
         self._check_X(X)

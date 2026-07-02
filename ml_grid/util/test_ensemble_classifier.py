@@ -170,7 +170,7 @@ def test_ensemble_with_invalid_model_strings():
 def test_fit_with_x_columns_verification():
     """
     Test that fit() verifies X.columns contain all required features.
-    
+
     Regression test for bug where empty feature lists after mask conversion
     caused predict() to fail with "This ensemble has not been fitted yet."
     """
@@ -189,11 +189,11 @@ def test_fit_with_x_columns_verification():
     ]
 
     clf = SklearnEnsembleClassifier(ensemble_arch, ["feat_1", "feat_2"])
-    
+
     # Should fit successfully since features match X.columns
     clf.fit(X, y)
     assert len(clf.fitted_models) == 1
-    
+
     # Verify predict works after fitting
     preds = clf.predict(X)
     assert len(preds) == 6

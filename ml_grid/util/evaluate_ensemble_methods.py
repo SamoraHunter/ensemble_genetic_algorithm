@@ -301,7 +301,10 @@ class EnsembleEvaluator:
                 def mask_to_features(mask):
                     """Convert binary/int mask or indices to feature names."""
                     if isinstance(mask, (list, tuple, np.ndarray)) and len(mask) > 0:
-                        print(f"DEBUG mask_to_features: mask type={type(mask)}, first_elem_type={type(mask[0])}, is_str={isinstance(mask[0], str)}", flush=True)
+                        print(
+                            f"DEBUG mask_to_features: mask type={type(mask)}, first_elem_type={type(mask[0])}, is_str={isinstance(mask[0], str)}",
+                            flush=True,
+                        )
                         # If already strings, return filtered to valid features
                         if isinstance(mask[0], str):
                             result = [f for f in mask if f in original_feature_names]
@@ -411,10 +414,10 @@ class EnsembleEvaluator:
                 logger.warning(f"Skipping row {row_idx}: Parsed ensemble is empty.")
                 continue
 
-           # Convert mask to feature names for each ensemble
+            # Convert mask to feature names for each ensemble
             def mask_to_features(mask, feature_names):
                 """Convert binary/int mask or indices to feature names with deduplication.
-                
+
                 This function handles:
                 - Binary masks: [0, 1, 0, 1] where len == len(feature_names)
                 - Index lists: [0, 2, 4] representing positions in feature_names
@@ -447,17 +450,17 @@ class EnsembleEvaluator:
                         if len(deduped) < len(result):
                             print(
                                 f"DEBUG ENSEMBLE: Binary mask deduplicated {len(result)} -> "
-                                f"{len(deduped)}, original_feature_names has {len(feature_names)} items", 
-                                flush=True
+                                f"{len(deduped)}, original_feature_names has {len(feature_names)} items",
+                                flush=True,
                             )
                         return deduped
-                  # If mask is indices (all integers within valid range)
+                    # If mask is indices (all integers within valid range)
                     elif all(
                         isinstance(x, (int, np.integer)) and 0 <= x < len(feature_names)
                         for x in mask
                     ):
                         result = [feature_names[x] for x in mask]
-                       # Deduplicate while preserving order
+                        # Deduplicate while preserving order
                         seen = set()
                         deduped = []
                         for f in result:
@@ -475,12 +478,14 @@ class EnsembleEvaluator:
                                 deduped.append(f)
                         return deduped
                 return mask  # fallback, return as is
-            
+
             def mask_to_features_with_logging(mask, feature_names):
                 """Wrapper that logs diagnostic info about mask conversion."""
-                original_mask_str = str(mask)[:50] + "..." if len(str(mask)) > 50 else str(mask)
+                original_mask_str = (
+                    str(mask)[:50] + "..." if len(str(mask)) > 50 else str(mask)
+                )
                 result = mask_to_features(mask, feature_names)
-                
+
                 # Log problematic conversions
                 if isinstance(result, list) and len(result) == 0:
                     logger.warning(
@@ -493,7 +498,7 @@ class EnsembleEvaluator:
                     logger.debug(
                         f"[MASK CONVERSION] Mask '{original_mask_str}' produced only {len(result)} features."
                     )
-                
+
                 return result
 
             for i, ensemble in enumerate(processed_ensembles):
