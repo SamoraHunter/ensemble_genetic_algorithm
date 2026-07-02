@@ -165,3 +165,35 @@ def test_ensemble_with_invalid_model_strings():
     # Should raise ValueError since all models fail to parse/fit
     with pytest.raises(ValueError, match="No base learners"):
         clf.fit(X, y)
+
+
+def test_fit_with_x_columns_verification():
+    """
+    Test that fit() verifies X.columns contain all required features.
+    
+    Regression test for bug where empty feature lists after mask conversion
+    caused predict() to fail with "This ensemble has not been fitted yet."
+    """
+    # Setup mock data with subset of features
+    X = pd.DataFrame(
+        {
+            "feat_1": [1, 2, 3, 4, 5, 6],
+            "feat_2": [6, 5, 4, 3, 2, 1],
+        }
+    )
+    y = pd.Series([1, 0, 1, 0, 1, 0])
+
+    # Create ensemble with valid feature names
+    ensemble_arch = [
+        (1.0, LogisticRegression(), ["feat_1", "feat_2"]),
+    ]
+
+    clf = SklearnEnsembleClassifier(ensemble_arch, ["feat_1", "feat_2"])
+    
+    # Should fit successfully since features match X.columns
+    clf.fit(X, y)
+    assert len(clf.fitted_models) == 1
+    
+    # Verify predict works after fitting
+    preds = clf.predict(X)
+    assert len(preds) == 6

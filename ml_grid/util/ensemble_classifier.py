@@ -82,7 +82,7 @@ class SklearnEnsembleClassifier(BaseEstimator, ClassifierMixin):
                     # only select features that exist in self.feature_names.
                     active_features = []
                     for i, val in enumerate(mask):
-                        if val == 1 and i < len(self.feature_names):
+                        if int(val) == 1 and i < len(self.feature_names):
                             active_features.append(self.feature_names[i])
 
             # Check if we have any valid features before attempting fit
@@ -95,6 +95,14 @@ class SklearnEnsembleClassifier(BaseEstimator, ClassifierMixin):
 
             try:
                 if not isinstance(model, BinaryClassification):
+                    # Verify active_features actually exist in X
+                    missing_features = set(active_features) - set(X.columns)
+                    if missing_features:
+                        warnings.warn(
+                            f"Base learner {type(model).__name__} has missing features: "
+                            f"{missing_features}. Skipping."
+                        )
+                        continue
                     model.fit(X[active_features], y)
                 self.fitted_models.append((model, active_features, weight))
                 all_req_features_set.update(active_features)
@@ -151,6 +159,14 @@ class SklearnEnsembleClassifier(BaseEstimator, ClassifierMixin):
 
     def predict(self, X):
         self._check_X(X)
+        
+        # Check if fit was called before predict
+        if not self.fitted_models:
+            raise ValueError(
+                "This ensemble has not been fitted yet. "
+                "Call .fit(X_train, y_train) before calling .predict()."
+            )
+        
         all_preds = []
         weights = []
         for model, features, weight in self.fitted_models:
@@ -165,14 +181,19 @@ class SklearnEnsembleClassifier(BaseEstimator, ClassifierMixin):
                 all_preds.append(np.asarray(model.predict(X[features])).ravel())
             weights.append(weight)
 
-        # Handle edge case where weights sum to zero (normalize if needed)
-        weights = np.array(weights)
-        if np.sum(weights) == 0:
-            # Use equal weights if all weights are zero
-            weights = np.ones(len(weights)) / len(weights)
+        # Handle edge case where weights sum to zero or very close to zero (normalize if needed)
+        weights = np.array(weights, dtype=float)
+        
+        weight_sum = np.sum(weights)
+        
+        # Use equal weights if all weights are zero or empty
+        if np.isclose(weight_sum, 0) or len(weights) == 0:
+            if len(weights) > 0:
+                weights = np.ones(len(weights)) / len(weights)
 
+        result = np.average(all_preds, axis=0, weights=weights)
         return (
-            np.round(np.average(all_preds, axis=0, weights=weights)).astype(int).ravel()
+            np.round(result).astype(int).ravel()
         )
 
     def predict_proba(self, X):
@@ -205,7 +226,7 @@ class SklearnEnsembleClassifier(BaseEstimator, ClassifierMixin):
 
         # Use evolved weights for the final prediction probabilities
         weights = np.array(weights)
-        if np.sum(weights) == 0:
+        if np.isclose(np.sum(weights), 0):
             # Use equal weights if all weights are zero
             weights = np.ones(len(weights)) / len(weights)
 
