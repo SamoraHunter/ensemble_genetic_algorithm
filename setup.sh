@@ -26,6 +26,7 @@ print_warning() {
 # Parse command line arguments
 INSTALL_TYPE="default"
 FORCE_RECREATE=false
+ENV_NAME="ga_env"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -49,15 +50,21 @@ while [[ $# -gt 0 ]]; do
             FORCE_RECREATE=true
             shift
             ;;
+        --env-name)
+            ENV_NAME="$2"
+            shift
+            shift
+            ;;
         --help|-h)
             echo "Usage: $0 [OPTIONS]"
             echo "Options:"
-            echo "  --cpu     Install CPU-only version (good for CI/testing)"
-            echo "  --gpu     Install with GPU support"
-            echo "  --dev     Install with development dependencies"
-            echo "  --all     Install all dependencies (dev + gpu)"
-            echo "  --force   Force recreation of virtual environment"
-            echo "  --help    Show this help message"
+            echo "  --cpu      Install CPU-only version (good for CI/testing)"
+            echo "  --gpu      Install with GPU support"
+            echo "  --dev      Install with development dependencies"
+            echo "  --all      Install all dependencies (dev + gpu)"
+            echo "  --force    Force recreation of virtual environment"
+            echo "  --env-name NAME  Specify the virtual environment directory name (default: ga_env)"
+            echo "  --help     Show this help message"
             exit 0
             ;;
         *)
@@ -102,23 +109,23 @@ if command -v dpkg &> /dev/null; then
 fi
 
 # Check if we need to recreate virtual environment
-if [ "$FORCE_RECREATE" = true ] && [ -d "ga_env" ]; then
+if [ "$FORCE_RECREATE" = true ] && [ -d "$ENV_NAME" ]; then
     print_info "Force recreation requested. Removing existing virtual environment..."
-    rm -rf ga_env
+    rm -rf "$ENV_NAME"
 fi
 
 # Check if virtual environment exists
-if [ ! -d "ga_env" ]; then
+if [ ! -d "$ENV_NAME" ]; then
     print_info "Creating virtual environment..."
-    $PYTHON_CMD -m venv ga_env || print_error_and_exit "Failed to create virtual environment"
+    $PYTHON_CMD -m venv "$ENV_NAME" || print_error_and_exit "Failed to create virtual environment"
     print_info "Virtual environment created successfully."
 else
-    print_info "Virtual environment already exists."
+    print_info "Virtual environment '$ENV_NAME' already exists. Use --force to recreate or --env-name to specify a different name."
 fi
 
 # Activate virtual environment
 print_info "Activating virtual environment..."
-source ga_env/bin/activate || print_error_and_exit "Failed to activate virtual environment"
+source "$ENV_NAME/bin/activate" || print_error_and_exit "Failed to activate virtual environment"
 print_info "Virtual environment activated."
 
 # Upgrade pip and install build tools
@@ -181,7 +188,7 @@ fi
 # Install ipykernel and register the environment
 print_info "Setting up Jupyter kernel..."
 pip install ipykernel
-python -m ipykernel install --user --name=ga_env --display-name="GA Project Environment"
+python -m ipykernel install --user --name="$ENV_NAME" --display-name="GA Project Environment"
 
 # Verify installation
 print_info "Verifying installation..."
@@ -212,15 +219,15 @@ except ImportError:
 "
 
 print_info "Setup completed successfully!"
-print_info "To activate the environment in the future, run: source ga_env/bin/activate"
+print_info "To activate the environment in the future, run: source $ENV_NAME/bin/activate"
 
 # Show next steps
 echo ""
 echo "✅ Setup completed successfully!"
 echo ""
 echo "=== Next Steps for All Users ==="
-echo "1. The virtual environment 'ga_env' is active for this terminal session."
-echo "2. For future sessions, activate it with: source ga_env/bin/activate"
+echo "1. The virtual environment '$ENV_NAME' is active for this terminal session."
+echo "2. For future sessions, activate it with: source $ENV_NAME/bin/activate"
 echo "3. To start Jupyter, run: jupyter lab"
 echo "   - In your notebook, select the 'GA Project Environment' kernel."
 echo ""
@@ -231,6 +238,11 @@ echo ""
 echo "=== Re-running Setup ==="
 echo "  You can re-run this script with different options (e.g., ./setup.sh --gpu --force)."
 echo "  Use ./setup.sh --help to see all options."
+echo ""
+echo "=== Creating Multiple Environments ==="
+echo "  To create a new environment without overwriting existing ones, use:"
+echo "    $0 --env-name ga_env_1"
+echo "  This creates '$ENV_NAME' as a new venv directory."
 
 # Keep environment activated for the user
 echo ""
