@@ -37,22 +37,21 @@ def setup_logger(log_folder_path: str = ".") -> logging.Logger:
     console_handler.setFormatter(console_formatter)
     console_handler.setLevel(logging.INFO)
 
-    # Get a specific logger for the application
+   # Get a specific logger for the application
     logger = logging.getLogger("ensemble_ga")
     logger.setLevel(logging.INFO)
 
-    # Prevent propagation to the root logger during normal runs to avoid duplicate outputs,
+    # Prevent propagation to the root logger during normal runs,
     # but allow it during tests so that caplog can capture messages.
     logger.propagate = False
     logger.propagate = "pytest" in sys.modules
 
-    # Avoid adding duplicate handlers
-    # Clear existing handlers to prevent duplicates during re-runs (e.g., in tests)
+    # Clear existing handlers to ensure only one active FileHandler at a time
     if logger.hasHandlers():
         logger.handlers.clear()
-
-    if not any(isinstance(h, logging.FileHandler) for h in logger.handlers):
-        logger.addHandler(file_handler)
+    
+    # Add the file handler (only one file handler ever)
+    logger.addHandler(file_handler)
     if not any(isinstance(h, logging.StreamHandler) for h in logger.handlers):
         logger.addHandler(console_handler)
 
