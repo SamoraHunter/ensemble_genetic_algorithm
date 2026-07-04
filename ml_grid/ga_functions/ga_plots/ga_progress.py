@@ -55,4 +55,6 @@ def plot_generation_progress_fitness(
     save_path = f"{file_path}/logs/figures/best_pop={pop_val}_g={g_val}_nb={nb_val}.png"
     plt.savefig(save_path, bbox_inches="tight")
 
-    plt.show()  # This shows the plot if you're running the script directly
+    # Don't show plot interactively to prevent Jupyter GUI lag with long runs
+    # The plots are still saved to disk for later viewing
+    plt.close()

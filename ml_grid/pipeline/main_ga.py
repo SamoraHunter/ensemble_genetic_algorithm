@@ -240,10 +240,12 @@ class run:
                 pop_val = param_grid[i][1]
                 g_val = param_grid[i][2]
 
-                try:
-                    clear_output(wait=True)
-                except Exception as e:
-                    logger.warning("failed to clear output before run: %s", e)
+                # Only clear for first few runs or in short experiments
+                if param_grid.index(param_grid[i]) < 3:
+                    try:
+                        clear_output(wait=True)
+                    except Exception as e:
+                        logger.warning("failed to clear output before run: %s", e)
 
                 logger.info(
                     "Evolving ensemble: nb_val: %s, pop_val: %s, g_val: %s, ...",
@@ -374,8 +376,10 @@ class run:
 
                 while g < g_val and gen_eval_score < 0.999 and not stop_early:
 
-                    if self.ml_grid_object.verbose < 9 and g % 2 == 0:
-                        clear_output(wait=False)
+                    if self.ml_grid_object.verbose < 9:
+                        # Only clear output every 5 generations for long runs to prevent GUI lag
+                        if g <= 10 or (g + 1) % 5 == 0:
+                            clear_output(wait=False)
                     # while g < 50: alt ::  while g < g_val and  ?? eval some how measure AUC or mcc of ensemble?
                     # for i in tqdm(range(0, g_val)):
                     # A new generation
