@@ -150,6 +150,9 @@ class global_parameters:
     gen_eval_score_threshold_early_stopping: int
     """Number of consecutive generations without score improvement before early stopping."""
 
+    progress_bars: bool
+    """If True, shows tqdm progress bars during long operations. Default False to reduce GUI lag."""
+
     def __init__(self, config_path: str = "config.yml", **kwargs):
         """Initializes the global_parameters class with layered configuration management.
 
@@ -222,6 +225,8 @@ class global_parameters:
         self.store_base_learners: bool = False
 
         self.gen_eval_score_threshold_early_stopping: int = 5
+
+        self.progress_bars: bool = False
 
         self.log_store_dataframe_path: str = "log_store_dataframe"
 

@@ -1,9 +1,60 @@
 """Module for plotting the progress of the genetic algorithm's fitness."""
 
-from typing import List
+from typing import List, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.figure import Figure
+
+
+def plot_generation_progress_fitness_wrapper(
+    generation_progress_list: List[float],
+    pop_val: int,
+    g_val: int,
+    nb_val: int,
+    file_path: str,
+    fig: Optional[Figure] = None,
+) -> Figure:
+    """Creates a fitness progress plot without displaying it.
+
+    Args:
+        generation_progress_list: A list of fitness scores for each generation.
+        pop_val: The population size used in the genetic algorithm.
+        g_val: The current generation number.
+        nb_val: The number of neighbors considered.
+        file_path: The base path to save the plot to.
+        fig: An optional figure object to use. If None, a new figure is created.
+
+    Returns:
+        The matplotlib figure object.
+    """
+    if fig is None:
+        fig = plt.figure()
+    else:
+        fig.clear()
+
+    ax = fig.add_subplot(111)
+
+    x = list(range(1, len(generation_progress_list) + 1))
+
+    ax.scatter(x, generation_progress_list)
+
+    coeffs = np.polyfit(x, generation_progress_list, 1)
+    line_of_best_fit = np.poly1d(coeffs)
+    ax.plot(
+        x, line_of_best_fit(x), color="red", linestyle="--", label="Line of Best Fit"
+    )
+
+    ax.set_title("Generation Progress Fitness")
+    ax.set_xlabel("Generation")
+    ax.set_ylabel("Evaluation Metric Score")
+
+    ax.legend()
+
+    save_path = f"{file_path}/logs/figures/best_pop={pop_val}_g={g_val}_nb={nb_val}.png"
+    fig.savefig(save_path, bbox_inches="tight")
+
+    return fig
 
 
 def plot_generation_progress_fitness(
@@ -31,30 +82,24 @@ def plot_generation_progress_fitness(
     """
     fig, ax = plt.subplots()
 
-    # Convert x-axis to integers representing epochs
     x = list(range(1, len(generation_progress_list) + 1))
 
     ax.scatter(x, generation_progress_list)
 
-    # Calculate the line of best fit
     coeffs = np.polyfit(x, generation_progress_list, 1)
     line_of_best_fit = np.poly1d(coeffs)
     ax.plot(
         x, line_of_best_fit(x), color="red", linestyle="--", label="Line of Best Fit"
     )
 
-    # Set plot title and axis labels
     ax.set_title("Generation Progress Fitness")
     ax.set_xlabel("Generation")
     ax.set_ylabel("Evaluation Metric Score")
 
-    # Add legend
     ax.legend()
 
-    # Saving the figure
     save_path = f"{file_path}/logs/figures/best_pop={pop_val}_g={g_val}_nb={nb_val}.png"
     plt.savefig(save_path, bbox_inches="tight")
 
-    # Don't show plot interactively to prevent Jupyter GUI lag with long runs
-    # The plots are still saved to disk for later viewing
-    plt.close()
+    plt.show()
+    plt.close(fig)

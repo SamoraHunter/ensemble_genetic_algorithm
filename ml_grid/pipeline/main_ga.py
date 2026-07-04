@@ -9,6 +9,7 @@ import time
 import traceback
 from typing import Any, Dict, List
 
+import matplotlib.pyplot as plt
 import numpy as np
 import tqdm
 from deap import base, creator, tools
@@ -375,6 +376,8 @@ class run:
                 highest_scoring_ensemble = (0, None)
 
                 while g < g_val and gen_eval_score < 0.999 and not stop_early:
+                    if self.global_params.progress_bars:
+                        pbar = tqdm.tqdm(total=g_val + 1)
 
                     if self.ml_grid_object.verbose < 9:
                         # Only clear output every 5 generations for long runs to prevent GUI lag
@@ -384,7 +387,8 @@ class run:
                     # for i in tqdm(range(0, g_val)):
                     # A new generation
                     g = g + 1
-                    pbar.update(1)
+                    if self.global_params.progress_bars:
+                        pbar.update(1)
                     logger.info("\n -- Generation %i --", g)
                     # Select the next generation individuals
                     logger.info("Selecting next generation individuals, %s", len(pop))
@@ -491,7 +495,8 @@ class run:
 
                     gen_eval_score_previous = gen_eval_score
 
-                pbar.close()
+                if self.global_params.progress_bars:
+                   pbar.close()
 
                 # best = pop[np.argmax([toolbox.evaluate(x) for x in pop])] #was argmin
 
@@ -523,16 +528,30 @@ class run:
                         ensemble=best, ml_grid_object=self.ml_grid_object, valid=True
                     )
                     if self.verbose >= 1:
-                        plot_auc(
-                            self.y_test_orig,
-                            best_pred_orig,
+                        run_index = param_grid.index(param_grid[i])
+                        plot_basename = (
                             "best_pop="
                             + str(pop_val)
                             + "_g="
                             + str(g_val)
                             + "_nb="
-                            + str(nb_val),
+                            + str(nb_val)
                         )
+                        if run_index % 10 == 0:
+                            plot_auc(
+                                self.y_test_orig,
+                                best_pred_orig,
+                                plot_basename,
+                            )
+                        else:
+                            fig = plt.figure()
+                            plot_auc_base(
+                                self.y_test_orig,
+                                best_pred_orig,
+                                plot_basename,
+                                fig=fig,
+                            )
+                            plt.close(fig)
                         logger.info(
                             "nb_val: %s, pop_val: %s, g_val: %s", nb_val, pop_val, g_val
                         )
@@ -628,13 +647,26 @@ class run:
                     self.global_param_str + (additional_naming or ""),
                 )
 
-                plot_generation_progress_fitness(
-                    generation_progress_list,
-                    pop_val,
-                    g_val,
-                    nb_val,
-                    file_path=plot_base_path,
-                )
+                run_index = param_grid.index(param_grid[i])
+                if run_index % 10 == 0:
+                    plot_generation_progress_fitness(
+                        generation_progress_list,
+                        pop_val,
+                        g_val,
+                        nb_val,
+                        file_path=plot_base_path,
+                    )
+                else:
+                    fig = plt.figure()
+                    plot_generation_progress_fitness_wrapper(
+                        generation_progress_list,
+                        pop_val,
+                        g_val,
+                        nb_val,
+                        file_path=plot_base_path,
+                        fig=fig,
+                    )
+                    plt.close(fig)
 
                 with open(
                     self.ml_grid_object.base_project_dir

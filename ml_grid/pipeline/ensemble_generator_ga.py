@@ -138,7 +138,8 @@ def ensembleGenerator(nb_val: int = 28, ml_grid_object: Any = None) -> List[Tupl
 
     if ml_grid_object.multiprocessing_ensemble is False and nb_val > 1:
         ensemble = []
-        for _ in tqdm(dummy_list, total=len(dummy_list)):
+        progress_bar_range = tqdm(dummy_list, total=len(dummy_list)) if getattr(ml_grid_object, 'global_params', None) and ml_grid_object.global_params.progress_bars else dummy_list
+        for _ in progress_bar_range:
             ensemble.append(do_work(ml_grid_object=ml_grid_object, n=_))
 
         if len(ensemble) != nb_val:
@@ -164,7 +165,8 @@ def ensembleGenerator(nb_val: int = 28, ml_grid_object: Any = None) -> List[Tupl
         partial_do_work = partial(do_work, ml_grid_object=ml_grid_object)
         pool = multiprocessing.Pool(processes=2)
         ensemble = []
-        for _ in tqdm(pool.imap(partial_do_work, dummy_list), total=len(dummy_list)):
+        progress_bar_iter = tqdm(pool.imap(partial_do_work, dummy_list), total=len(dummy_list)) if getattr(ml_grid_object, 'global_params', None) and ml_grid_object.global_params.progress_bars else pool.imap(partial_do_work, dummy_list)
+        for _ in progress_bar_iter:
             ensemble.append(_)
 
         if len(ensemble) != nb_val:

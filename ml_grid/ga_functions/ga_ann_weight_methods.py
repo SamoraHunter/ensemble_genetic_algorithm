@@ -144,7 +144,8 @@ def get_y_pred_ann_torch_weighting(
             logger.info("Training ANN weighted ensemble on full data")
             logger.debug("target_ensemble: %s", target_ensemble)
         prediction_array = []
-        for i in tqdm(range(0, len(target_ensemble))):
+        range_iter = tqdm(range(0, len(target_ensemble))) if getattr(ml_grid_object, 'global_params', None) and ml_grid_object.global_params.progress_bars else range(0, len(target_ensemble))
+        for i in range_iter:
             prediction_array.append(target_ensemble[i][5])
 
         prediction_matrix_X_train = np.matrix(prediction_array)
