@@ -235,6 +235,7 @@ class run:
 
         for i in enumerate(idx_list):
             i = i[0]
+            param_grid_idx = i
 
             try:
                 nb_val = param_grid[i][0]
@@ -528,7 +529,7 @@ class run:
                         ensemble=best, ml_grid_object=self.ml_grid_object, valid=True
                     )
                     if self.verbose >= 1:
-                        run_index = param_grid.index(param_grid[i])
+                        run_index = param_grid_idx
                         plot_basename = (
                             "best_pop="
                             + str(pop_val)
@@ -647,7 +648,7 @@ class run:
                     self.global_param_str + (additional_naming or ""),
                 )
 
-                run_index = param_grid.index(param_grid[i])
+                run_index = param_grid_idx
                 if run_index % 10 == 0:
                     plot_generation_progress_fitness(
                         generation_progress_list,
