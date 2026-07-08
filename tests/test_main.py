@@ -11,10 +11,14 @@ import pytest
 
 def test_initialize_logger_creates_experiment_directory_with_timestamp():
     """Test that initialize_logger creates the experiment directory with timestamp."""
+    import tempfile
     from main import initialize_logger
 
-    # Create a temporary config file path (file doesn't need to exist)
-    config_path = "/tmp/config.yml"
+    tmp_dir = tempfile.mkdtemp()
+    config_path = os.path.join(tmp_dir, "config.yml")
+    
+    with open(config_path, "w") as f:
+        f.write("global_params:\n  testing: True\ngrid_params:\n  outcome_var_n: [1]\n")
 
     # Initialize logger
     logger = initialize_logger(config_path)
@@ -23,23 +27,27 @@ def test_initialize_logger_creates_experiment_directory_with_timestamp():
     assert isinstance(logger, logging.Logger)
     assert logger.name == "ensemble_ga"
 
-    # Verify experiment directory was created with timestamp pattern
-    base_log_dir = logger.handlers[0].baseFilename
+    try:
+        # Verify experiment directory was created with timestamp pattern
+        base_log_dir = logger.handlers[0].baseFilename
 
-    # Extract the directory path from the log file path
-    run_specific_dir = os.path.dirname(base_log_dir)
+        # Extract the directory path from the log file path
+        run_specific_dir = os.path.dirname(base_log_dir)
 
-    # Directory should be in experiments folder
-    assert "experiments" in run_specific_dir
+        # Directory should be in experiments folder
+        assert "HFE_GA_experiments" in run_specific_dir
 
-    # Directory name should contain timestamp pattern (YYYY-MM-DD_HH-MM-SS)
-    dir_name = os.path.basename(run_specific_dir)
-    import re
+        # Directory name should contain timestamp pattern (YYYY-MM-DD_HH-MM-SS)
+        dir_name = os.path.basename(run_specific_dir)
+        import re
 
-    timestamp_pattern = r"\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}"
-    assert re.match(
-        timestamp_pattern, dir_name
-    ), f"Expected timestamp pattern in {dir_name}"
+        timestamp_pattern = r"\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}"
+        assert re.match(
+            timestamp_pattern, dir_name
+        ), f"Expected timestamp pattern in {dir_name}"
+    finally:
+        import shutil
+        shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
 def test_main_evaluate_flag_functionality(caplog):
