@@ -89,10 +89,9 @@ def test_column_list_complete():
 
     if missing:
         print(f"✗ Missing columns from column_list: {missing}")
-        return False
+        assert False, f"Missing columns from column_list: {missing}"
 
     print(f"✓ All {len(expected_columns)} expected columns are present")
-    return True
 
 
 def test_no_missing_column_assignments():
@@ -112,27 +111,36 @@ def test_no_missing_column_assignments():
     update_col_pattern = r"column_list = \[[\s\S]*?\]"
     match = re.search(update_col_pattern, content)
 
-    if not match:
-        print("✗ Could not find update_score_log column_list")
-        return False
+    assert match, "Could not find update_score_log column_list"
 
     col_list_section = match.group(0)
 
     # Extract column names from the list
     col_names = re.findall(r'["\'](\w+)["\'],?', col_list_section)
 
-    if len(col_names) != 55:
-        print(f"✗ Expected 55 columns in update_score_log, found {len(col_names)}")
-        return False
+    # There should be 57 columns (original 55 + t_fits, n_fits)
+    assert (
+        len(col_names) == 57
+    ), f"Expected 57 columns in update_score_log, found {len(col_names)}"
 
     print(f"✓ Found {len(col_names)} columns in column_list definition")
 
-    # For each column, check that it's written somewhere (either explicitly or from loop)
     missing_assignments = []
 
     for col in col_names:
         # Check if column is explicitly written
-        if f'line["{col}"]' not in content and f"line['{col}']" not in content:
+        has_explicit = f'line["{col}"]' in content or f"line['{col}']" in content
+
+        # Also check loop-based assignments (e.g., line[param])
+        has_loop_assignment = "line[param]" in content and col in [
+            "cx_type",
+            "cxpb",
+            "mutpb",
+            "indpb",
+            "t_size",
+        ]
+
+        if not (has_explicit or has_loop_assignment):
             # Exception: columns that come from local_param_dict iteration
             # These columns should be handled in the loop
             if col not in [
@@ -168,12 +176,11 @@ def test_no_missing_column_assignments():
             ]:
                 missing_assignments.append(col)
 
-    if missing_assignments:
-        print(f"✗ Columns without explicit assignments: {missing_assignments}")
-        return False
+    assert (
+        not missing_assignments
+    ), f"Columns without explicit assignments: {missing_assignments}"
 
     print("✓ All columns have proper value assignments")
-    return True
 
 
 def test_valid_column_is_written():
@@ -189,20 +196,17 @@ def test_valid_column_is_written():
     # Check if line["valid"] exists
     has_valid_write = 'line["valid"]' in content or "line['valid']" in content
 
-    if not has_valid_write:
-        print("✗ 'valid' column is NOT explicitely written!")
-        print("\n  SUGGESTION: Add after DataFrame creation:")
-        print('    line["valid"] = [valid]')
-        return False
+    assert (
+        has_valid_write
+    ), "'valid' column is NOT explicitly written!\n\n  SUGGESTION: Add after DataFrame creation:\n    line[\"valid\"] = [valid]"
 
     # Also verify it's in the exact right position (after t_size)
     col_list_pattern = r'"t_size",\s*"valid"'
-    if not re.search(col_list_pattern, content):
-        print("✗ 'valid' column is not immediately after 't_size'")
-        return False
+    assert re.search(
+        col_list_pattern, content
+    ), "'valid' column is not immediately after 't_size'"
 
     print("✓ 'valid' column is properly written and positioned")
-    return True
 
 
 def test_explicit_parameter_ordering():
@@ -220,13 +224,9 @@ def test_explicit_parameter_ordering():
         r'ga_params_order\s*=\s*\["[^"]+",\s*"[^"]+",\s*"[^"]+",\s*"[^"]+",\s*"[^"]+"\]'
     )
 
-    if not re.search(ga_order_pattern, content):
-        print("✗ No explicit ga_params_order list found!")
-        print("\n  SUGGESTION: Add after DataFrame creation:")
-        print('    ga_params_order = ["cx_type", "cxpb", "mutpb", "indpb", "t_size"]')
-        print("    for param in ga_params_order:")
-        print("        line[param] = [ml_grid_object.local_param_dict.get(param)]")
-        return False
+    assert re.search(
+        ga_order_pattern, content
+    ), 'No explicit ga_params_order list found!\n\n  SUGGESTION: Add after DataFrame creation:\n    ga_params_order = ["cx_type", "cxpb", "mutpb", "indpb", "t_size"]\n    for param in ga_params_order:\n        line[param] = [ml_grid_object.local_param_dict.get(param)]'
 
     # Verify cx_type is first and t_size is last
     params_match = re.search(r"ga_params_order.*?\]", content, re.DOTALL)
@@ -236,21 +236,19 @@ def test_explicit_parameter_ordering():
         t_size_pos = params_str.find('"t_size"')
 
         # Find first occurrence
-        import re as regex
+        all_params = re.findall(r'"(\w+)"', params_str)
 
-        all_params = regex.findall(r'"(\w+)"', params_str)
-
-        if "cx_type" not in all_params or "t_size" not in all_params:
-            print(f"✗ GA param list incomplete: {all_params}")
-            return False
+        assert (
+            "cx_type" in all_params and "t_size" in all_params
+        ), f"GA param list incomplete: {all_params}"
 
         # Verify t_size comes after cx_type
         if cx_pos > t_size_pos and t_size_pos > 0:
-            print("✗GA param order incorrect (cx_type should come before t_size)")
-            return False
+            raise AssertionError(
+                "GA param order incorrect (cx_type should come before t_size)"
+            )
 
     print("✓ Explicit GA parameter ordering is in place")
-    return True
 
 
 def test_sorted_iteration():
@@ -269,19 +267,14 @@ def test_sorted_iteration():
         or "for key in sorted(local_param_dict.keys()):" in content
     )
 
-    if not has_sorted_iteration:
-        print("✗ Dictionary iteration does NOT use sorted keys!")
-        return False
+    assert has_sorted_iteration, "Dictionary iteration does NOT use sorted keys!"
 
     # Also check nested data dict iteration is sorted
     has_sorted_data = "sorted(data_dict.keys())" in content or "sorted_keys" in content
 
-    if not has_sorted_data:
-        print("✗ Nested 'data' dictionary iteration is not sorted!")
-        return False
+    assert has_sorted_data, "Nested 'data' dictionary iteration is not sorted!"
 
     print("✓ Both dictionaries use sorted() iteration")
-    return True
 
 
 def test_ga_params_have_defaults():
@@ -294,25 +287,22 @@ def test_ga_params_have_defaults():
     with open(source_path, "r") as f:
         content = f.read()
 
-    ga_params = ["cx_type", "cxpb", "mutpb", "indpb", "t_size"]
+    # Check that GA params have .get() with defaults in the loop (via ga_params_order)
+    # The code uses: line[param] = [ml_grid_object.local_param_dict.get(param)]
+    has_get_param_pattern = (
+        "line[param] = [ml_grid_object.local_param_dict.get(param)]" in content
+    )
 
-    # Check that all GA params have .get() with defaults in the loop
-    for param in ga_params:
-        # Pattern: line[param] = [ml_grid_object.local_param_dict.get(param)]
-        get_pattern = f'local_param_dict.get("{param}"'
+    assert has_get_param_pattern, "GA params do NOT have .get() method call!"
 
-        if (
-            get_pattern not in content
-            and f"local_param_dict.get('{param}'" not in content
-        ):
-            print(f"✗ GA param '{param}' does NOT have a default value!")
+    # Verify cx_type is in ga_params_order (implies it should be retrieved)
+    assert (
+        '"cx_type"' in content and "ga_params_order" in content
+    ), "cx_type not properly configured"
 
-    # For cx_type specifically, check we use a default value
-    if '"twopoint"' not in content and "'twopoint'" not in content:
-        print("  Note: cx_type default 'twopoint' might need to be added")
+    print("✓ GA parameters retrieved using get() method")
 
-    print("✓ GA parameters retrieved with defaults (or explicit handling)")
-    return True
+    print("✓ GA parameters retrieved with defaults")
 
 
 def test_column_count_validation():
@@ -330,12 +320,11 @@ def test_column_count_validation():
         "column_alignment" in content.lower() or "alignment check" in content.lower()
     )
 
-    if not has_validation:
-        print("  Note: No explicit column count validation found")
-        print("  Consider adding assertion after DataFrame creation")
+    assert (
+        has_validation
+    ), "No explicit column count validation found. Consider adding assertion after DataFrame creation"
 
-    print("✓ Column structure verification is in place (via tests)")
-    return True
+    print("✓ Column structure verification is in place")
 
 
 def test_new_parameter_checklist():
@@ -355,14 +344,11 @@ def test_new_parameter_checklist():
         and "add" in content.lower()
     )
 
-    if not has_documentation:
-        print("  Note: No embedded documentation found for adding new parameters")
-        print("  Consider adding comments like:")
-        print("    # When adding new GA params, update ga_params_order")
-        print("    # and ensure cx_type comes before other crossover/mutation params")
+    assert (
+        has_documentation
+    ), "No embedded documentation found for adding new parameters. Consider adding comments like:\n    # When adding new GA params, update ga_params_order\n    # and ensure cx_type comes before other crossover/mutation params"
 
-    print("✓ Source code exists (documentation in separate file)")
-    return True
+    print("✓ Source code exists with parameter documentation")
 
 
 def run_all_tests():
@@ -381,48 +367,32 @@ def run_all_tests():
         ("Column Count Validation", test_column_count_validation),
     ]
 
-    results = []
     for name, test_fn in tests:
         print(f"\n{name}:")
         print("-" * 60)
         try:
-            result = test_fn()
-            results.append((name, result))
+            test_fn()
+        except AssertionError as e:
+            import traceback
+
+            traceback.print_exc()
+            raise AssertionError(f"{name} failed: {e}")
         except Exception as e:
             print(f"✗ Error: {e}")
             import traceback
 
             traceback.print_exc()
-            results.append((name, False))
+            raise
 
-    # Special check for new parameter checklist (soft test)
+    # Special check for new parameter checklist
     print("\nNew Parameter Checklist:")
     print("-" * 60)
-    result = test_new_parameter_checklist()
-    results.append(("New Param Checklist", result))
+    test_new_parameter_checklist()
 
     print("\n" + "=" * 80)
-    print("Test Results Summary:")
+    print("All tests passed!")
     print("=" * 80)
-
-    passed = sum(1 for _, r in results if r)
-    total = len(results)
-
-    for name, result in results:
-        status = "✓ PASS" if result else "✗ FAIL"
-        print(f"{status}: {name}")
-
-    print(f"\nTotal: {passed}/{total} tests passed")
-
-    if not all(r for _, r in results):
-        print("\n⚠ Some tests failed. These tests validate SOURCE CODE structure.")
-        print(
-            "   Run `python3 tests/test_column_alignment.py` to check actual CSV data."
-        )
-
-    return all(r for _, r in results)
 
 
 if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)
+    run_all_tests()
