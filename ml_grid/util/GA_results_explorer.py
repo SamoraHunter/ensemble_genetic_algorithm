@@ -2071,6 +2071,155 @@ class GA_results_explorer:
         plt.show()
         plt.close()
 
+    def plot_ensemble_summary(self, plot_dir: Optional[str] = None) -> None:
+        """Creates a comprehensive visualization of the best ensemble configuration.
+
+        Shows:
+        1. Weight distribution of models in the best ensemble
+        2. Feature coverage (how many features each model uses)
+        3. Model type breakdown if available
+
+        Args:
+            plot_dir: Directory to save plots. If None, displays interactively.
+        """
+        results_df = self.df.copy()
+
+        # Get the best run by AUC
+        best_run = results_df.loc[results_df["auc"].idxmax()]
+        ensemble_str = best_run.get("best_ensemble")
+
+        if pd.isna(ensemble_str) or not ensemble_str:
+            logger.warning("No ensemble string found for visualization")
+            self._create_empty_plot(
+                plot_dir=plot_dir,
+                title="Ensemble Summary",
+                message="No ensemble data available"
+            )
+            return
+
+        # Parse the ensemble string
+        models = parse_ensemble_string(ensemble_str)
+
+        if not models:
+            logger.warning("Could not parse ensemble string")
+            self._create_empty_plot(
+                plot_dir=plot_dir,
+                title="Ensemble Summary",
+                message="Failed to parse ensemble data"
+            )
+            return
+
+        # Extract metrics
+        weights = [m["weight"] for m in models]
+        model_names = [m["model_name"].split("(")[0] for m in models]
+        feature_masks = [m["feature_mask"] for m in models]
+        feature_counts = [sum(m) for m in feature_masks]
+        scores = [m.get("score", 0) for m in models]
+
+        # Create visualization
+        fig = plt.figure(figsize=(16, 10))
+
+        # Plot 1: Weight distribution (bar chart)
+        ax1 = fig.add_subplot(2, 3, 1)
+        bar_colors = plt.cm.viridis(np.linspace(0.2, 0.8, len(weights)))
+        bars = ax1.bar(range(len(weights)), weights, color=bar_colors, edgecolor="black", linewidth=0.5)
+        ax1.set_xlabel("Model Index", fontsize=12)
+        ax1.set_ylabel("Weight", fontsize=12)
+        ax1.set_title(f"Ensemble Weight Distribution\nMax AUC: {best_run['auc']:.4f}", fontsize=14, fontweight="bold")
+        ax1.set_xticks(range(len(weights)))
+        ax1.set_xticklabels([f"M{i}" for i in range(len(weights))], rotation=45, ha="right")
+
+        # Add weight labels
+        for bar, weight in zip(bars, weights):
+            ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
+                    f"{weight:.3f}", ha="center", va="bottom", fontsize=9)
+
+        # Plot 2: Feature coverage per model
+        ax2 = fig.add_subplot(2, 3, 2)
+        bar_colors2 = plt.cm.viridis(np.linspace(0.3, 0.9, len(feature_counts)))
+        bars2 = ax2.bar(range(len(feature_counts)), feature_counts, color=bar_colors2, edgecolor="black", linewidth=0.5)
+        ax2.set_xlabel("Model Index", fontsize=12)
+        ax2.set_ylabel("Number of Features", fontsize=12)
+        ax2.set_title("Feature Coverage per Model", fontsize=14, fontweight="bold")
+        ax2.set_xticks(range(len(feature_counts)))
+        ax2.set_xticklabels([f"M{i}" for i in range(len(feature_counts))], rotation=45, ha="right")
+
+        # Plot 3: Model type distribution (pie chart)
+        ax3 = fig.add_subplot(2, 3, 3)
+        type_counts = {}
+        for mt in model_names:
+            type_counts[mt] = type_counts.get(mt, 0) + 1
+
+        if len(type_counts) > 0:
+            explode = [0.05] * len(type_counts)
+            wedges, texts, autotexts = ax3.pie(
+                list(type_counts.values()),
+                labels=list(type_counts.keys()),
+                autopct="%1.1f%%",
+                startangle=90,
+                explode=explode
+            )
+            ax3.set_title(f"Model Composition ({len(models)} models)", fontsize=14, fontweight="bold")
+
+        # Plot 4: Performance summary text
+        ax4 = fig.add_subplot(2, 1, 2)
+        
+        # Calculate ensemble statistics safely
+        total_unique_features = 0
+        if feature_masks:
+            try:
+                all_features = []
+                for mask in feature_masks:
+                    indices = np.where(np.array(mask) == 1)[0]
+                    all_features.extend(indices)
+                total_unique_features = len(set(all_features))
+            except Exception as e:
+                logger.warning(f"Could not calculate unique features: {e}")
+
+        performance_text = (
+            f"Best Ensemble Summary\n"
+            f"{'=' * 40}\n"
+            f"AUC: {best_run['auc']:.4f}\n"
+            f"Run ID: {best_run.name}\n\n"
+            f"Ensemble Size: {len(models)} models\n"
+            f"Total Features: {total_unique_features}\n"
+            f"Mean Weight: {np.mean(weights):.3f}\n"
+            f"Max Features/Model: {max(feature_counts) if feature_counts else 0}\n"
+            f"Min Features/Model: {min(feature_counts) if feature_counts else 0}"
+        )
+
+        ax4.text(0.5, 0.5, performance_text, fontsize=12, family="monospace",
+                verticalalignment="center", horizontalalignment="left",
+                transform=ax4.transAxes, bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5))
+        ax4.axis("off")
+
+        # Adjust layout and save/show
+        plt.tight_layout()
+
+        if plot_dir is not None:
+            plot_path = os.path.join(plot_dir, "best_ensemble_summary.png")
+            plt.savefig(plot_path, dpi=150, bbox_inches="tight")
+            logger.info("✅ Ensemble summary saved to: %s", plot_path)
+            plt.close()
+        else:
+            plt.show()
+
+    def _create_empty_plot(self, plot_dir: Optional[str], title: str, message: str) -> None:
+        """Creates a placeholder plot for error cases."""
+        fig = plt.figure(figsize=(8, 4))
+        plt.text(0.5, 0.5, f"{title}\n{message}",
+                ha="center", va="center", fontsize=12)
+        plt.axis("off")
+
+        if plot_dir is not None:
+            filename = title.lower().replace(" ", "_") + ".png"
+            plot_path = os.path.join(plot_dir, filename)
+            plt.savefig(plot_path)
+            logger.info("Plot saved to: %s", plot_path)
+            plt.close()
+        else:
+            plt.show()
+
     def run_all_plots(
         self,
         plot_dir: Optional[str] = None,
@@ -2185,6 +2334,46 @@ def extract_feature_arrays_from_string(raw_ensemble_string: str) -> List[List[in
     except Exception as e:
         logger.error("❌ An error occurred during extraction: %s", e)
         return []
+
+
+def parse_ensemble_string(ensemble_str: str) -> Optional[List[dict]]:
+    """Parses an ensemble string and extracts model information.
+
+    Args:
+        ensemble_str: String representation of the ensemble from best_ensemble column.
+                      Format: [(weight, "model_name", feature_mask, ..., score)]
+
+    Returns:
+        List of dicts with keys: weight, model_name, feature_mask, score
+        or None if parsing fails.
+    """
+    try:
+        safe_context = {"array": lambda x: x, "np": np}
+        parsed = eval(ensemble_str, {"__builtins__": {}}, safe_context)
+
+        # Extract models from nested structure [[(...)]]
+        models = []
+        if isinstance(parsed, list) and len(parsed) > 0:
+            inner_list = parsed[0] if isinstance(parsed[0], list) else parsed
+            for item in inner_list:
+                if isinstance(item, tuple) and len(item) >= 4:
+                    weight = float(item[0])
+                    model_name = str(item[1])
+                    feature_mask = item[2]
+                    score = float(item[4]) if len(item) > 4 else None
+                    
+                    models.append({
+                        "weight": weight,
+                        "model_name": model_name,
+                        "feature_mask": feature_mask,
+                        "score": score
+                    })
+        
+        return models if models else None
+
+    except Exception as e:
+        logger.error("❌ Error parsing ensemble string: %s", e)
+        return None
 
 
 # --- Example Usage ---
