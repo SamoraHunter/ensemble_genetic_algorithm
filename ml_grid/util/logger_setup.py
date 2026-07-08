@@ -4,7 +4,7 @@ import sys
 from datetime import datetime
 
 
-def setup_logger(log_folder_path: str = ".") -> logging.Logger:
+def setup_logger(log_folder_path: str = ".", verbose: int = 0) -> logging.Logger:
     """Sets up a root logger to write to a file.
 
     This function configures the root logger to send messages to a timestamped
@@ -14,6 +14,7 @@ def setup_logger(log_folder_path: str = ".") -> logging.Logger:
     Args:
         log_folder_path: The relative path to the directory where logs
             should be stored. Defaults to the current directory.
+        verbose: Verbosity level (0-3+). Levels 0-10 show INFO, levels 11+ also show DEBUG on console.
 
     Returns:
         The configured logger instance.
@@ -31,13 +32,16 @@ def setup_logger(log_folder_path: str = ".") -> logging.Logger:
     )
     file_handler.setFormatter(file_formatter)
 
+    # Determine console log level based on verbose parameter
+    console_level = logging.DEBUG if verbose >= 11 else logging.INFO
+
     # Set up console handler
     console_handler = logging.StreamHandler(sys.stdout)
     console_formatter = logging.Formatter("%(message)s")  # Simple format for console
     console_handler.setFormatter(console_formatter)
-    console_handler.setLevel(logging.INFO)
+    console_handler.setLevel(console_level)
 
-   # Get a specific logger for the application
+    # Get a specific logger for the application
     logger = logging.getLogger("ensemble_ga")
     logger.setLevel(logging.INFO)
 
@@ -49,7 +53,7 @@ def setup_logger(log_folder_path: str = ".") -> logging.Logger:
     # Clear existing handlers to ensure only one active FileHandler at a time
     if logger.hasHandlers():
         logger.handlers.clear()
-    
+
     # Add the file handler (only one file handler ever)
     logger.addHandler(file_handler)
     if not any(isinstance(h, logging.StreamHandler) for h in logger.handlers):
