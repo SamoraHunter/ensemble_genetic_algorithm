@@ -157,3 +157,4 @@ run_ci.sh
 .secrets
 .actrc
 doc_status.json
+INSTRUCTIONS.md
