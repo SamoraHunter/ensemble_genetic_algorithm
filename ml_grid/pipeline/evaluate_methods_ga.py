@@ -180,8 +180,7 @@ def evaluate_weighted_ensemble_auc(
     recall = metrics.recall_score(y_test, y_pred, average="binary")
     accuracy = metrics.accuracy_score(y_test, y_pred)
 
-    if verbose >= 1:
-        logger.info("Ensemble MCC %s, AUC %s, nb %s", mcc, auc, len(individual[0]))
+    # Skip the spammy first log line (reduces logs by half)
 
     # ?? how does the diversity weighting and the order of operations interact with the ensemble weights already
     # measure and incorporate diversity
@@ -294,13 +293,16 @@ def evaluate_weighted_ensemble_auc(
         header=False,
     )
 
-    if verbose >= 1:
+    # Log every 10th evaluation to reduce spam
+    eval_count = getattr(evaluate_weighted_ensemble_auc, "eval_count", 0)
+
+    if verbose >= 1 and eval_count % 10 == 0:
         logger.info(
-            f"""Ensemble MCC {mcc}, diversity weighted MCC {mcc_div}
-        , \n f1 {f1} precision {precision} recall {recall} accuracy {accuracy}
-        , \n AUC {auc}, diversity weighted AUC {auc_div}
-        , \n nb {len(individual[0])}, diversity_score: {diversity_metric}, diff: {auc_div-auc} """
+            f"Ensemble MCC {mcc:.4f}({mcc_div:.4f}), AUC {auc:.4f}({auc_div:.4f}), "
+            f"F1 {f1:.4f}, nb {len(individual[0])}, diversity_score: {diversity_metric:.4f}"
         )
+    eval_count += 1
+    evaluate_weighted_ensemble_auc.eval_count = eval_count
 
     # return mcc for genetic algorithm evalutation
     if diversity_parameter > 0:

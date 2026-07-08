@@ -6,12 +6,12 @@ import os
 import pathlib
 import pickle
 import random
+import shutil
 import time
 import traceback
 from typing import Any, Dict, List
 
 import matplotlib.pyplot as plt
-import numpy as np
 import tqdm
 from deap import base, creator, tools
 from IPython.display import clear_output
@@ -233,7 +233,7 @@ class run:
             model_names = []
             for model in self.global_params.model_list:
                 model_name = None
-                if hasattr(model, '__name__'):
+                if hasattr(model, "__name__"):
                     model_name = model.__name__
                 elif isinstance(model, type):
                     model_name = model.__name__
@@ -241,8 +241,10 @@ class run:
                     # Try to find by reversing through MODEL_REGISTRY
                     for name, cls in self.global_params.MODEL_REGISTRY.items():
                         try:
-                            if model is cls or (hasattr(model, '__class__') and 
-                               model.__class__.__name__ == cls.__name__):
+                            if model is cls or (
+                                hasattr(model, "__class__")
+                                and model.__class__.__name__ == cls.__name__
+                            ):
                                 model_name = name
                                 break
                         except Exception:
@@ -421,9 +423,22 @@ class run:
                 # Extracting all the fitnesses of
                 fits = [ind.fitness.values[0] for ind in pop]
 
-                if self.ml_grid_object.verbose >= 11:
-                    logger.debug("fits")
-                    logger.debug(fits)
+                if self.ml_grid_object.verbose >= 5:
+                    mean_fit = sum(fits) / len(fits)
+                    logger.info(
+                        f"Initial pop: size={len(pop)}, mean_fitness={mean_fit:.4f}"
+                    )
+
+                # Log top 3 individuals from initial population (if verbose)
+                if self.ml_grid_object.verbose >= 10:
+                    sorted_fits = sorted(
+                        enumerate(fits), key=lambda x: x[1], reverse=True
+                    )[:3]
+                    logger.debug("Top 3 initial individuals:")
+                    for idx, fit in sorted_fits:
+                        logger.debug(
+                            f"  Ind {idx}: fitness={fit:.4f}, len_ensemble={len(pop[idx][0])}"
+                        )
 
                 # Variable keeping track of the number of generations
                 g = 0
@@ -466,58 +481,73 @@ class run:
                     g = g + 1
                     if self.global_params.progress_bars:
                         pbar.update(1)
-                    logger.info("\n -- Generation %i --", g)
+                    # Log generation start (less verbose)
+                    if self.ml_grid_object.verbose >= 1:
+                        logger.info("--- Generation %d starting ---", g)
+
                     # Select the next generation individuals
-                    logger.info("Selecting next generation individuals, %s", len(pop))
                     offspring = self.toolbox.select(pop, len(pop))
+
                     # Clone the selected individuals
-                    logger.info("Clone the selected individuals")
                     offspring = list(self.toolbox.map(self.toolbox.clone, offspring))
-                    logger.info("Apply crossover and mutation on the offspring")
+
                     # Apply crossover and mutation on the offspring
                     for child1, child2 in zip(offspring[::2], offspring[1::2]):
                         if random.random() < CXPB:
                             self.toolbox.mate(child1[0], child2[0])
                             del child1.fitness.values
                             del child2.fitness.values
-                    counter = 0
-                    logger.info("mutate")
+
+                    # Mutation counter
+                    mut_count = 0
                     for mutant in offspring:
                         if random.random() < MUTPB:
                             mutatedEnsemble = mutateEnsemble(
-                                offspring[counter], ml_grid_object=self.ml_grid_object
+                                offspring[mut_count], ml_grid_object=self.ml_grid_object
                             )
-                            offspring[counter] = mutatedEnsemble
-                            # toolbox.mutateEnsemble(mutant[0])
-                            # toolbox.mutate(mutant[0][0])
+                            offspring[mut_count] = mutatedEnsemble
                             del mutant.fitness.values
-                        counter = counter + 1
-                    logger.info("Evaluate the individuals with an invalid fitness")
-                    # Evaluate the individuals with an invalid fitness
+                        mut_count += 1
+
+                    # Evaluate only individuals with invalid fitness
                     invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-                    # fitnesses = map(toolbox.evaluate, invalid_ind)
                     fitnesses = self.toolbox.map(self.toolbox.evaluate, invalid_ind)
                     for ind, fit in zip(invalid_ind, fitnesses):
                         ind.fitness.values = fit
+
                     pop[:] = offspring
-                    logger.info(
-                        "Gather all the fitnesses in one list and print the stats"
-                    )
-                    # Gather all the fitnesses in one list and print the stats
+
+                    # Gather all the fitnesses
                     fits = [ind.fitness.values[0] for ind in pop]
                     length = len(pop)
                     mean = sum(fits) / length
                     sum2 = sum(x * x for x in fits)
                     std = abs(sum2 / length - mean**2) ** 0.5
-                    logger.info(
-                        f"min: {min(fits)}, max: {max(fits)} , mean: {mean}, std: {std}"
-                    )
+
+                    # Log generation stats (only every 5 generations unless verbose > 5)
+                    if self.ml_grid_object.verbose >= 5 or g <= 5 or g % 5 == 0:
+                        logger.info(
+                            f"Gen {g}: pop_size={length}, min={min(fits):.4f}, max={max(fits):.4f}, "
+                            f"mean={mean:.4f}, std={std:.4f}"
+                        )
                     # pool.close() # experimental
                     # Additional eval stage for generation truncation:
                     # argmin... or argmax for auc
 
-                    # calculate the best individual from within the population by arg min or max on target metric
-                    best = pop[np.argmax([self.toolbox.evaluate(x) for x in pop])]
+                    # Calculate the best individual from within the population
+                    pop_size = len(pop)
+
+                    # Find top performers without re-evaluating
+                    fitness_list = [
+                        (i, pop[i].fitness.values[0]) for i in range(pop_size)
+                    ]
+                    sorted_by_fitness = sorted(
+                        fitness_list, key=lambda x: x[1], reverse=True
+                    )
+
+                    # Evaluate best individual more thoroughly
+                    best_idx = sorted_by_fitness[0][0]
+                    best = pop[best_idx]
                     # best_pred = get_best_y_pred(best)
                     # gen_eval_score = metrics.roc_auc_score(self.y_test_orig, best_pred)
 
@@ -528,11 +558,31 @@ class run:
 
                     try:
                         gen_eval_score = metrics.roc_auc_score(y_test, y_pred)
+                        gen_mcc = metrics.matthews_corrcoef(y_test, y_pred)
+                        gen_f1 = metrics.f1_score(y_test, y_pred, average="binary")
+                        gen_accuracy = metrics.accuracy_score(y_test, y_pred)
+
+                        # Measure diversity of best individual
+                        try:
+                            best_diversity = measure_binary_vector_diversity(best)
+                        except Exception:
+                            best_diversity = 0.0
                     except ValueError:
                         gen_eval_score = (
                             0.5  # Assign random chance score if AUC is not defined
                         )
-                    logger.info("gen_eval_score == %s Generation %s", gen_eval_score, g)
+                        gen_mcc = 0.0
+                        gen_f1 = 0.0
+                        gen_accuracy = 0.0
+                        best_diversity = 0.0
+
+                    # Log generation progress (less frequently unless verbose)
+                    log_freq = 5 if self.ml_grid_object.verbose >= 5 else 10
+                    if g <= 3 or g % log_freq == 0:
+                        logger.info(
+                            f"Gen {g}: Best AUC {gen_eval_score:.4f}, MCC {gen_mcc:.4f}, "
+                            f"F1 {gen_f1:.4f}, Acc {gen_accuracy:.4f}, Div {best_diversity:.3f}"
+                        )
                     generation_progress_list.append(gen_eval_score)
 
                     if gen_eval_score < highest_scoring_ensemble[0]:
@@ -587,11 +637,6 @@ class run:
                             "%s n features: %s", best[0][i][1], len(best[0][i][2])
                         )
 
-                if self.verbose >= 1:
-                    logger.info(
-                        f"Best Ensemble diversity score: {measure_binary_vector_diversity(best)}"
-                    )
-
                 end = time.time()
                 if self.verbose >= 1:
                     logger.info(end - start)
@@ -641,6 +686,34 @@ class run:
                             logger.warning(
                                 "AUC: undefined (only one class in y_true), g: %s", g
                             )
+                        # Calculate additional metrics for better visibility
+                        try:
+                            final_mcc = metrics.matthews_corrcoef(
+                                y_test_orig, best_pred_orig
+                            )
+                            final_f1 = metrics.f1_score(
+                                y_test_orig, best_pred_orig, average="binary"
+                            )
+                            final_precision = metrics.precision_score(
+                                y_test_orig, best_pred_orig, average="binary"
+                            )
+                            final_recall = metrics.recall_score(
+                                y_test_orig, best_pred_orig, average="binary"
+                            )
+                            final_accuracy = metrics.accuracy_score(
+                                y_test_orig, best_pred_orig
+                            )
+
+                            # Measure diversity
+                            diversity_metric = measure_binary_vector_diversity(best)
+
+                            logger.info(
+                                f"Best Ensemble: AUC {final_auc:.4f}, MCC {final_mcc:.4f}, F1 {final_f1:.4f}, "
+                                f"Precision {final_precision:.4f}, Recall {final_recall:.4f}, Accuracy {final_accuracy:.4f}, "
+                                f"diversity_score: {diversity_metric:.4f}"
+                            )
+                        except Exception:
+                            pass
                 except Exception as e:
                     logger.error("Failed to get best y pred and plot auc")
                     logger.error(e)

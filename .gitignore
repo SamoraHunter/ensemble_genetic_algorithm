@@ -158,3 +158,4 @@ run_ci.sh
 .actrc
 doc_status.json
 INSTRUCTIONS.md
+.kilo/*

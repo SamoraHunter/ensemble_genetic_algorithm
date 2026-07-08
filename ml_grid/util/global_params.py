@@ -318,18 +318,19 @@ class global_parameters:
 
         # Print config to log at initialization (only once per run)
         import ml_grid.util.global_params as gp_module
+
         if not gp_module._CONFIG_LOGGED:
             self._log_config()
             gp_module._CONFIG_LOGGED = True
 
     def _log_config(self) -> None:
         """Prints the complete configuration to the log.
-        
-        This method logs all configuration settings including defaults and 
+
+        This method logs all configuration settings including defaults and
         any values loaded from the config file or passed as runtime arguments.
         """
         import datetime
-        
+
         # Collect all config attributes (exclude methods, private attributes starting with _)
         config_dict = {}
         for attr in dir(self):
@@ -342,7 +343,7 @@ class global_parameters:
                             resolved_models = []
                             for item in value:
                                 item_type = type(item).__name__
-                                if item_type == 'function' or item_type == 'type':
+                                if item_type == "function" or item_type == "type":
                                     # Try to find the model name by reversing through MODEL_REGISTRY
                                     found_name = None
                                     for name, cls in self.MODEL_REGISTRY.items():
@@ -355,7 +356,9 @@ class global_parameters:
                                     if found_name:
                                         resolved_models.append(found_name)
                                     else:
-                                        resolved_models.append(getattr(item, '__name__', str(item)))
+                                        resolved_models.append(
+                                            getattr(item, "__name__", str(item))
+                                        )
                                 else:
                                     resolved_models.append(str(item))
                             config_dict[attr] = resolved_models
@@ -370,9 +373,15 @@ class global_parameters:
                                     resolved_models = []
                                     for item in v:
                                         item_type = type(item).__name__
-                                        if item_type == 'function' or item_type == 'type':
+                                        if (
+                                            item_type == "function"
+                                            or item_type == "type"
+                                        ):
                                             found_name = None
-                                            for name, cls in self.MODEL_REGISTRY.items():
+                                            for (
+                                                name,
+                                                cls,
+                                            ) in self.MODEL_REGISTRY.items():
                                                 try:
                                                     if item is cls:
                                                         found_name = name
@@ -382,7 +391,9 @@ class global_parameters:
                                             if found_name:
                                                 resolved_models.append(found_name)
                                             else:
-                                                resolved_models.append(getattr(item, '__name__', str(item)))
+                                                resolved_models.append(
+                                                    getattr(item, "__name__", str(item))
+                                                )
                                         else:
                                             resolved_models.append(str(item))
                                     converted_dict[k] = resolved_models
@@ -397,9 +408,15 @@ class global_parameters:
                                             resolved_models = []
                                             for item in nv:
                                                 item_type = type(item).__name__
-                                                if item_type == 'function' or item_type == 'type':
+                                                if (
+                                                    item_type == "function"
+                                                    or item_type == "type"
+                                                ):
                                                     found_name = None
-                                                    for name, cls in self.MODEL_REGISTRY.items():
+                                                    for (
+                                                        name,
+                                                        cls,
+                                                    ) in self.MODEL_REGISTRY.items():
                                                         try:
                                                             if item is cls:
                                                                 found_name = name
@@ -407,28 +424,40 @@ class global_parameters:
                                                         except Exception:
                                                             pass
                                                     if found_name:
-                                                        resolved_models.append(found_name)
+                                                        resolved_models.append(
+                                                            found_name
+                                                        )
                                                     else:
-                                                        resolved_models.append(getattr(item, '__name__', str(item)))
+                                                        resolved_models.append(
+                                                            getattr(
+                                                                item,
+                                                                "__name__",
+                                                                str(item),
+                                                            )
+                                                        )
                                                 else:
                                                     resolved_models.append(str(item))
                                             converted_nested[nk] = resolved_models
                                         except Exception:
-                                            converted_nested[nk] = [str(nv) for nv in nv]
+                                            converted_nested[nk] = [
+                                                str(nv) for nv in nv
+                                            ]
                                     else:
                                         converted_nested[nk] = v
                                 converted_dict[k] = converted_nested
                             else:
                                 converted_dict[k] = v
                         config_dict[attr] = converted_dict
-                    elif hasattr(value, '__name__'):
+                    elif hasattr(value, "__name__"):
                         # Single model class - get its name
                         model_name = None
                         for name, cls in self.MODEL_REGISTRY.items():
                             if value is cls:
                                 model_name = name
                                 break
-                        config_dict[attr] = model_name or getattr(value, '__name__', str(value))
+                        config_dict[attr] = model_name or getattr(
+                            value, "__name__", str(value)
+                        )
                     else:
                         config_dict[attr] = value
 
@@ -438,23 +467,24 @@ class global_parameters:
         log_lines.append("RUNTIME CONFIGURATION")
         log_lines.append(f"Generated: {datetime.datetime.now().isoformat()}")
         log_lines.append("-" * 60)
-        
+
         # Sort keys and group by category for better readability
         sorted_keys = sorted(config_dict.keys())
         for key in sorted_keys:
             value = config_dict[key]
             log_lines.append(f"{key}: {value}")
-        
+
         log_lines.append("=" * 60)
-        
+
         logger.info("\n".join(log_lines))
 
     @classmethod
     def reset_config_log_flag(cls) -> None:
         """Reset the config log flag, allowing configs to be logged again.
-        
+
         This is useful for testing or when starting multiple independent runs
         in the same process.
         """
         import ml_grid.util.global_params as gp_module
+
         gp_module._CONFIG_LOGGED = False

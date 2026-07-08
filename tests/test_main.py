@@ -12,11 +12,12 @@ import pytest
 def test_initialize_logger_creates_experiment_directory_with_timestamp():
     """Test that initialize_logger creates the experiment directory with timestamp."""
     import tempfile
+
     from main import initialize_logger
 
     tmp_dir = tempfile.mkdtemp()
     config_path = os.path.join(tmp_dir, "config.yml")
-    
+
     with open(config_path, "w") as f:
         f.write("global_params:\n  testing: True\ngrid_params:\n  outcome_var_n: [1]\n")
 
@@ -47,6 +48,7 @@ def test_initialize_logger_creates_experiment_directory_with_timestamp():
         ), f"Expected timestamp pattern in {dir_name}"
     finally:
         import shutil
+
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
 

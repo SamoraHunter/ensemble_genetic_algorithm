@@ -33,22 +33,11 @@ def initialize_logger(config_path: str) -> logging.Logger:
     )  # Store experiments in a dedicated folder
     pathlib.Path(run_specific_dir).mkdir(parents=True, exist_ok=True)
 
-    # Initialize global parameters first to get verbose setting
-    global_params = global_parameters(config_path=config_path)
-    
-    logger = setup_logger(log_folder_path=run_specific_dir, verbose=global_params.verbose)
+    logger = setup_logger(log_folder_path=run_specific_dir)
+
     logger.info(f"Using configuration from: {config_path}")
     logger.info(f"Experiment outputs will be saved in: {run_specific_dir}")
-    
-    # Save a copy of the config file to the output folder
-    config_filename = os.path.basename(config_path)
-    config_save_path = os.path.join(run_specific_dir, f"config_{timestamp}.{config_filename.split('.')[-1]}")
-    with open(config_path, 'r') as src:
-        config_content = src.read()
-    with open(config_save_path, 'w') as dst:
-        dst.write(config_content)
-    logger.info(f"Configuration saved to: {config_save_path}")
-    
+
     return logger
 
 
@@ -61,14 +50,31 @@ def main(config_path: str, plot: bool = False, evaluate: bool = False):
         plot (bool): Whether to generate and save analysis plots.
         evaluate (bool): Whether to evaluate the best ensemble on the validation set.
     """
-    logger = initialize_logger(config_path)
-
     # 1. Initialize global parameters from the specified config file.
     global_params = global_parameters(config_path=config_path)
 
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    run_specific_dir = os.path.join("HFE_GA_experiments", timestamp)
+    pathlib.Path(run_specific_dir).mkdir(parents=True, exist_ok=True)
+
+    logger = setup_logger(
+        log_folder_path=run_specific_dir, verbose=global_params.verbose
+    )
+    logger.info(f"Using configuration from: {config_path}")
+    logger.info(f"Experiment outputs will be saved in: {run_specific_dir}")
+
+    # Save a copy of the config file to the output folder
+    config_filename = os.path.basename(config_path)
+    config_save_path = os.path.join(
+        run_specific_dir, f"config_{timestamp}.{config_filename.split('.')[-1]}"
+    )
+    with open(config_path, "r") as src:
+        config_content = src.read()
+    with open(config_save_path, "w") as dst:
+        dst.write(config_content)
+    logger.info(f"Configuration saved to: {config_save_path}")
+
     # 2. Update the base project directory to the run-specific directory.
-    # Extract dir from logger's file handler (the first handler is always file handler)
-    run_specific_dir = os.path.dirname(logger.handlers[0].baseFilename) if hasattr(logger.handlers[0], 'baseFilename') else run_specific_dir
     global_params.base_project_dir = run_specific_dir
 
     # 3. Initialize the project score CSV file.
@@ -151,13 +157,13 @@ def main(config_path: str, plot: bool = False, evaluate: bool = False):
             )
 
             explorer.run_all_plots(plot_dir=run_specific_dir)
-            
+
             # Generate ensemble summary visualization
             try:
                 explorer.plot_ensemble_summary(plot_dir=run_specific_dir)
             except Exception as e:
                 logger.warning(f"Could not generate ensemble summary plot: {e}")
-            
+
             logger.info(f"--- Plots saved to: {run_specific_dir} ---")
         except Exception as e:
             logger.error(f"❌ Failed during plot generation: {e}", exc_info=True)

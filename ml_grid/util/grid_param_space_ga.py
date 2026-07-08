@@ -233,18 +233,19 @@ class Grid:
 
         # Log the complete grid configuration at initialization (only once per run)
         import ml_grid.util.grid_param_space_ga as gp_module
+
         if not gp_module._GRID_CONFIG_LOGGED:
             self._log_grid_config()
             gp_module._GRID_CONFIG_LOGGED = True
 
     def _log_grid_config(self) -> None:
         """Prints the complete Grid configuration to the log.
-        
-        This method logs all grid settings including defaults and any values 
+
+        This method logs all grid settings including defaults and any values
         loaded from the config file or overridden during initialization.
         """
         import datetime
-        
+
         # Collect all grid attributes
         grid_dict = {}
         for attr in dir(self):
@@ -258,22 +259,23 @@ class Grid:
         log_lines.append("GRID CONFIGURATION")
         log_lines.append(f"Generated: {datetime.datetime.now().isoformat()}")
         log_lines.append("-" * 60)
-        
+
         sorted_keys = sorted(grid_dict.keys())
         for key in sorted_keys:
             value = grid_dict[key]
             log_lines.append(f"{key}: {value}")
-        
+
         log_lines.append("=" * 60)
-        
+
         logger.info("\n".join(log_lines))
 
     @classmethod
     def reset_config_log_flag(cls) -> None:
         """Reset the grid config log flag, allowing configs to be logged again.
-        
+
         This is useful for testing or when starting multiple independent runs
         in the same process.
         """
         import ml_grid.util.grid_param_space_ga as gp_module
+
         gp_module._GRID_CONFIG_LOGGED = False

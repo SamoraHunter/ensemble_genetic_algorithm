@@ -2093,7 +2093,7 @@ class GA_results_explorer:
             self._create_empty_plot(
                 plot_dir=plot_dir,
                 title="Ensemble Summary",
-                message="No ensemble data available"
+                message="No ensemble data available",
             )
             return
 
@@ -2105,7 +2105,7 @@ class GA_results_explorer:
             self._create_empty_plot(
                 plot_dir=plot_dir,
                 title="Ensemble Summary",
-                message="Failed to parse ensemble data"
+                message="Failed to parse ensemble data",
             )
             return
 
@@ -2114,7 +2114,6 @@ class GA_results_explorer:
         model_names = [m["model_name"].split("(")[0] for m in models]
         feature_masks = [m["feature_mask"] for m in models]
         feature_counts = [sum(m) for m in feature_masks]
-        scores = [m.get("score", 0) for m in models]
 
         # Create visualization
         fig = plt.figure(figsize=(16, 10))
@@ -2122,27 +2121,53 @@ class GA_results_explorer:
         # Plot 1: Weight distribution (bar chart)
         ax1 = fig.add_subplot(2, 3, 1)
         bar_colors = plt.cm.viridis(np.linspace(0.2, 0.8, len(weights)))
-        bars = ax1.bar(range(len(weights)), weights, color=bar_colors, edgecolor="black", linewidth=0.5)
+        bars = ax1.bar(
+            range(len(weights)),
+            weights,
+            color=bar_colors,
+            edgecolor="black",
+            linewidth=0.5,
+        )
         ax1.set_xlabel("Model Index", fontsize=12)
         ax1.set_ylabel("Weight", fontsize=12)
-        ax1.set_title(f"Ensemble Weight Distribution\nMax AUC: {best_run['auc']:.4f}", fontsize=14, fontweight="bold")
+        ax1.set_title(
+            f"Ensemble Weight Distribution\nMax AUC: {best_run['auc']:.4f}",
+            fontsize=14,
+            fontweight="bold",
+        )
         ax1.set_xticks(range(len(weights)))
-        ax1.set_xticklabels([f"M{i}" for i in range(len(weights))], rotation=45, ha="right")
+        ax1.set_xticklabels(
+            [f"M{i}" for i in range(len(weights))], rotation=45, ha="right"
+        )
 
         # Add weight labels
         for bar, weight in zip(bars, weights):
-            ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
-                    f"{weight:.3f}", ha="center", va="bottom", fontsize=9)
+            ax1.text(
+                bar.get_x() + bar.get_width() / 2,
+                bar.get_height() + 0.01,
+                f"{weight:.3f}",
+                ha="center",
+                va="bottom",
+                fontsize=9,
+            )
 
         # Plot 2: Feature coverage per model
         ax2 = fig.add_subplot(2, 3, 2)
         bar_colors2 = plt.cm.viridis(np.linspace(0.3, 0.9, len(feature_counts)))
-        bars2 = ax2.bar(range(len(feature_counts)), feature_counts, color=bar_colors2, edgecolor="black", linewidth=0.5)
+        ax2.bar(
+            range(len(feature_counts)),
+            feature_counts,
+            color=bar_colors2,
+            edgecolor="black",
+            linewidth=0.5,
+        )
         ax2.set_xlabel("Model Index", fontsize=12)
         ax2.set_ylabel("Number of Features", fontsize=12)
         ax2.set_title("Feature Coverage per Model", fontsize=14, fontweight="bold")
         ax2.set_xticks(range(len(feature_counts)))
-        ax2.set_xticklabels([f"M{i}" for i in range(len(feature_counts))], rotation=45, ha="right")
+        ax2.set_xticklabels(
+            [f"M{i}" for i in range(len(feature_counts))], rotation=45, ha="right"
+        )
 
         # Plot 3: Model type distribution (pie chart)
         ax3 = fig.add_subplot(2, 3, 3)
@@ -2157,13 +2182,17 @@ class GA_results_explorer:
                 labels=list(type_counts.keys()),
                 autopct="%1.1f%%",
                 startangle=90,
-                explode=explode
+                explode=explode,
             )
-            ax3.set_title(f"Model Composition ({len(models)} models)", fontsize=14, fontweight="bold")
+            ax3.set_title(
+                f"Model Composition ({len(models)} models)",
+                fontsize=14,
+                fontweight="bold",
+            )
 
         # Plot 4: Performance summary text
         ax4 = fig.add_subplot(2, 1, 2)
-        
+
         # Calculate ensemble statistics safely
         total_unique_features = 0
         if feature_masks:
@@ -2188,9 +2217,17 @@ class GA_results_explorer:
             f"Min Features/Model: {min(feature_counts) if feature_counts else 0}"
         )
 
-        ax4.text(0.5, 0.5, performance_text, fontsize=12, family="monospace",
-                verticalalignment="center", horizontalalignment="left",
-                transform=ax4.transAxes, bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5))
+        ax4.text(
+            0.5,
+            0.5,
+            performance_text,
+            fontsize=12,
+            family="monospace",
+            verticalalignment="center",
+            horizontalalignment="left",
+            transform=ax4.transAxes,
+            bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
+        )
         ax4.axis("off")
 
         # Adjust layout and save/show
@@ -2204,11 +2241,12 @@ class GA_results_explorer:
         else:
             plt.show()
 
-    def _create_empty_plot(self, plot_dir: Optional[str], title: str, message: str) -> None:
+    def _create_empty_plot(
+        self, plot_dir: Optional[str], title: str, message: str
+    ) -> None:
         """Creates a placeholder plot for error cases."""
-        fig = plt.figure(figsize=(8, 4))
-        plt.text(0.5, 0.5, f"{title}\n{message}",
-                ha="center", va="center", fontsize=12)
+        plt.figure(figsize=(8, 4))
+        plt.text(0.5, 0.5, f"{title}\n{message}", ha="center", va="center", fontsize=12)
         plt.axis("off")
 
         if plot_dir is not None:
@@ -2361,14 +2399,16 @@ def parse_ensemble_string(ensemble_str: str) -> Optional[List[dict]]:
                     model_name = str(item[1])
                     feature_mask = item[2]
                     score = float(item[4]) if len(item) > 4 else None
-                    
-                    models.append({
-                        "weight": weight,
-                        "model_name": model_name,
-                        "feature_mask": feature_mask,
-                        "score": score
-                    })
-        
+
+                    models.append(
+                        {
+                            "weight": weight,
+                            "model_name": model_name,
+                            "feature_mask": feature_mask,
+                            "score": score,
+                        }
+                    )
+
         return models if models else None
 
     except Exception as e:
