@@ -1,3 +1,4 @@
+import datetime
 import gc
 import itertools
 import logging
@@ -17,7 +18,10 @@ from IPython.display import clear_output
 from sklearn import metrics
 
 # from ml_grid.ga_functions.ga_plots.ga_progress import plot_generation_progress_fitness
-from ml_grid.ga_functions.ga_plots.ga_progress import plot_generation_progress_fitness
+from ml_grid.ga_functions.ga_plots.ga_progress import (
+    plot_generation_progress_fitness,
+    plot_generation_progress_fitness_wrapper,
+)
 from ml_grid.pipeline.crossover_methods import (
     cxBlend,
     cxOnePoint,
@@ -31,7 +35,7 @@ from ml_grid.pipeline.evaluate_methods_ga import (
     measure_binary_vector_diversity,
 )
 from ml_grid.pipeline.mutate_methods import mutateEnsemble
-from ml_grid.pipeline.plot_methods.plot_auc_ga import plot_auc
+from ml_grid.pipeline.plot_methods.plot_auc_ga import plot_auc, plot_auc_base
 
 # from ml_grid.model_classes import LogisticRegression_class
 # from ml_grid.pipeline import grid_search_cross_validate
@@ -144,6 +148,9 @@ class run:
         pathlib.Path(f"{self.log_folder_path}/progress_logs_scores/").mkdir(
             parents=True, exist_ok=True
         )
+
+        # Save config and settings at GA runtime for logging
+        self._save_runtime_config(local_param_dict)
         # --------------------------------------------------------------------
 
         self.global_param_str = self.ml_grid_object.logging_paths_obj.global_param_str
@@ -158,51 +165,111 @@ class run:
 
         self.tools = tools
 
+        # Initialize DEAP creator (must be done before creating toolbox)
+        creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+        creator.create("Individual", list, fitness=creator.FitnessMax)
+
+        # Initialize toolbox
         self.toolbox = base.Toolbox()
 
         self.project_score_save_object = self.ml_grid_object.project_score_save_object
 
-        self.X_test = self.ml_grid_object.X_test
-        self.y_test = self.ml_grid_object.y_test
-        self.X_train = self.ml_grid_object.X_train
-        self.y_train = self.ml_grid_object.y_train
-
-        # self.X_train_orig = self.ml_grid_object.X_train_orig
-        # self.y_train_orig = self.ml_grid_object.y_train_orig
-        self.X_test_orig = self.ml_grid_object.X_test_orig
-        self.y_test_orig = self.ml_grid_object.y_test_orig
-
-        if __name__ == "__main__":
-            grid = [self.nb_params, self.pop_params, self.g_params]  # type: ignore
-            param_grid = list(itertools.product(*grid))
-            logger.debug(param_grid)
-            for elem in param_grid:
-                logger.debug("%s %s model generation space", elem, elem[0] * elem[1])
-                logger.debug(
-                    "%s %s individual evaluation space", elem, elem[0] * elem[2]
-                )
-            logger.debug(len(param_grid))
-
-            if self.verbose >= 2:
-                logger.info(
-                    f"{len(self.ml_grid_object.model_class_list)} models loaded"
-                )
+        # Store data references from ml_grid_object
+        self.X_test = getattr(ml_grid_object, "X_test", None)
+        self.y_test = getattr(ml_grid_object, "y_test", None)
+        self.X_train = getattr(ml_grid_object, "X_train", None)
+        self.y_train = getattr(ml_grid_object, "y_train", None)
+        self.X_test_orig = getattr(ml_grid_object, "X_test_orig", None)
+        self.y_test_orig = getattr(ml_grid_object, "y_test_orig", None)
 
         self.multiprocess = False
-
         self.local_param_dict = local_param_dict
 
-        # test
-        self.creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-        self.creator.create("Individual", list, fitness=creator.FitnessMax)
+    def _save_runtime_config(self, local_param_dict: Dict) -> None:
+        """Saves a copy of the config and all configured settings to the results output folder.
 
-        self.toolbox = base.Toolbox()
-        self.toolbox.register(
-            "evaluate", evaluate_weighted_ensemble_auc, ml_grid_object=ml_grid_object
-        )
+        This method creates two files in the log folder:
+        1. runtime_config.yml - A YAML file containing the user's configuration
+        2. runtime_settings.json - A JSON file containing all runtime settings including local_param_dict
 
-        if self.verbose >= 2:
-            logger.info("Passed main GA init")
+        Args:
+            local_param_dict: A dictionary of local parameters for the current run.
+        """
+        import json
+
+        try:
+            # Save local parameters as JSON
+            config_path = self.ml_grid_object.global_params.input_csv_path
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+            runtime_settings = {
+                "timestamp": timestamp,
+                "config_file": (
+                    config_path
+                    if os.path.exists(config_path)
+                    else "config.yml (default)"
+                ),
+                "local_parameters": local_param_dict,
+                "global_parameters": {
+                    "input_csv_path": self.global_params.input_csv_path,
+                    "n_iter": self.global_params.n_iter,
+                    # model_list is populated below with accurate names
+                    "model_list": [],  # Placeholder, filled after lookup
+                    "testing": self.global_params.testing,
+                    "test_sample_n": self.global_params.test_sample_n,
+                    "column_sample_n": self.global_params.column_sample_n,
+                    "outcome_var_n": self.global_params.outcome_var_n,
+                    "verbose": self.global_params.verbose,
+                    "base_project_dir": self.global_params.base_project_dir,
+                    "gen_eval_score_threshold_early_stopping": self.global_params.gen_eval_score_threshold_early_stopping,
+                },
+                "log_folder_path": self.log_folder_path,
+                "param_space_index": getattr(
+                    self.ml_grid_object, "param_space_index", "N/A"
+                ),
+            }
+
+            # Build model list with actual names for accurate logging
+            model_names = []
+            for model in self.global_params.model_list:
+                model_name = None
+                if hasattr(model, '__name__'):
+                    model_name = model.__name__
+                elif isinstance(model, type):
+                    model_name = model.__name__
+                else:
+                    # Try to find by reversing through MODEL_REGISTRY
+                    for name, cls in self.global_params.MODEL_REGISTRY.items():
+                        try:
+                            if model is cls or (hasattr(model, '__class__') and 
+                               model.__class__.__name__ == cls.__name__):
+                                model_name = name
+                                break
+                        except Exception:
+                            pass
+                if model_name:
+                    model_names.append(model_name)
+                else:
+                    # Fallback to string representation
+                    model_names.append(str(model))
+
+            settings_path = os.path.join(
+                self.log_folder_path, f"runtime_settings_{timestamp}.json"
+            )
+            with open(settings_path, "w") as f:
+                json.dump(runtime_settings, f, indent=2)
+
+            # Also save a copy of the raw config file if it exists
+            if os.path.exists(config_path):
+                shutil.copy2(
+                    config_path,
+                    os.path.join(self.log_folder_path, "runtime_config.yml"),
+                )
+
+            logger.info("Runtime configuration saved to: %s", self.log_folder_path)
+
+        except Exception as e:
+            logger.warning("Failed to save runtime configuration: %s", e)
 
     def execute(self) -> List[List]:
         """Executes the full genetic algorithm process for all GA parameter combinations.
@@ -277,6 +344,12 @@ class run:
                 )
                 self.toolbox.register(
                     "population", self.tools.initRepeat, list, self.toolbox.individual
+                )
+
+                self.toolbox.register(
+                    "evaluate",
+                    evaluate_weighted_ensemble_auc,
+                    ml_grid_object=self.ml_grid_object,
                 )
 
                 cx_type = local_param_dict.get("cx_type", "twopoint")
@@ -356,11 +429,14 @@ class run:
                 g = 0
 
                 # Begin the evolution
-                chance_dummy_best_pred = [x for x in range(0, len(self.y_test))]
+                y_test = self.ml_grid_object.y_test
+                y_test_orig = self.ml_grid_object.y_test_orig
+
+                chance_dummy_best_pred = [x for x in range(0, len(y_test))]
 
                 try:
                     gen_eval_score = metrics.roc_auc_score(
-                        self.y_test, chance_dummy_best_pred
+                        y_test, chance_dummy_best_pred
                     )
                 except ValueError:
                     gen_eval_score = 0.5
@@ -451,7 +527,7 @@ class run:
                     )
 
                     try:
-                        gen_eval_score = metrics.roc_auc_score(self.y_test, y_pred)
+                        gen_eval_score = metrics.roc_auc_score(y_test, y_pred)
                     except ValueError:
                         gen_eval_score = (
                             0.5  # Assign random chance score if AUC is not defined
@@ -497,7 +573,7 @@ class run:
                     gen_eval_score_previous = gen_eval_score
 
                 if self.global_params.progress_bars:
-                   pbar.close()
+                    pbar.close()
 
                 # best = pop[np.argmax([toolbox.evaluate(x) for x in pop])] #was argmin
 
@@ -540,14 +616,14 @@ class run:
                         )
                         if run_index % 10 == 0:
                             plot_auc(
-                                self.y_test_orig,
+                                y_test_orig,
                                 best_pred_orig,
                                 plot_basename,
                             )
                         else:
                             fig = plt.figure()
                             plot_auc_base(
-                                self.y_test_orig,
+                                y_test_orig,
                                 best_pred_orig,
                                 plot_basename,
                                 fig=fig,
@@ -558,7 +634,7 @@ class run:
                         )
                         try:
                             final_auc = metrics.roc_auc_score(
-                                self.y_test_orig, best_pred_orig
+                                y_test_orig, best_pred_orig
                             )
                             logger.info("AUC: %s, g: %s", final_auc, g)
                         except ValueError:
@@ -582,7 +658,7 @@ class run:
                 #     myfile.close()
 
                 try:
-                    metrics.roc_auc_score(self.y_test_orig, best_pred_orig)
+                    metrics.roc_auc_score(y_test_orig, best_pred_orig)
                 except ValueError:
                     pass
                 current_algorithm = best

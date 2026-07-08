@@ -7,6 +7,8 @@ from ml_grid.util.config import load_config, merge_configs
 from ml_grid.util.global_params import global_parameters
 
 logger = logging.getLogger("ensemble_ga")
+# Flag to ensure grid config is logged only once per process
+_GRID_CONFIG_LOGGED = False
 
 
 class Grid:
@@ -228,3 +230,50 @@ class Grid:
             self.pop_params = [8]
             # Override number of generations for testing
             self.g_params = [4]
+
+        # Log the complete grid configuration at initialization (only once per run)
+        import ml_grid.util.grid_param_space_ga as gp_module
+        if not gp_module._GRID_CONFIG_LOGGED:
+            self._log_grid_config()
+            gp_module._GRID_CONFIG_LOGGED = True
+
+    def _log_grid_config(self) -> None:
+        """Prints the complete Grid configuration to the log.
+        
+        This method logs all grid settings including defaults and any values 
+        loaded from the config file or overridden during initialization.
+        """
+        import datetime
+        
+        # Collect all grid attributes
+        grid_dict = {}
+        for attr in dir(self):
+            if not callable(getattr(self, attr)) and not attr.startswith("_"):
+                value = getattr(self, attr)
+                if isinstance(value, (str, int, float, bool, list, dict)):
+                    grid_dict[attr] = value
+
+        log_lines = []
+        log_lines.append("=" * 60)
+        log_lines.append("GRID CONFIGURATION")
+        log_lines.append(f"Generated: {datetime.datetime.now().isoformat()}")
+        log_lines.append("-" * 60)
+        
+        sorted_keys = sorted(grid_dict.keys())
+        for key in sorted_keys:
+            value = grid_dict[key]
+            log_lines.append(f"{key}: {value}")
+        
+        log_lines.append("=" * 60)
+        
+        logger.info("\n".join(log_lines))
+
+    @classmethod
+    def reset_config_log_flag(cls) -> None:
+        """Reset the grid config log flag, allowing configs to be logged again.
+        
+        This is useful for testing or when starting multiple independent runs
+        in the same process.
+        """
+        import ml_grid.util.grid_param_space_ga as gp_module
+        gp_module._GRID_CONFIG_LOGGED = False
