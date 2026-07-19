@@ -48,11 +48,8 @@ def AdaBoostClassifierModelGenerator(
             - auc_score (float): The ROC AUC score.
             - y_pred (np.ndarray): The model's predictions on the test set.
     """
-    from ml_grid.util.global_params import global_parameters
+    verbose = ml_grid_object.global_params.verbose
 
-    # Retrieve global parameters
-
-    global_parameter_val = global_parameters()
     store_base_learners = ml_grid_object.global_params.store_base_learners
 
     # Retrieve data
@@ -102,7 +99,7 @@ def AdaBoostClassifierModelGenerator(
     end = time.time()
     model_train_time = int(end - start)
 
-    verbose = global_parameter_val.verbose
+    verbose = ml_grid_object.global_params.verbose
 
     # Print performance of base learner
     if verbose >= 2:

@@ -43,46 +43,56 @@ def get_weighted_ensemble_prediction_de_y_pred_valid(
 
     X_test_orig = ml_grid_object.X_test_orig
     X_train = ml_grid_object.X_train
-    y_train = ml_grid_object.y_train
 
     target_ensemble = best[0]
-    if valid:
-        if ml_grid_object.verbose >= 1:
-            logger.info("Evaluating weighted ensemble on validation set")
-        x_test = X_test_orig.copy()
 
+    if valid:
+        y_train = ml_grid_object.y_train
+        x_test = X_test_orig.copy()
         prediction_array = []
 
         for i in range(0, len(target_ensemble)):
             feature_columns = target_ensemble[i][2]
 
+            existing_columns = [
+                col
+                for col in feature_columns
+                if col in X_train.columns and (hasattr(x_test, "columns") or True)
+            ]
+
+            if hasattr(x_test, "columns"):
+                existing_columns = [
+                    col
+                    for col in feature_columns
+                    if col in X_train.columns and col in x_test.columns
+                ]
+            else:
+                existing_columns = feature_columns
+
             model = target_ensemble[i][1]
 
             if not isinstance(model, BinaryClassification):
-                if ml_grid_object.verbose >= 2:
-                    logger.debug(f"Fitting model {i+1}")
-
                 try:
-                    model.fit(X_train[feature_columns], y_train)
-                except ValueError as e:
-                    logger.error(e)
-                    logger.error("ValueError on fit")
-                    logger.error("feature_columns")
-                    logger.error(len(feature_columns))
-                    logger.error(
-                        "%s, %s, %s, %s, %s",
-                        X_train.shape,
-                        x_test.shape,
-                        type(X_train),
-                        type(y_train),
-                        type(feature_columns),
-                    )
-
-                prediction_array.append(model.predict(x_test[feature_columns]))
+                    model.fit(X_train[existing_columns], y_train)
+                    if hasattr(x_test, "columns"):
+                        prediction_array.append(model.predict(x_test[existing_columns]))
+                    else:
+                        prediction_array.append(
+                            model.predict(x_test[:, existing_columns])
+                        )
+                except (ValueError, np.linalg.LinAlgError) as e:
+                    logger.warning(f"Fitting/Prediction failed for model {i+1}: {e}")
+                    if hasattr(x_test, "columns"):
+                        prediction_array.append(np.zeros(len(x_test)))
+                    else:
+                        prediction_array.append(np.zeros(x_test.shape[0]))
             else:
-                if ml_grid_object.verbose >= 2:
-                    logger.debug(f"Handling torch model prediction for model {i+1}")
-                test_data = TestData(torch.FloatTensor(x_test[feature_columns].values))
+                if hasattr(x_test, "columns"):
+                    test_data = TestData(
+                        torch.FloatTensor(x_test[existing_columns].values)
+                    )
+                else:
+                    test_data = TestData(torch.FloatTensor(x_test[:, existing_columns]))
 
                 device = torch.device("cpu")
                 model.to(device)
@@ -96,17 +106,22 @@ def get_weighted_ensemble_prediction_de_y_pred_valid(
                     logger.warning(
                         "Returning dummy random yhat vector for torch pred, nan found"
                     )
-                    y_hat = np.random.choice(a=[False, True], size=(len(y_hat),))
+                    if hasattr(x_test, "columns"):
+                        y_hat = np.random.choice(a=[False, True], size=(len(y_hat),))
+                    else:
+                        y_hat = np.random.choice(
+                            a=[False, True], size=(x_test.shape[0],)
+                        )
 
                 prediction_array.append(y_hat)
+
     else:
         prediction_array = []
 
         for i in range(0, len(target_ensemble)):
             prediction_array.append(target_ensemble[i][5])
 
-    prediction_matrix = np.matrix(prediction_array)
-    prediction_matrix = prediction_matrix.astype(float)
+    prediction_matrix = np.matrix(prediction_array).astype(float)
 
     weights = normalize(weights)
 

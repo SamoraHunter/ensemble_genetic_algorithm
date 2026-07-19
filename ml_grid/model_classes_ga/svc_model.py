@@ -65,11 +65,8 @@ def SVC_ModelGenerator(
         0.5 is returned.
 
     """
-    from ml_grid.util.global_params import global_parameters
+    verbose = ml_grid_object.global_params.verbose
 
-    global_parameter_val = global_parameters()
-
-    verbose = global_parameter_val.verbose
     store_base_learners = ml_grid_object.global_params.store_base_learners
 
     X_train = ml_grid_object.X_train

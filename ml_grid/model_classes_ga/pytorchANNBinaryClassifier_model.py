@@ -103,11 +103,8 @@ def Pytorch_binary_class_ModelGenerator(
             - y_pred (np.ndarray): The model's predictions on the test set.
 
     """
-    from ml_grid.util.global_params import global_parameters
+    verbose = ml_grid_object.global_params.verbose
 
-    global_parameter_val = global_parameters()
-
-    verbose = global_parameter_val.verbose
     store_base_learners = ml_grid_object.global_params.store_base_learners
     scale = ml_grid_object.local_param_dict.get("scale")
 
