@@ -98,7 +98,9 @@ class TestGetYpredResolver:
         "ml_grid.pipeline.evaluate_methods_ga.get_linear_weighted_ensemble_predictions"
     )
     @patch("ml_grid.pipeline.evaluate_methods_ga.find_linear_weights")
-    def test_get_y_pred_resolver_linear_weighted(self, mock_find_weights, mock_get_pred):
+    def test_get_y_pred_resolver_linear_weighted(
+        self, mock_find_weights, mock_get_pred
+    ):
         """Test get_y_pred_resolver handles linear-weighted ensemble."""
         from ml_grid.pipeline.evaluate_methods_ga import get_y_pred_resolver
 

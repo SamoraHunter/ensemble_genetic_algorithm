@@ -83,7 +83,12 @@ class Grid:
 
         # 1. Define default grid
         default_grid = {
-            "weighted": ["linear", "ann", "de", "unweighted"],  # Weighted algorithms to consider
+            "weighted": [
+                "linear",
+                "ann",
+                "de",
+                "unweighted",
+            ],  # Weighted algorithms to consider
             # "weighted": ["unweighted"],  # An alternative option for weighted algorithms
             "use_stored_base_learners": [
                 False
