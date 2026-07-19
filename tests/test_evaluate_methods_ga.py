@@ -94,6 +94,35 @@ class TestGetYpredResolver:
         mock_get_pred.assert_called_once()
         np.testing.assert_array_equal(result, expected_pred)
 
+    @patch(
+        "ml_grid.pipeline.evaluate_methods_ga.get_linear_weighted_ensemble_predictions"
+    )
+    @patch("ml_grid.pipeline.evaluate_methods_ga.find_linear_weights")
+    def test_get_y_pred_resolver_linear_weighted(self, mock_find_weights, mock_get_pred):
+        """Test get_y_pred_resolver handles linear-weighted ensemble."""
+        from ml_grid.pipeline.evaluate_methods_ga import get_y_pred_resolver
+
+        # Mock ml_grid_object
+        ml_grid = MagicMock()
+        type(ml_grid).verbose = 0
+        ml_grid.local_param_dict = {"weighted": "linear"}
+        ml_grid.X_test_orig = np.array([[1, 2], [3, 4], [5, 6]])
+        ml_grid.y_test = np.array([0, 1, 0])
+
+        # Mock the linear-weighted-specific functions
+        mock_find_weights.return_value = np.array([0.4, 0.6])
+        expected_pred = np.array([0.3, 0.7, 0.2])
+        mock_get_pred.return_value = expected_pred
+
+        result = get_y_pred_resolver(
+            [[("model1", None, None, None, None, None)], []], ml_grid, valid=False
+        )
+
+        # Should call linear-weighted functions and return predictions
+        mock_find_weights.assert_called_once()
+        mock_get_pred.assert_called_once()
+        np.testing.assert_array_equal(result, expected_pred)
+
 
 class TestEvaluateWeightedEnsembleAuc:
     """Tests for the evaluate_weighted_ensemble_auc function."""
