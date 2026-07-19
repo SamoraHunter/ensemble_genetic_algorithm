@@ -66,8 +66,8 @@ def test_grid_defaults():
     grid = Grid(config_path="non_existent_file.yml", global_params=params)
     # Test a default ga_param
     assert grid.pop_params == [32, 64, 128]
-    # Test a default grid_param
-    assert grid.grid["weighted"] == ["ann", "de", "unweighted"]
+    # Test a default grid-param
+    assert grid.grid["weighted"] == ["linear", "ann", "de", "unweighted"]
     assert grid.grid["corr"] == [0.9, 0.99]
 
 

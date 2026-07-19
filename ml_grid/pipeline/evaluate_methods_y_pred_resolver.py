@@ -12,6 +12,9 @@ from ml_grid.ga_functions.ga_eval_de_weight_method import (  # Renamed
 from ml_grid.ga_functions.ga_eval_ensemble_weight_finder_de import (
     find_ensemble_weights_de_eval,
 )
+from ml_grid.ga_functions.ga_eval_linear_weight_method import (
+    get_linear_weighted_ensemble_predictions_eval,
+)
 from ml_grid.ga_functions.ga_eval_unweighted import (
     get_unweighted_ensemble_predictions_eval,
 )
@@ -90,5 +93,18 @@ def get_y_pred_resolver_eval(
         y_pred = get_ann_weighted_ensemble_predictions_eval(
             ensemble, ml_grid_object, valid=valid
         )
+    elif local_param_dict.get("weighted") == "linear":
+        if ml_grid_object.verbose >= 1:
+            logger.info("Using Linear-weighted ensemble prediction...")
+        from ml_grid.ga_functions.ga_linear_weight_method import find_linear_weights
+
+        y_pred = get_linear_weighted_ensemble_predictions_eval(
+            ensemble,
+            find_linear_weights(ensemble, ml_grid_object, valid=valid),
+            ml_grid_object,
+            valid=valid,
+        )
+        if ml_grid_object.verbose >= 2:
+            logger.info("Linear weighted y_pred shape: %s", y_pred.shape)
 
     return y_pred
