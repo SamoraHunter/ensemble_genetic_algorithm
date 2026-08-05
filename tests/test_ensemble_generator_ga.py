@@ -1,16 +1,10 @@
-# ruff: noqa: PLC2401
 """Tests for ensemble_generator_ga module."""
 
+import sys
 from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
-
-from ml_grid.pipeline.ensemble_generator_ga import (
-    do_work,
-    ensembleGenerator,
-    multi_run_wrapper,
-)
 
 
 class TestMultiRunWrapper:
@@ -18,10 +12,13 @@ class TestMultiRunWrapper:
 
     def test_multi_run_wrapper_calls_do_work(self):
         """Test that multi_run_wrapper correctly unpacks args and calls do_work."""
+        from ml_grid.pipeline.ensemble_generator_ga import (
+            multi_run_wrapper,
+        )
+
         mock_ml_grid = MagicMock()
         mock_ml_grid.verbose = 1
 
-        # Create a mock model function that returns a known tuple
         def mock_model_func(ml_grid, local_param):
             return (0.8, "model_obj", ["feat1"], 10, 0.9, None)
 
@@ -30,7 +27,6 @@ class TestMultiRunWrapper:
         }
         mock_ml_grid.local_param_dict = {}
 
-        # Mock random module to control which index is chosen
         with patch("ml_grid.pipeline.ensemble_generator_ga.random") as mock_random:
             mock_random.randint.return_value = 0
 
@@ -45,11 +41,14 @@ class TestEnsembleGenerator:
 
     def test_ensemble_generator_with_nb_val_less_than_or_equal_to_1(self):
         """Test that ensembleGenerator calls baseLearnerGenerator when nb_val <= 1."""
+        from ml_grid.pipeline.ensemble_generator_ga import (
+            ensembleGenerator,
+        )
+
         mock_ml_grid = MagicMock()
         mock_ml_grid.verbose = 1
         mock_ml_grid.multiprocessing_ensemble = False
 
-        # Create a mock model function that returns a known tuple
         def mock_model_func(ml_grid, local_param):
             return (0.8, "model_obj", ["feat1"], 10, 0.9, None)
 
@@ -58,15 +57,11 @@ class TestEnsembleGenerator:
         }
         mock_ml_grid.local_param_dict = {}
 
-        # Test with nb_val <= 1 - should call baseLearnerGenerator
-        # Force random choices to get predictable results
         with (
             patch("ml_grid.pipeline.ensemble_generator_ga.skewnorm") as mock_skew,
             patch("ml_grid.pipeline.ensemble_generator_ga.np.random") as mock_np_random,
         ):
-            # Make skewnorm return consistent values
             mock_skew.rvs.return_value = np.array([10] * 10000)
-            # Force random.choice to select a specific value
             mock_np_random.choice.side_effect = [2, 3]
 
             result = ensembleGenerator(nb_val=1, ml_grid_object=mock_ml_grid)
@@ -75,11 +70,14 @@ class TestEnsembleGenerator:
 
     def test_ensemble_generator_with_nb_val_greater_than_1(self):
         """Test that ensembleGenerator generates multiple models when nb_val > 1."""
+        from ml_grid.pipeline.ensemble_generator_ga import (
+            ensembleGenerator,
+        )
+
         mock_ml_grid = MagicMock()
         mock_ml_grid.verbose = 1
         mock_ml_grid.multiprocessing_ensemble = False
 
-        # Create a mock model function that returns a known tuple
         def mock_model_func(ml_grid, local_param):
             return (0.8, "model_obj", ["feat1"], 10, 0.9, None)
 
@@ -88,7 +86,6 @@ class TestEnsembleGenerator:
         }
         mock_ml_grid.local_param_dict = {}
 
-        # Test with nb_val > 1
         with (
             patch("ml_grid.pipeline.ensemble_generator_ga.skewnorm") as mock_skew,
             patch("ml_grid.pipeline.ensemble_generator_ga.np.random") as mock_np_random,
@@ -99,7 +96,6 @@ class TestEnsembleGenerator:
             result = ensembleGenerator(nb_val=5, ml_grid_object=mock_ml_grid)
 
         assert isinstance(result, list)
-        # Should have generated a few models
         assert len(result) >= 2
 
 
@@ -108,10 +104,19 @@ class TestDoWork:
 
     def test_do_work_with_use_stored_base_learners_true(self):
         """Test that do_work takes the stored model branch when use_stored_base_learners=True and random.random() > 0.5."""
+
+        # Clear module cache before importing
+        mod_key = "ml_grid.pipeline.ensemble_generator_ga"
+        if mod_key in sys.modules:
+            del sys.modules[mod_key]
+
+        from ml_grid.pipeline.ensemble_generator_ga import (
+            do_work,
+        )
+
         mock_ml_grid = MagicMock()
         mock_ml_grid.verbose = 2
 
-        # Mock model function for the else branch
         def mock_model_func(ml_grid, local_param):
             return (0.8, "model_obj", ["feat1"], 10, 0.9, None)
 
@@ -121,16 +126,13 @@ class TestDoWork:
         }
         mock_ml_grid.local_param_dict = {}
 
-        # Patch both random and get_stored_model
         with (
             patch("ml_grid.pipeline.ensemble_generator_ga.random") as mock_random,
             patch(
                 "ml_grid.pipeline.ensemble_generator_ga.get_stored_model"
             ) as mock_get_stored,
         ):
-            # Make random.random() return > 0.5 to trigger stored model branch
             mock_random.random.return_value = 0.7
-            # Configure get_stored_model to return a known value
             mock_get_stored.return_value = (
                 0.95,
                 "stored_model",
@@ -147,10 +149,18 @@ class TestDoWork:
 
     def test_do_work_raises_exception_get_stored_model(self):
         """Test that do_work raises exception when get_stored_model fails."""
+
+        mod_key = "ml_grid.pipeline.ensemble_generator_ga"
+        if mod_key in sys.modules:
+            del sys.modules[mod_key]
+
+        from ml_grid.pipeline.ensemble_generator_ga import (
+            do_work,
+        )
+
         mock_ml_grid = MagicMock()
         mock_ml_grid.verbose = 11
 
-        # Mock model function for the else branch
         def mock_model_func(ml_grid, local_param):
             return (0.8, "model_obj", ["feat1"], 10, 0.9, None)
 
@@ -160,7 +170,6 @@ class TestDoWork:
         }
         mock_ml_grid.local_param_dict = {}
 
-        # Patch random and get_stored_model to raise exception
         with (
             patch("ml_grid.pipeline.ensemble_generator_ga.random") as mock_random,
             patch(
@@ -178,6 +187,15 @@ class TestDoWork:
 
     def test_do_work_verbose_logging(self):
         """Test that verbose >= 11 triggers debug logging for do_work."""
+
+        mod_key = "ml_grid.pipeline.ensemble_generator_ga"
+        if mod_key in sys.modules:
+            del sys.modules[mod_key]
+
+        from ml_grid.pipeline.ensemble_generator_ga import (
+            do_work,
+        )
+
         mock_ml_grid = MagicMock()
         mock_ml_grid.verbose = 11
 
@@ -203,6 +221,15 @@ class TestDoWork:
 
     def test_do_work_raises_exception_new_model_generation(self):
         """Test that do_work raises exception when new model generation fails."""
+
+        mod_key = "ml_grid.pipeline.ensemble_generator_ga"
+        if mod_key in sys.modules:
+            del sys.modules[mod_key]
+
+        from ml_grid.pipeline.ensemble_generator_ga import (
+            do_work,
+        )
+
         mock_ml_grid = MagicMock()
         mock_ml_grid.verbose = 11
 

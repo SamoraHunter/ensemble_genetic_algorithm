@@ -1,13 +1,9 @@
 """Tests for evaluate_methods_ga module."""
 
+import sys
 from unittest.mock import MagicMock, patch
 
 import numpy as np
-
-from ml_grid.pipeline.evaluate_methods_ga import (
-    evaluate_weighted_ensemble_auc,
-    normalize,
-)
 
 
 class TestNormalize:
@@ -15,158 +11,198 @@ class TestNormalize:
 
     def test_normalize_basic(self):
         """Test basic normalization of weights."""
+        from ml_grid.pipeline.evaluate_methods_ga import (
+            normalize,
+        )
+
         weights = np.array([1.0, 2.0, 3.0])
         result = normalize(weights)
 
-        # L1 norm = 1+2+3 = 6, so normalized values should be [1/6, 2/6, 3/6]
         expected = weights / 6.0
         np.testing.assert_allclose(result, expected)
 
     def test_normalize_already_normalized(self):
         """Test that already normalized weights stay the same."""
+        from ml_grid.pipeline.evaluate_methods_ga import (
+            normalize,
+        )
+
         weights = np.array([0.2, 0.3, 0.5])
         result = normalize(weights)
 
-        # Already sums to 1 in L1 norm
         np.testing.assert_allclose(result, weights)
 
     def test_normalize_zero_vector(self):
         """Test normalization of zero vector (should return as-is)."""
+        from ml_grid.pipeline.evaluate_methods_ga import (
+            normalize,
+        )
+
         weights = np.array([0.0, 0.0, 0.0])
         result = normalize(weights)
 
-        # Zero vector should be returned unchanged
         np.testing.assert_array_equal(result, weights)
 
 
 class TestGetYpredResolver:
     """Tests for the get_y_pred_resolver function."""
 
-    @patch("ml_grid.pipeline.evaluate_methods_ga.get_unweighted_ensemble_predictions")
-    def test_get_y_pred_resolver_svc_fallback(self, mock_unweighted):
+    def test_get_y_pred_resolver_svc_fallback(self):
         """Test get_y_pred_resolver handles SVC fitting error with fallback."""
-        from ml_grid.pipeline.evaluate_methods_ga import get_y_pred_resolver
 
-        # Mock ml_grid_object
+        mod_key = "ml_grid.pipeline.evaluate_methods_ga"
+        if mod_key in sys.modules:
+            del sys.modules[mod_key]
+
+        from ml_grid.pipeline.evaluate_methods_ga import (
+            get_y_pred_resolver,
+        )
+
         ml_grid = MagicMock()
-        type(ml_grid).verbose = 0  # Make verbose accessible as attribute
+        type(ml_grid).verbose = 0
         ml_grid.local_param_dict = {"weighted": None}
         ml_grid.X_test_orig = np.array([[1, 2], [3, 4]])
         ml_grid.y_test = np.array([0, 1])
 
-        # Make unweighted function raise a ValueError about SVC
-        mock_unweighted.side_effect = ValueError(
-            "The dual coefficients or intercepts are not finite"
+        with patch(
+            "ml_grid.pipeline.evaluate_methods_ga.get_unweighted_ensemble_predictions"
+        ) as mock_unweighted:
+            mock_unweighted.side_effect = ValueError(
+                "The dual coefficients or intercepts are not finite"
+            )
+
+            result = get_y_pred_resolver([[]], ml_grid, valid=False)
+
+            assert len(result) == 2
+            np.testing.assert_array_equal(result, np.zeros(2))
+
+    def test_get_y_pred_resolver_de_weighted(self):
+        """Test get_y_pred_resolver handles DE (Differential Evolution) weighted ensemble."""
+
+        mod_key = "ml_grid.pipeline.evaluate_methods_ga"
+        if mod_key in sys.modules:
+            del sys.modules[mod_key]
+
+        from ml_grid.pipeline.evaluate_methods_ga import (
+            get_y_pred_resolver,
         )
 
-        result = get_y_pred_resolver([[]], ml_grid, valid=False)
-
-        # Should return zeros with expected length
-        assert len(result) == 2
-        np.testing.assert_array_equal(result, np.zeros(2))
-
-    @patch(
-        "ml_grid.pipeline.evaluate_methods_ga.get_weighted_ensemble_prediction_de_y_pred_valid"
-    )
-    @patch("ml_grid.pipeline.evaluate_methods_ga.find_ensemble_weights_de")
-    def test_get_y_pred_resolver_de_weighted(self, mock_find_weights, mock_get_pred):
-        """Test get_y_pred_resolver handles DE (Differential Evolution) weighted ensemble."""
-        from ml_grid.pipeline.evaluate_methods_ga import get_y_pred_resolver
-
-        # Mock ml_grid_object
         ml_grid = MagicMock()
         type(ml_grid).verbose = 0
         ml_grid.local_param_dict = {"weighted": "de"}
         ml_grid.X_test_orig = np.array([[1, 2], [3, 4], [5, 6]])
         ml_grid.y_test = np.array([0, 1, 0])
 
-        # Mock the DE-specific functions
-        mock_find_weights.return_value = np.array([0.3, 0.7])
-        expected_pred = np.array([0.2, 0.8, 0.3])
-        mock_get_pred.return_value = expected_pred
+        with (
+            patch(
+                "ml_grid.pipeline.evaluate_methods_ga.find_ensemble_weights_de"
+            ) as mock_find_weights,
+            patch(
+                "ml_grid.pipeline.evaluate_methods_ga.get_weighted_ensemble_prediction_de_y_pred_valid"
+            ) as mock_get_pred,
+        ):
+            mock_find_weights.return_value = np.array([0.3, 0.7])
+            expected_pred = np.array([0.2, 0.8, 0.3])
+            mock_get_pred.return_value = expected_pred
 
-        result = get_y_pred_resolver(
-            [[("model1", None, None, None, None, None)], []], ml_grid, valid=False
+            result = get_y_pred_resolver(
+                [[("model1", None, None, None, None, None)], []], ml_grid, valid=False
+            )
+
+            mock_find_weights.assert_called_once()
+            mock_get_pred.assert_called_once()
+            np.testing.assert_array_equal(result, expected_pred)
+
+    def test_get_y_pred_resolver_linear_weighted(self):
+        """Test get_y_pred_resolver handles linear-weighted ensemble."""
+
+        mod_key = "ml_grid.pipeline.evaluate_methods_ga"
+        if mod_key in sys.modules:
+            del sys.modules[mod_key]
+
+        from ml_grid.pipeline.evaluate_methods_ga import (
+            get_y_pred_resolver,
         )
 
-        # Should call DE functions and return predictions
-        mock_find_weights.assert_called_once()
-        mock_get_pred.assert_called_once()
-        np.testing.assert_array_equal(result, expected_pred)
-
-    @patch(
-        "ml_grid.pipeline.evaluate_methods_ga.get_linear_weighted_ensemble_predictions"
-    )
-    @patch("ml_grid.pipeline.evaluate_methods_ga.find_linear_weights")
-    def test_get_y_pred_resolver_linear_weighted(
-        self, mock_find_weights, mock_get_pred
-    ):
-        """Test get_y_pred_resolver handles linear-weighted ensemble."""
-        from ml_grid.pipeline.evaluate_methods_ga import get_y_pred_resolver
-
-        # Mock ml_grid_object
         ml_grid = MagicMock()
         type(ml_grid).verbose = 0
         ml_grid.local_param_dict = {"weighted": "linear"}
         ml_grid.X_test_orig = np.array([[1, 2], [3, 4], [5, 6]])
         ml_grid.y_test = np.array([0, 1, 0])
 
-        # Mock the linear-weighted-specific functions
-        mock_find_weights.return_value = np.array([0.4, 0.6])
-        expected_pred = np.array([0.3, 0.7, 0.2])
-        mock_get_pred.return_value = expected_pred
+        with (
+            patch(
+                "ml_grid.pipeline.evaluate_methods_ga.find_linear_weights"
+            ) as mock_find_weights,
+            patch(
+                "ml_grid.pipeline.evaluate_methods_ga.get_linear_weighted_ensemble_predictions"
+            ) as mock_get_pred,
+        ):
+            mock_find_weights.return_value = np.array([0.4, 0.6])
+            expected_pred = np.array([0.3, 0.7, 0.2])
+            mock_get_pred.return_value = expected_pred
 
-        result = get_y_pred_resolver(
-            [[("model1", None, None, None, None, None)], []], ml_grid, valid=False
-        )
+            result = get_y_pred_resolver(
+                [[("model1", None, None, None, None, None)], []], ml_grid, valid=False
+            )
 
-        # Should call linear-weighted functions and return predictions
-        mock_find_weights.assert_called_once()
-        mock_get_pred.assert_called_once()
-        np.testing.assert_array_equal(result, expected_pred)
+            mock_find_weights.assert_called_once()
+            mock_get_pred.assert_called_once()
+            np.testing.assert_array_equal(result, expected_pred)
 
 
 class TestEvaluateWeightedEnsembleAuc:
     """Tests for the evaluate_weighted_ensemble_auc function."""
 
-    @patch("ml_grid.pipeline.evaluate_methods_ga.get_y_pred_resolver")
-    @patch("ml_grid.pipeline.evaluate_methods_ga.metrics.roc_auc_score")
-    @patch("ml_grid.pipeline.evaluate_methods_ga.metrics.matthews_corrcoef")
-    @patch("ml_grid.pipeline.evaluate_methods_ga.metrics.f1_score")
-    @patch("ml_grid.pipeline.evaluate_methods_ga.metrics.precision_score")
-    @patch("ml_grid.pipeline.evaluate_methods_ga.metrics.recall_score")
-    @patch("ml_grid.pipeline.evaluate_methods_ga.metrics.accuracy_score")
-    @patch("ml_grid.pipeline.evaluate_methods_ga.measure_diversity_wrapper")
-    @patch("ml_grid.pipeline.evaluate_methods_ga.apply_diversity_penalty")
-    def test_evaluate_weighted_ensemble_auc_basic(
-        self,
-        mock_apply_diversity,
-        mock_measure_diversity,
-        mock_accuracy,
-        mock_recall,
-        mock_precision,
-        mock_f1,
-        mock_mcc,
-        mock_auc,
-        mock_get_y_pred,
-    ):
+    def test_evaluate_weighted_ensemble_auc_basic(self):
         """Test basic functionality of evaluate_weighted_ensemble_auc."""
-        # Mock get_y_pred_resolver to return predictions
-        mock_get_y_pred.return_value = np.array([0, 1, 0, 1, 0])
 
-        # Mock sklearn metrics
-        mock_auc.return_value = 0.85
-        mock_mcc.return_value = 0.75
-        mock_f1.return_value = 0.80
-        mock_precision.return_value = 0.82
-        mock_recall.return_value = 0.78
-        mock_accuracy.return_value = 0.83
+        mod_key = "ml_grid.pipeline.evaluate_methods_ga"
+        if mod_key in sys.modules:
+            del sys.modules[mod_key]
 
-        # Mock diversity functions
-        mock_measure_diversity.return_value = 0.5
-        mock_apply_diversity.return_value = (0.78, 0.68)
+        from ml_grid.pipeline.evaluate_methods_ga import (
+            evaluate_weighted_ensemble_auc,
+        )
 
-        with patch("ml_grid.pipeline.evaluate_methods_ga.pd.DataFrame.to_csv"):
+        with (
+            patch(
+                "ml_grid.pipeline.evaluate_methods_ga.get_y_pred_resolver"
+            ) as mock_get_y_pred,
+            patch(
+                "ml_grid.pipeline.evaluate_methods_ga.metrics.roc_auc_score"
+            ) as mock_auc,
+            patch(
+                "ml_grid.pipeline.evaluate_methods_ga.metrics.matthews_corrcoef"
+            ) as mock_mcc,
+            patch("ml_grid.pipeline.evaluate_methods_ga.metrics.f1_score") as mock_f1,
+            patch(
+                "ml_grid.pipeline.evaluate_methods_ga.metrics.precision_score"
+            ) as mock_precision,
+            patch(
+                "ml_grid.pipeline.evaluate_methods_ga.metrics.recall_score"
+            ) as mock_recall,
+            patch(
+                "ml_grid.pipeline.evaluate_methods_ga.metrics.accuracy_score"
+            ) as mock_accuracy,
+            patch(
+                "ml_grid.pipeline.evaluate_methods_ga.measure_diversity_wrapper"
+            ) as mock_measure_diversity,
+            patch(
+                "ml_grid.pipeline.evaluate_methods_ga.apply_diversity_penalty"
+            ) as mock_apply_diversity,
+            patch("ml_grid.pipeline.evaluate_methods_ga.pd.DataFrame.to_csv"),
+        ):
+            mock_get_y_pred.return_value = np.array([0, 1, 0, 1, 0])
+            mock_auc.return_value = 0.85
+            mock_mcc.return_value = 0.75
+            mock_f1.return_value = 0.80
+            mock_precision.return_value = 0.82
+            mock_recall.return_value = 0.78
+            mock_accuracy.return_value = 0.83
+            mock_measure_diversity.return_value = 0.5
+            mock_apply_diversity.return_value = (0.78, 0.68)
+
             global_params_mock = MagicMock()
             global_params_mock.verbose = 0
 
@@ -196,16 +232,26 @@ class TestEvaluateWeightedEnsembleAuc:
             assert isinstance(result[0], (float, np.floating))
             assert result[0] == 0.85
 
-    @patch("ml_grid.pipeline.evaluate_methods_ga.get_y_pred_resolver")
-    def test_evaluate_weighted_ensemble_auc_with_diversity_penalty(
-        self,
-        mock_get_y_pred,
-    ):
+    def test_evaluate_weighted_ensemble_auc_with_diversity_penalty(self):
         """Test evaluate_weighted_ensemble_auc with diversity penalty enabled."""
-        # Mock get_y_pred_resolver to return predictions
-        mock_get_y_pred.return_value = np.array([0, 1, 0, 1, 0])
+
+        mod_key = "ml_grid.pipeline.evaluate_methods_ga"
+        if mod_key in sys.modules:
+            del sys.modules[mod_key]
+
+        from ml_grid.pipeline.evaluate_methods_ga import (
+            evaluate_weighted_ensemble_auc,
+        )
+
+        def apply_diversity_side_effect(auc, mcc, diversity_metric, params):
+            if diversity_metric < 1.0:
+                return (auc * 0.9, mcc * 0.9)
+            return (auc, mcc)
 
         with (
+            patch(
+                "ml_grid.pipeline.evaluate_methods_ga.get_y_pred_resolver"
+            ) as mock_get_y_pred,
             patch(
                 "ml_grid.pipeline.evaluate_methods_ga.measure_diversity_wrapper",
                 return_value=0.3,
@@ -239,12 +285,7 @@ class TestEvaluateWeightedEnsembleAuc:
             ),
             patch("ml_grid.pipeline.evaluate_methods_ga.pd.DataFrame.to_csv"),
         ):
-
-            def apply_diversity_side_effect(auc, mcc, diversity_metric, params):
-                if diversity_metric < 1.0:
-                    return (auc * 0.9, mcc * 0.9)
-                return (auc, mcc)
-
+            mock_get_y_pred.return_value = np.array([0, 1, 0, 1, 0])
             mock_apply_diversity.side_effect = apply_diversity_side_effect
 
             global_params_mock = MagicMock()
@@ -275,16 +316,21 @@ class TestEvaluateWeightedEnsembleAuc:
             assert len(result) == 1
             np.testing.assert_allclose(result[0], 0.765, rtol=1e-3)
 
-    @patch("ml_grid.pipeline.evaluate_methods_ga.get_y_pred_resolver")
-    def test_evaluate_weighted_ensemble_auc_auc_error_handling(
-        self,
-        mock_get_y_pred,
-    ):
+    def test_evaluate_weighted_ensemble_auc_auc_error_handling(self):
         """Test evaluate_weighted_ensemble_auc handles ValueError in AUC calculation."""
-        # Mock get_y_pred_resolver to return predictions
-        mock_get_y_pred.return_value = np.array([1, 1, 1, 1, 1])
+
+        mod_key = "ml_grid.pipeline.evaluate_methods_ga"
+        if mod_key in sys.modules:
+            del sys.modules[mod_key]
+
+        from ml_grid.pipeline.evaluate_methods_ga import (
+            evaluate_weighted_ensemble_auc,
+        )
 
         with (
+            patch(
+                "ml_grid.pipeline.evaluate_methods_ga.get_y_pred_resolver"
+            ) as mock_get_y_pred,
             patch(
                 "ml_grid.pipeline.evaluate_methods_ga.metrics.roc_auc_score"
             ) as mock_auc,
@@ -318,6 +364,7 @@ class TestEvaluateWeightedEnsembleAuc:
             ),
             patch("ml_grid.pipeline.evaluate_methods_ga.pd.DataFrame.to_csv"),
         ):
+            mock_get_y_pred.return_value = np.array([1, 1, 1, 1, 1])
             mock_auc.side_effect = ValueError("Only one class present in y_test")
 
             global_params_mock = MagicMock()

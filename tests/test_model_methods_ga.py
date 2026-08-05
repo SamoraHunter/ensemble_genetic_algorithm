@@ -187,14 +187,16 @@ def test_get_stored_model_sklearn(tmp_path):
     )
     mock_ml_grid_object.logging_paths_obj.log_folder_path = str(log_folder)
     mock_ml_grid_object.config_dict = MagicMock()
-    mock_ml_grid_object.config_dict.modelFuncList = lambda x, y: (
-        0.5,
-        None,
-        [],
-        0,
-        0.5,
-        np.array([]),
-    )
+    mock_ml_grid_object.config_dict.get.return_value = [
+        lambda x, y: (
+            0.5,
+            None,
+            [],
+            0,
+            0.5,
+            np.array([]),
+        )
+    ]
 
     model_store_path = mock_ml_grid_object.logging_paths_obj.model_store_path
     with open(model_store_path, "w") as f:
@@ -250,7 +252,7 @@ def test_get_stored_model_fallback_on_error(tmp_path):
         np.array([1, 0]),
     )
     mock_ml_grid_object.config_dict = MagicMock()
-    mock_ml_grid_object.config_dict.modelFuncList = [fallback_mock]
+    mock_ml_grid_object.config_dict.get.return_value = [fallback_mock]
 
     model_store_path = mock_ml_grid_object.logging_paths_obj.model_store_path
     with open(model_store_path, "w") as f:
@@ -283,7 +285,7 @@ def test_get_stored_model_exception_logs_error(tmp_path, caplog):
     def mock_model_generator(*args, **kwargs):
         return (0.5, None, [], 0, 0.5, np.array([]))
 
-    mock_ml_grid_object.config_dict.modelFuncList = [mock_model_generator]
+    mock_ml_grid_object.config_dict.get.return_value = [mock_model_generator]
 
     model_store_path = mock_ml_grid_object.logging_paths_obj.model_store_path
     with open(model_store_path, "w") as f:
@@ -320,7 +322,7 @@ def test_get_stored_model_returns_random_model_on_key_error(tmp_path):
     fallback_mock = MagicMock()
     fallback_mock.return_value = (0.9, "fallback", ["x"], 5, 0.95, np.array([1]))
     mock_ml_grid_object.config_dict = MagicMock()
-    mock_ml_grid_object.config_dict.modelFuncList = [fallback_mock]
+    mock_ml_grid_object.config_dict.get.return_value = [fallback_mock]
 
     model_store_path = mock_ml_grid_object.logging_paths_obj.model_store_path
     with open(model_store_path, "w") as f:
@@ -409,7 +411,7 @@ def test_get_stored_model_empty_store_fallback(tmp_path):
     fallback_mock = MagicMock()
     fallback_mock.return_value = (0.9, "fallback", ["x"], 5, 0.95, np.array([1]))
     mock_ml_grid_object.config_dict = MagicMock()
-    mock_ml_grid_object.config_dict.modelFuncList = [fallback_mock]
+    mock_ml_grid_object.config_dict.get.return_value = [fallback_mock]
 
     model_store_path = mock_ml_grid_object.logging_paths_obj.model_store_path
     with open(model_store_path, "w") as f:
