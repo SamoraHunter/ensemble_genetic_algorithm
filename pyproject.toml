@@ -71,6 +71,7 @@ dev = [
     "sphinx-rtd-theme",
     "myst-parser",
     "sphinx-autodoc-typehints",
+    "hypothesis",
 ]
 
 # Dependencies for GPU support (e.g., CUDA-enabled libraries)
