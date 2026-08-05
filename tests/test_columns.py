@@ -1,17 +1,16 @@
 import sys
-
-sys.path.insert(0, "/workspaces/ensemble_genetic_algorithm")
-
+import tempfile
 import os
 import shutil
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
 import pandas as pd
 
 from ml_grid.util.project_score_save import project_score_save_class
 
-tmpdir = "/workspaces/ensemble_genetic_algorithm/test_run"
-os.makedirs(tmpdir, exist_ok=True)
+tmpdir = tempfile.mkdtemp()
 
 saver = project_score_save_class(tmpdir)
 

@@ -1,12 +1,11 @@
 import sys
-
-sys.path.insert(0, "/workspaces/ensemble_genetic_algorithm")
-
-# Direct test - simulate exactly what update_score_log does
-
 import os
 import shutil
 import tempfile
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Direct test - simulate exactly what update_score_log does
 
 import pandas as pd
 
