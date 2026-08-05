@@ -166,6 +166,11 @@ class run:
         self.tools = tools
 
         # Initialize DEAP creator (must be done before creating toolbox)
+        if hasattr(creator, "FitnessMax"):
+            delattr(creator, "FitnessMax")
+        if hasattr(creator, "Individual"):
+            delattr(creator, "Individual")
+
         creator.create("FitnessMax", base.Fitness, weights=(1.0,))
         creator.create("Individual", list, fitness=creator.FitnessMax)
 
@@ -841,6 +846,12 @@ class run:
 
                 del self.toolbox
                 gc.collect()
+
+                if hasattr(creator, "FitnessMax"):
+                    delattr(creator, "FitnessMax")
+                if hasattr(creator, "Individual"):
+                    delattr(creator, "Individual")
+
                 creator.create("FitnessMax", base.Fitness, weights=(1.0,))
                 creator.create("Individual", list, fitness=creator.FitnessMax)
                 self.toolbox = base.Toolbox()

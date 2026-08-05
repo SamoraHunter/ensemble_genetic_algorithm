@@ -1,5 +1,7 @@
+import fcntl
 import json
 import logging
+import os
 import pickle
 import random
 import time
@@ -55,53 +57,67 @@ def store_model(
         logger.info("model_store_path: %s", model_store_path)
         logger.info("log_folder_path: %s", log_folder_path)
 
-    with open(model_store_path, "r") as f:
-        model_store_data = json.load(f)
+    lock_file_path = f"{model_store_path}.lock"
 
-    idx = int(len(model_store_data["models"]) + 1)
+    with open(lock_file_path, "w") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
 
-    time_stamp = int(time.time_ns())
+        try:
+            if (
+                not os.path.exists(model_store_path)
+                or os.stat(model_store_path).st_size == 0
+            ):
+                model_store_data = {"models": {}}
+            else:
+                with open(model_store_path, "r") as f:
+                    model_store_data = json.load(f)
 
-    if ml_grid_object.verbose >= 11:
-        logger.debug("saving model type: %s", model_type)
+            idx = int(len(model_store_data["models"]) + 1)
 
-    if model_type == "sklearn":
-        model = str(model)
+            time_stamp = int(time.time_ns())
 
-    elif model_type == "torch":
-        y_pred = y_pred.astype(float)
-        torch.save(model, f=f"{log_folder_path}/" + "/torch/" + str(time_stamp))
-        model = time_stamp
+            if ml_grid_object.verbose >= 11:
+                logger.debug("saving model type: %s", model_type)
 
-    elif model_type == "xgb":
-        pickle.dump(
-            model, open(f"{log_folder_path}/" + "/xgb/" + str(time_stamp), "wb")
-        )
-        model = time_stamp
-        y_pred = y_pred.astype(float)
+            if model_type == "sklearn":
+                model = str(model)
 
-    # print(type(model))
-    scale = local_param_dict.get("scale")
-    if scale:
-        y_pred = y_pred.astype(float)
+            elif model_type == "torch":
+                y_pred = y_pred.astype(float)
+                torch.save(model, f=f"{log_folder_path}/" + "/torch/" + str(time_stamp))
+                model = time_stamp
 
-    model_store_entry = {
-        "index": idx,
-        "mcc_score": float(mccscore),
-        "model": model,
-        "feature_list": feature_list,
-        "model_train_time": int(model_train_time),
-        "auc_score": float(auc_score),
-        "y_pred": y_pred.tolist(),
-        "model_type": str(model_type),
-    }
+            elif model_type == "xgb":
+                pickle.dump(
+                    model, open(f"{log_folder_path}/" + "/xgb/" + str(time_stamp), "wb")
+                )
+                model = time_stamp
+                y_pred = y_pred.astype(float)
 
-    model_store_data["models"].update({idx: model_store_entry})
+            # print(type(model))
+            scale = local_param_dict.get("scale")
+            if scale:
+                y_pred = y_pred.astype(float)
 
-    jsonString = json.dumps(model_store_data)
-    jsonFile = open(model_store_path, "w", encoding="utf-8")
-    jsonFile.write(jsonString)
-    jsonFile.close()
+            model_store_entry = {
+                "index": idx,
+                "mcc_score": float(mccscore),
+                "model": model,
+                "feature_list": feature_list,
+                "model_train_time": int(model_train_time),
+                "auc_score": float(auc_score),
+                "y_pred": y_pred.tolist(),
+                "model_type": str(model_type),
+            }
+
+            model_store_data["models"].update({idx: model_store_entry})
+
+            jsonString = json.dumps(model_store_data)
+
+            with open(model_store_path, "w", encoding="utf-8") as jsonFile:
+                jsonFile.write(jsonString)
+        finally:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
 
     try:
         torch.cuda.empty_cache()  # exp
@@ -138,14 +154,30 @@ def get_stored_model(ml_grid_object: Any) -> Tuple:
 
     log_folder_path = ml_grid_object.logging_paths_obj.log_folder_path
 
-    modelFuncList = ml_grid_object.config_dict.modelFuncList
+    modelFuncList = ml_grid_object.config_dict.get("modelFuncList")
 
-    with open(model_store_path, "r", encoding="utf-8") as f:
-        model_store_data = json.load(f)
+    lock_file_path = f"{model_store_path}.lock"
 
-    model_key_list = list(model_store_data["models"].keys())
+    with open(lock_file_path, "w") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+
+        try:
+            if (
+                not os.path.exists(model_store_path)
+                or os.stat(model_store_path).st_size == 0
+            ):
+                model_store_data = {"models": {}}
+            else:
+                with open(model_store_path, "r", encoding="utf-8") as f:
+                    model_store_data = json.load(f)
+        finally:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+
+    model_key_list = list(model_store_data.get("models", {}).keys())
 
     try:
+        if not model_key_list:
+            raise ValueError("No stored models available")
         model_key = str(random.choice(model_key_list))
 
         logger.info(

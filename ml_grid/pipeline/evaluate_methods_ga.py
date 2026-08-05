@@ -233,7 +233,7 @@ def evaluate_weighted_ensemble_auc(
     auc_score_list = []
     mcc_score_list = []
     # For each member in the ensemble
-    for i in range(0, len(individual[0]) - 1):
+    for i in range(len(individual[0])):
         ensemble_model_list.append(str(individual[0][i][1]))  # str or model?
         feature_count_list.append(
             individual[0][i][2]
@@ -253,14 +253,18 @@ def evaluate_weighted_ensemble_auc(
     feature_map_vector = np.array(feature_map_vector)
 
     # set score log dataframe in main
+    # Handle empty lists safely (e.g., single model ensembles)
+    auc_mean = float(np.mean(auc_score_list)) if len(auc_score_list) > 0 else 0.0
+    mcc_mean = float(np.mean(mcc_score_list)) if len(mcc_score_list) > 0 else 0.0
+
     df_data = [
         [
             len(individual[0]),
             auc,
-            np.mean(auc_score_list),
+            auc_mean,
             auc_div,
             mcc,
-            np.mean(mcc_score_list),
+            mcc_mean,
             mcc_div,
             f1,
             precision,

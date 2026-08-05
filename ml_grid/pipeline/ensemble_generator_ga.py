@@ -59,10 +59,8 @@ def do_work(n: int = 0, ml_grid_object: Any = None) -> Tuple:
             return modelFuncList[index](ml_grid_object, ml_grid_object.local_param_dict)
     except Exception as e:
         logger.error(e)
-        logger.error("Failed to return model at index %s, returning perceptron", index)
+        logger.error("Failed to return model at index %s", index)
         raise e
-        # Fallback to a known simple model
-        return modelFuncList[1](ml_grid_object, ml_grid_object.local_param_dict)
 
     # return random.choice(modelFuncList)
 

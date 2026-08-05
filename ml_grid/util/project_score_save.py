@@ -86,6 +86,8 @@ class project_score_save_class:
             "div_p",
             "percent_missing",
             "corr",
+            "mutpb_adaptive_enabled",
+            "niche_params_enabled",
             "age",
             "sex",
             "bmi",
@@ -244,6 +246,8 @@ class project_score_save_class:
                 "div_p",
                 "percent_missing",
                 "corr",
+                "mutpb_adaptive_enabled",
+                "niche_params_enabled",
                 "age",
                 "sex",
                 "bmi",
@@ -302,6 +306,16 @@ class project_score_save_class:
                 if key != "data":
                     if key in column_list:
                         line[key] = [ml_grid_object.local_param_dict.get(key)]
+
+                    # Handle nested param dicts like mutpb_adaptive and niche_params
+                    elif isinstance(ml_grid_object.local_param_dict.get(key), dict):
+                        nested_key_enabled = f"{key}_enabled"
+                        if nested_key_enabled in column_list:
+                            line[nested_key_enabled] = [
+                                ml_grid_object.local_param_dict.get(key, {}).get(
+                                    "enabled", False
+                                )
+                            ]
                 else:
                     for key_1 in ml_grid_object.local_param_dict.get("data"):
 
